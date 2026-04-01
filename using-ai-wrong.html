@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tôi đã dùng AI sai cách suốt một năm</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <div class="topbar-tag">Góc nhìn cá nhân</div>
+</nav>
+
+<main class="container">
+  <header class="hero">
+    <div class="hero-label">Suy nghĩ sau giờ làm</div>
+    <h1>Tôi đã dùng AI sai cách<br><em>suốt gần một năm</em></h1>
+    <p class="hero-intro">
+      Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả. Ghi lại đây để nhớ — và phòng ai đang bị tương tự.
+    </p>
+    <div class="hero-meta">Senior Software Engineer · 5 năm trong nghề · Tháng 3, 2025</div>
+  </header>
+
+  <article class="article">
+
+    <p>Tuần trước mình đọc một bài của một Staff Engineer người Mỹ — anh này làm ở Meta, viết về cách anh ta dùng AI để code. Ban đầu định đọc lướt rồi thôi. Nhưng đọc đến đoạn anh mô tả "tutorial hell 2.0", mình phải dừng lại. Không phải vì hay. Mà vì anh đang mô tả chính xác những gì mình đã làm trong gần một năm qua.</p>
+
+    <p>Mình không tự hào về điều đó.</p>
+
+    <h2>Cái bẫy mình đã rơi vào</h2>
+
+    <p>Cuối 2023, mình bắt đầu dùng ChatGPT nghiêm túc trong công việc. Lúc đó mình nghĩ mình đang dùng "đúng cách" — không copy mù, có đọc lại code, có chỉnh sửa cho phù hợp với codebase. Mình tự hào về điều đó, thậm chí còn nói với mấy đứa em trong team rằng "dùng AI phải có chọn lọc, đừng tin tưởng mù quáng."</p>
+
+    <p>Nhưng thực ra mình chỉ đang làm một việc: <strong>lấy code nhanh hơn.</strong> Không hơn không kém.</p>
+
+    <p>Triệu chứng bắt đầu xuất hiện khoảng 3-4 tháng sau. Mình nhận ra mình đang debug chậm hơn trước. Không phải vì code phức tạp hơn. Mà vì mình không còn "cảm" được code nữa. Cái trực giác khi đọc một đoạn code và biết ngay vấn đề nằm ở đâu — nó mờ dần. Mình không nhận ra lúc nào nó biến mất.</p>
+
+    <div class="pq">
+      <p>Cái trực giác khi đọc code và biết ngay vấn đề ở đâu — nó mờ dần mà mình không hay.</p>
+    </div>
+
+    <p>Bài viết của anh kỹ sư người Mỹ kia gọi cái này là "tutorial hell 2.0". Tutorial hell cũ là xem video, làm theo từng bước, cảm thấy mình đang học, nhưng thực ra không học được gì vì không có ma sát. Tutorial hell mới là dùng AI theo kiểu mình đang dùng — có vẻ productive, nhưng cũng không có ma sát. Không có ma sát thì không có học.</p>
+
+    <p>Mình ngồi nhìn cái định nghĩa đó khá lâu.</p>
+
+    <h2>Cái khác biệt mà mình bỏ qua</h2>
+
+    <p>Điều khiến mình suy nghĩ nhất trong bài viết đó không phải là câu chuyện của anh ta. Mà là một chi tiết nhỏ: các kỹ sư tại Anthropic — công ty tạo ra Claude — cũng viết 90% code của họ bằng AI. Thậm chí Claude Code phần lớn được viết bởi chính Claude.</p>
+
+    <p>Vậy thì tại sao một bên thì dùng AI mà giỏi lên, còn mình thì dùng AI mà cảm giác mình đang trở nên... tệ hơn?</p>
+
+    <p>Anh kỹ sư kia lý giải: hầu hết mọi người dùng AI để lấy <strong>code</strong>. Những người giỏi nhất dùng AI để lấy <strong>sự hiểu biết</strong>. Code chỉ là sản phẩm phụ.</p>
+
+    <div class="callout">
+      <div class="callout-label">Điểm mấu chốt</div>
+      <p>Khi bạn hỏi "build cho tôi cái X" — bạn đang thuê AI làm việc thay mình. Khi bạn hỏi "tôi cần làm X, có những cách nào, đánh đổi gì, cách nào hợp với context này" — bạn đang dùng AI để suy nghĩ cùng mình.</p>
+    </div>
+
+    <p>Nghe thì đơn giản. Nhưng thật ra rất khác nhau trong thực tế.</p>
+
+    <h2>Thử áp dụng — và thấy khó hơn tưởng</h2>
+
+    <p>Sau khi đọc xong mình thử thay đổi ngay trong task đang làm hôm đó. Thay vì paste requirement vào Claude và chờ code, mình bắt đầu bằng một câu hỏi: <em>"Tôi cần implement rate limiting cho API này. Có những approach nào, và với một service đang có khoảng 50k req/phút thì cái nào hợp lý hơn?"</em></p>
+
+    <p>Câu trả lời mình nhận được dài hơn, phức tạp hơn, và quan trọng là — mình phải đọc thật sự. Không thể scan qua. Mình thấy mình đang hỏi lại, phản biện, thậm chí có lúc bất đồng với Claude về một số trade-off.</p>
+
+    <p>Cái session đó tốn gấp đôi thời gian so với bình thường. Nhưng cuối ngày, khi review lại code mình vừa viết, mình có thể giải thích từng quyết định. Đó là cảm giác mình đã đánh mất từ lúc nào không biết.</p>
+
+    <div class="aside">
+      <p>Một thứ mình thêm vào không có trong bài gốc: sau mỗi session như vậy, mình hỏi Claude tóm tắt lại những gì vừa thảo luận — không phải code, mà là các quyết định thiết kế. Lưu lại. Đọc lại sau vài ngày. Kỳ lạ là nó giúp ích thật.</p>
+    </div>
+
+    <h2>Vài điểm mình không hoàn toàn đồng ý</h2>
+
+    <p>Bài gốc có một luận điểm mình thấy hơi lý tưởng hóa: rằng AI là "người thầy tốt nhất bạn từng có — kiên nhẫn vô hạn, luôn sẵn sàng."</p>
+
+    <p>Đúng, nhưng chưa đủ. AI không có skin in the game. Một senior thật sự trong team sẽ bực mình khi bạn hỏi câu ngớ ngẩn lần thứ ba — và cái bực mình đó, cái nhìn ấy, đôi khi là thứ khiến bạn nhớ mãi. AI thì không vậy. Nó sẽ kiên nhẫn giải thích lần thứ ba, thứ tư, thứ mười — và chính sự kiên nhẫn đó đôi khi là vấn đề.</p>
+
+    <p>Mình vẫn dùng AI rất nhiều. Nhưng mình cũng học cách tạo ra ma sát nhân tạo cho bản thân — đặt câu hỏi khó hơn, cố giải thích lại bằng lời mình trước khi hỏi AI, và thỉnh thoảng cố tình làm không có AI để nhớ mình thật sự có thể làm gì.</p>
+
+    <hr class="divider">
+
+    <p>Bài viết đó của anh kỹ sư người Mỹ viết từ góc nhìn của một người làm ở Big Tech, codebase hàng tỷ người dùng. Context của mình khác — startup nhỏ, team ít người, deadline gần hơn. Nhưng cái core insight vẫn đúng.</p>
+
+    <p>Không phải bạn dùng AI bao nhiêu. Mà là bạn đang dùng nó để <em>tránh suy nghĩ</em>, hay để <em>suy nghĩ sâu hơn</em>.</p>
+
+    <p>Câu trả lời đó tích lũy theo thời gian. Một năm sau bạn sẽ là hai người rất khác nhau tùy vào bạn chọn cái nào.</p>
+
+    <div class="closing">
+      <p class="sig">Viết lại từ góc nhìn cá nhân, tháng 3 năm 2025</p>
+    </div>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="agentic-rag.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">RAG thông thường đang nói dối bạn</div>
+      </a>
+      <div></div>
+    </nav>
+
+  </article>
+</main>
+
+<footer>
+  <div class="container">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

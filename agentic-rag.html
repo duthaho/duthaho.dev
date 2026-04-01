@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <div class="topbar-tag">AI Engineering</div>
+</nav>
+
+<main class="container">
+  <header class="hero">
+    <div class="hero-label">Suy nghĩ sau giờ làm</div>
+    <h1>RAG thông thường<br><em>đang nói dối bạn</em></h1>
+    <p class="hero-intro">
+      Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu. Không phải lỗi của RAG — mà là mình đã kỳ vọng sai thứ.
+    </p>
+    <div class="hero-meta">Senior Software Engineer · AI tooling · Tháng 3, 2025</div>
+  </header>
+
+  <article class="article">
+
+    <p>Khoảng sáu tháng trước, team mình build một chatbot nội bộ dùng RAG — mục tiêu là để nhân viên hỏi về policy công ty mà không cần lục tung Google Drive. Về mặt kỹ thuật, nó hoạt động. Embedding, vector database, LLM, xong. Demo thì mượt. Nhưng sau hai tuần đưa vào dùng thật, phản hồi bắt đầu về: "nó trả lời sai," "nó trả lời câu không ai hỏi," và câu phổ biến nhất: "mình hỏi X nhưng nó trả lời Y một cách rất tự tin."</p>
+
+    <p>Mình mất thêm một tháng debug trước khi nhận ra vấn đề không nằm ở implementation. Vấn đề nằm ở <em>kiến trúc</em>. Và lý do là RAG thông thường có một lỗ hổng thiết kế mà bạn sẽ không thấy cho đến khi hệ thống gặp câu hỏi thật, từ người dùng thật.</p>
+
+    <h2>Vấn đề RAG thông thường không ai nói cho bạn</h2>
+
+    <p>Trên giấy tờ, RAG trông rất hợp lý. Người dùng hỏi câu gì đó, hệ thống chuyển câu hỏi thành embedding, tìm trong vector database những đoạn text có nghĩa gần nhất, nhét vào context của LLM, LLM trả lời. Sạch sẽ, đơn giản, có thể giải thích được.</p>
+
+    <p>Và với những câu hỏi rõ ràng, nó thực sự rất tốt. "Chính sách nghỉ phép của công ty là gì?" — trả lời ngon. "Quy trình onboarding cho nhân viên mới?" — cũng ổn. Nhưng khi câu hỏi phức tạp hơn một chút, bộ máy bắt đầu lung lay.</p>
+
+    <div class="diagram"><span class="diagram-label">Standard RAG — luồng một chiều</span>
+Câu hỏi  ──▶  Embedding  ──▶  Vector Search  ──▶  Top-K Chunks  ──▶  LLM  ──▶  Trả lời
+                                                         │
+                                              (chỉ lấy một lần,
+                                              không kiểm tra lại)</div>
+
+    <p>Vấn đề cốt lõi là: <strong>không có gì ngồi giữa để quyết định xem kết quả tìm được có đủ tốt không.</strong> Hệ thống retrieve xong là generate thẳng, không dừng lại, không tự hỏi "thứ mình vừa tìm được có thực sự trả lời câu hỏi không?"</p>
+
+    <p>Cụ thể hơn, có ba dạng thất bại mình đã thấy tận mắt:</p>
+
+    <p>Câu hỏi mơ hồ là dạng phổ biến nhất. Khi ai đó hỏi "quy trình xử lý hợp đồng là gì?" — họ đang hỏi về hợp đồng với khách hàng, với nhà cung cấp, hay hợp đồng lao động? RAG không biết cần hỏi lại. Nó lấy đại thứ có similarity score cao nhất và trả lời như thể đó là ý định duy nhất có thể có. Đôi khi may mắn đúng. Đôi khi sai hoàn toàn.</p>
+
+    <p>Câu trả lời nằm rải rác ở nhiều tài liệu là dạng thứ hai. "Policy remote work cho contractor thì khác gì full-time employee?" — câu này cần thông tin từ ít nhất hai tài liệu khác nhau. RAG thông thường retrieve từ một pool duy nhất và không có khái niệm "tìm thêm ở chỗ khác nếu chỗ này không đủ."</p>
+
+    <div class="aside">
+      <p>Dạng thứ ba mới là thứ nguy hiểm nhất, và cũng là thứ làm team mình mất nhiều thời gian nhất: false confidence. Hệ thống tìm được thứ gì đó có similarity score cao — nhưng thực ra là từ một phiên bản tài liệu cũ, hoặc từ một document nói về chủ đề gần đó chứ không phải chủ đề đúng. LLM không biết điều này. Nó nhận context, nó generate, và nó trả lời rất tự tin. Không có dấu hiệu nào cho thấy nó đang nhầm.</p>
+    </div>
+
+    <div class="pq">
+      <p>Retrieval thành công không có nghĩa là retrieval đúng. Và RAG thông thường không có cơ chế nào để phân biệt hai điều này.</p>
+    </div>
+
+    <h2>Agentic RAG — khi hệ thống biết dừng lại để nghĩ</h2>
+
+    <p>Đọc bài của ByteByteGo tuần trước, mình thấy họ đặt vấn đề rất gọn: vấn đề của RAG thông thường là không có gì "ngồi giữa" quyết định xem retrieval có đủ tốt không trước khi generation xảy ra. Agentic RAG đặt một agent vào đúng chỗ đó.</p>
+
+    <p>Ý tưởng không phức tạp: thay vì pipeline một chiều, bạn có một vòng lặp. Retrieve xong, agent đánh giá kết quả. Nếu tốt thì generate. Nếu chưa đủ, agent quyết định xem cần làm gì tiếp — tìm thêm, viết lại câu hỏi, hoặc tìm ở nguồn khác.</p>
+
+    <div class="diagram"><span class="diagram-label">Agentic RAG — vòng lặp có kiểm soát</span>
+Câu hỏi ──▶ Agent ──▶ Viết lại / phân tích câu hỏi
+               │
+               ▼
+           Chọn nguồn  ──▶  Retrieve  ──▶  Đánh giá kết quả
+               ▲                                  │
+               │              ┌───────────────────┘
+               │         Đủ tốt?
+               │           │
+               │          Không ──▶  Thử lại với query khác / nguồn khác
+               │           │
+               └──────  Có ──▶  Generate ──▶  Trả lời</div>
+
+    <p>Điều này cho phép hệ thống làm được ba thứ mà RAG thông thường không có. Thứ nhất là routing — agent biết câu hỏi tài chính thì nên query vào database SQL, câu hỏi về policy thì vào document store, câu hỏi phức tạp thì có thể cần cả hai. Thứ hai là query refinement — trước khi search, agent có thể viết lại câu hỏi mơ hồ thành cụ thể hơn. Sau khi search, nếu kết quả yếu, nó viết lại và thử lại. Thứ ba là self-evaluation — sau khi retrieve, agent tự hỏi "cái này có thực sự trả lời câu hỏi không?" trước khi đưa cho LLM.</p>
+
+    <h2>Nhưng không phải cứ thêm agent là xong</h2>
+
+    <p>Đây là phần mình nghĩ bài gốc nói hơi ít, và là thứ mình học được sau khi thử implement: Agentic RAG không phải một switch bật tắt. Nó là một phổ.</p>
+
+    <p>Đơn giản nhất là một router — agent chỉ quyết định query vào knowledge base nào trong số hai hoặc ba cái. Đã là cải thiện đáng kể so với RAG thông thường rồi, và độ phức tạp tăng không nhiều.</p>
+
+    <p>Phức tạp hơn là kiểu ReAct — agent xen kẽ giữa reasoning và acting, chạy nhiều bước retrieval với evaluation ở giữa mỗi bước. Mình đã thử approach này và nó cho kết quả tốt hơn rõ rệt với câu hỏi phức tạp. Nhưng nó cũng chậm hơn, tốn token hơn, và debug khó hơn nhiều khi có gì đó sai.</p>
+
+    <div class="callout">
+      <div class="callout-label">Điều mình học được sau khi thử</div>
+      <p>Trade-off chính của Agentic RAG không phải về độ chính xác — nó gần như luôn tốt hơn. Trade-off là về latency và chi phí. Mỗi vòng lặp thêm là thêm thời gian, thêm token. Với chatbot nội bộ của mình, người dùng chấp nhận chờ 3-4 giây để có câu trả lời đúng hơn là nhận câu trả lời sai trong 1 giây. Nhưng không phải use case nào cũng vậy.</p>
+    </div>
+
+    <p>Cực đoan hơn nữa là multi-agent systems, nơi nhiều agent chuyên biệt cộng tác, được điều phối bởi một orchestrator. Mình chưa deploy thứ này lên production nhưng đã đọc về một số case study, và cái giá phải trả về độ phức tạp là rất cao. Nó không phải thứ bạn nên chọn làm điểm khởi đầu.</p>
+
+    <h2>Điều mình sẽ làm khác nếu bắt đầu lại</h2>
+
+    <p>Nhìn lại, cái chatbot đầu tiên của team mình thất bại không phải vì kỹ thuật yếu. Mà vì mình đã dùng công cụ đúng cho bài toán sai. RAG thông thường phù hợp với câu hỏi rõ ràng, knowledge base đồng nhất, người dùng biết chính xác mình muốn hỏi gì. Đó không phải mô tả người dùng thật trong môi trường doanh nghiệp.</p>
+
+    <p>Nếu làm lại, mình sẽ bắt đầu với một router đơn giản — chỉ cần agent quyết định query vào knowledge base nào — và đánh giá xem có đủ không trước khi leo thang lên ReAct hay multi-agent. Trong hầu hết trường hợp, router đơn giản đã giải quyết được 70-80% vấn đề, với chi phí tăng không đáng kể.</p>
+
+    <p>Điều mình đồng ý nhất với bài gốc của ByteByteGo: vấn đề cốt lõi của RAG thông thường không phải retrieval hay generation — mà là không có gì ở giữa biết <em>tự hỏi liệu mình có đang làm đúng không</em>. Agentic RAG đặt câu hỏi đó vào trong kiến trúc. Và đó là sự thay đổi quan trọng hơn bất kỳ cải tiến embedding hay reranking nào.</p>
+
+    <hr class="divider">
+
+    <p>Một điểm mình vẫn chưa có câu trả lời rõ: khi nào thì nên chuyển từ RAG thông thường sang Agentic RAG? Mình có một heuristic thô: nếu câu hỏi của người dùng thường xuyên cần thông tin từ hơn một nguồn, hoặc nếu bạn thấy system đang "confident sai" nhiều hơn "uncertain đúng" — đó là lúc cần nghĩ đến agentic approach. Nhưng mình chưa chắc đây là rule tổng quát hay chỉ phù hợp với context cụ thể của mình.</p>
+
+    <p>Bạn đã từng gặp vấn đề tương tự chưa? Mình tò mò về cách team khác xử lý cái "false confidence" problem này.</p>
+
+    <div class="closing">
+      <p class="sig">Viết lại và phóng tác từ ByteByteGo, tháng 3 năm 2025</p>
+    </div>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="claude-interpretability.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Claude không biết mình đang nghĩ gì</div>
+      </a>
+      <a class="post-nav-item next" href="using-ai-wrong.html">
+        <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
+        <div class="post-nav-title">Tôi đã dùng AI sai cách suốt gần một năm</div>
+      </a>
+    </nav>
+
+  </article>
+</main>
+
+<footer>
+  <div class="container">Nhật ký dev &middot; AI Engineering &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
