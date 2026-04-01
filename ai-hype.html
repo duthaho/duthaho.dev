@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI không phải phép màu — nhưng bạn đang bị ai đó cố tình làm bạn quên điều đó</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký dev</a>
+  <div class="topbar-tag">Góc nhìn phản biện</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / ai-hype</div>
+
+  <h1 class="page-title">AI không phải phép màu — <em>nhưng ai đó đang cố làm bạn quên điều đó</em></h1>
+  <p class="page-desc">Đọc một bài khá nặng tay về hype AI, có chỗ đồng ý, có chỗ không. Viết lại theo góc nhìn của người đang xây sản phẩm thật bằng AI thật.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 01/04/2026</span>
+      <span class="meta-item">🏷️ <strong>tag:</strong> Góc nhìn phản biện</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">ai-hype.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Cuối tuần vừa rồi mình đọc một bài trên Substack của David William Silva — tiêu đề theo kiểu "tôi tiếc khi phải nói điều này, nhưng bạn đang bị lừa về AI." Bài viết thẳng thắn đến mức gần như gây hấn. Nhưng phần lớn những gì anh viết, mình đã nghĩ nhưng không đủ dũng cảm để nói to.</p>
+
+            <p>Vấn đề là: bài đó đúng ở một số chỗ. Và sai — hoặc chí ít là thiếu sót — ở những chỗ quan trọng không kém. Mình không muốn chỉ đồng ý hoặc chỉ phản bác. Mình muốn nghĩ lại từ đầu, từ vị trí của người đang thực sự xây thứ gì đó bằng AI mỗi ngày.</p>
+
+            <h2>Cái máy tạo hype đang vận hành như thế nào</h2>
+
+            <p>Bài gốc phân tích ba nhân vật chính trong không gian AI public discourse, và mình thấy cách phân loại này khá sắc bén:</p>
+
+            <div class="finding-block">
+              <div class="finding-num">Tiếng nói tỉnh táo</div>
+              <div class="finding-title">Yann LeCun</div>
+              <p>Chief AI Scientist cũ của Meta, người đã nói đi nói lại rằng LLM là một ngõ cụt trên con đường đến trí tuệ thật sự. LLM giỏi dự đoán văn bản, nhưng không có causal reasoning, không có world model, không có cách nào hiểu thế giới theo nghĩa vật lý. Ông lập luận rằng không có lượng scaling nào — nhiều data hơn, nhiều compute hơn — có thể vượt qua giới hạn đó. Và Meta đã trả lời bằng cách đặt lab nghiên cứu của ông dưới quyền một người ông công khai gọi là "thiếu kinh nghiệm." LeCun rời Meta tháng 11/2025 để lập công ty riêng.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Chuyên gia gây quỹ</div>
+              <div class="finding-title">Sam Altman</div>
+              <p>Tác giả bài gốc không ngại: Sam Altman là fundraiser, không phải nhà khoa học. Khi anh ta tweet "tôi đang dùng sản phẩm của mình và nó tuyệt đến mức tôi cảm thấy vô dụng" — đó là marketing, không phải đánh giá kỹ thuật. OpenAI vẫn chưa có business model thực sự profitable, nhưng valuation tiếp tục phá kỷ lục. Điều đó không xảy ra bằng sự thật. Nó xảy ra bằng narrative.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Nhà nghiên cứu nghiêm túc</div>
+              <div class="finding-title">Dario Amodei</div>
+              <p>Tác giả đặt Dario vào nhóm người biết mình đang làm gì — physicist, researcher, người chọn xây structure và protocol thay vì đuổi theo AGI mơ hồ. Nhưng anh cũng nhận ra: khi competitor của bạn tuyên bố mỗi tuần về superintelligence sắp đến, bạn bị áp lực phải match energy hoặc bị coi là lạc hậu. Đó không phải vấn đề kỹ thuật. Đó là vấn đề truyền thông mà cả ngành đang phải chịu.</p>
+            </div>
+
+            <p>Và rồi có Geoffrey Hinton — Nobel Prize, "Godfather of AI," người hiểu kiến trúc hơn hầu hết ai còn sống, nhưng lại đang đưa ra những cảnh báo hiện sinh theo cách mà tác giả bài gốc gọi thẳng là "giúp ích cho hype." Khi người xây nền móng của deep learning nói AI có thể có ý thức, cả giới đầu tư reo hò. Đó là một slide pitch deck hoàn hảo. Dù đúng hay sai về mặt khoa học.</p>
+
+            <div class="pq">
+              <p>Người bán cho bạn viễn cảnh tận thế và người bán cho bạn thiên đường AI thường là cùng một người — và họ bán cùng một thứ: sự chú ý của bạn.</p>
+            </div>
+
+            <h2>Phần mình đồng ý nhất — và tại sao nó quan trọng với dev</h2>
+
+            <p>Tác giả bài gốc có một đoạn ngắn về cấu trúc kỹ thuật của AI mà mình nghĩ là cần được đọc bởi mọi người đang làm việc với AI:</p>
+
+            <p>Ở nền là toán học cơ bản: cộng, nhân, trung bình, xác suất. Trên đó là thống kê, đại số tuyến tính, và các ma trận số. Rồi là các thuật toán điều chỉnh những con số đó theo từng bước nhỏ mỗi khi model đoán sai. Đó là tất cả những gì "learning" có nghĩa. Bạn đưa vào lượng dữ liệu khổng lồ, máy tính lặp đi lặp lại hàng tỷ lần, dần dần tự điều chỉnh. Thêm hardware chạy cực nhanh, bạn có một model nhận dạng pattern và sinh ra dự đoán.</p>
+
+            <p>AI agent? Còn đơn giản hơn người ta nghĩ: một model cộng với một to-do list và một bộ công cụ. Nó đọc mục tiêu, chia thành bước, quyết định làm gì tiếp theo, dùng tool (search, email, code), kiểm tra kết quả. Không có "inner mind." Không có bí ẩn. Chỉ là conditional logic và vòng lặp có cấu trúc.</p>
+
+            <div class="callout">
+              <div class="callout-label">Tại sao điều này quan trọng với người xây sản phẩm</div>
+              <p>Khi bạn hiểu AI là gì về mặt kỹ thuật, bạn bắt đầu có expectations đúng. Bạn không kỳ vọng nó "hiểu" business logic phức tạp của bạn. Bạn không ngạc nhiên khi nó confident sai. Bạn biết khi nào nên dùng và khi nào không. Đó là sự khác biệt giữa người build sản phẩm AI thật sự hoạt động và người mãi loay hoay debug "tại sao AI của tôi không thông minh như tôi tưởng."</p>
+            </div>
+
+            <h2>Phần mình muốn phản biện lại</h2>
+
+            <p>Bài gốc có một đoạn về AI và brainstorming mà mình thấy thiếu sót đáng kể. Tác giả viết rằng mỗi khi ông có ý tưởng thật sự out-of-the-box, AI đều discourage ông. Và từ đó ông kết luận: AI về bản chất chỉ là "averaging what already exists" — thống kê về quá khứ giả dạng cửa sổ nhìn về tương lai.</p>
+
+            <p>Mình đồng ý với phần kỹ thuật. LLM đúng là không thể "sáng tạo" theo nghĩa tạo ra thứ hoàn toàn ngoài distribution nó đã thấy.</p>
+
+            <p>Nhưng kết luận thực tế thì sai.</p>
+
+            <div class="callout">
+              <div class="callout-label">Góc nhìn khác</div>
+              <p>Mình đã dùng AI để brainstorm hàng trăm lần trong năm qua. Và mình nhận ra: vấn đề không phải AI không sáng tạo. Vấn đề là cách mình đặt câu hỏi. Khi tôi hỏi "ý tưởng của tôi có tốt không?" — AI sẽ pattern-match với những thứ tương tự đã tồn tại và đánh giá theo distribution đó. Tất nhiên ý tưởng out-of-the-box sẽ bị đánh giá thấp.</p>
+              <p style="margin-top: 0.8rem !important">Nhưng khi tôi hỏi "giả sử ý tưởng này đúng, những vấn đề lớn nhất tôi cần giải quyết là gì?" — câu trả lời hoàn toàn khác. AI không được hỏi để đánh giá nữa. Nó được hỏi để giúp tôi nghĩ sâu hơn về thứ tôi đã quyết định pursue. Đó là sự khác biệt lớn.</p>
+            </div>
+
+            <h2>Cái mà bài gốc bỏ qua hoàn toàn</h2>
+
+            <p>Bài của David William Silva tập trung vào những người nói về AI — LeCun, Altman, Amodei, Hinton. Đây là những con người ở tầng C-suite, học thuật, hoặc đầu tư. Bài không nói gì về những người đang thực sự build với AI mỗi ngày.</p>
+
+            <p>Và mình nghĩ đó là một thiếu sót có ý nghĩa.</p>
+
+            <p>Vì nhìn từ vị trí của người build sản phẩm, AI — dù không phải phép màu — đang thay đổi thực sự cách mình làm việc. Không phải theo kiểu "AI sẽ thay thế lập trình viên." Mà theo kiểu cụ thể hơn: mình đang làm được những thứ mà hai năm trước tốn gấp ba lần thời gian. Không phải vì AI thông minh hơn mình. Mà vì nó giỏi xử lý đống boilerplate, tìm kiếm trong codebase lớn, và giải thích đoạn code của người khác — tất cả những việc tốn thời gian nhưng không đòi hỏi judgment thực sự.</p>
+
+            <div class="aside">
+              <p>Mình đặt tên cho sự phân biệt này là: AI thay thế công việc tốn thời gian nhưng không tạo ra giá trị cao. Nó không thay thế judgment, không thay thế hiểu biết về domain, không thay thế khả năng nhìn ra vấn đề thật sự của người dùng. Những thứ đó vẫn là của người. Và đó chính xác là những thứ bạn nên đầu tư thời gian để giỏi hơn.</p>
+            </div>
+
+            <h2>Vậy nên tin ai?</h2>
+
+            <p>Tác giả bài gốc đưa ra một heuristic đơn giản nhưng mình thấy khá hữu dụng: hỏi xem người đang nói có incentive tài chính trong việc bạn tin họ không.</p>
+
+            <p>Sam Altman nói AI sắp thay đổi mọi thứ? Anh ta đang raise fund cho OpenAI. Một VC nói AI là cơ hội thế kỷ? Họ đang cần LP tin để đổ tiền vào. Một AI influencer nói tool này thay đổi cuộc đời họ? Kiểm tra xem họ có affiliate link không.</p>
+
+            <p>Điều đó không có nghĩa là họ sai. Có thể họ đúng. Nhưng incentive của họ và incentive của bạn không align. Và khi incentive không align, bạn cần đọc thông tin của họ với một mức discount nhất định.</p>
+
+            <p>Ngược lại: những người không có gì để bán, những người thậm chí nói thứ không có lợi cho career của họ — như LeCun khi ông bác bỏ hướng đi mà cả ngành đang theo — đó là những giọng nói đáng nghe hơn, dù ít ồn ào hơn nhiều.</p>
+
+            <div class="pq">
+              <p>AI là thành tựu kỹ thuật ấn tượng. Không phải phép màu. Không phải tâm trí. Và sự khác biệt đó quan trọng — không phải để giảm bớt sự thú vị, mà để bạn dùng nó đúng cách.</p>
+            </div>
+
+            <h2>Điều mình vẫn không chắc</h2>
+
+            <p>Có một câu hỏi mà bài gốc đặt ra nhưng không trả lời, và mình cũng không có câu trả lời rõ: LeCun đúng đến đâu khi nói LLM là "ngõ cụt"?</p>
+
+            <p>Về mặt kỹ thuật, lập luận của ông thuyết phục. LLM không có world model. Nó không học từ physical interaction. Không có scaling nào cho bạn thứ bạn không train on. Tất cả những điều đó đúng.</p>
+
+            <p>Nhưng mình cũng nhớ rằng người ta đã nói nhiều thứ là "ngõ cụt" trước khi chúng không còn là ngõ cụt nữa. Deep learning bản thân nó từng bị coi là dead end trong nhiều năm. Và mình không đủ kiến thức để biết liệu sự tắc nghẽn của LLM có thể được bypass bằng kiến trúc mới, training objective khác, hay multimodal data theo cách chúng ta chưa thử — hay đây thực sự là giới hạn cơ bản không thể vượt qua.</p>
+
+            <p>Mình nghiêng về phía LeCun đúng về hướng đi dài hạn. Nhưng "dài hạn" trong AI có thể là 5 năm hoặc 50 năm, và mình không biết cái nào.</p>
+
+            <p>Đó là mức độ không chắc chắn trung thực nhất mình có thể đưa ra. Và mình nghĩ thừa nhận điều đó quan trọng hơn là chọn một phía và đứng vững.</p>
+
+            <div class="pq closing-quote">
+              <p>AI là thành tựu kỹ thuật ấn tượng. Không phải phép màu. Không phải tâm trí. Và sự khác biệt đó quan trọng — để bạn dùng nó đúng cách.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="using-ai-wrong.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Tôi đã dùng AI sai cách suốt gần một năm</div>
+              </a>
+              <div></div>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Góc nhìn phản biện &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
