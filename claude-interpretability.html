@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude không biết mình đang nghĩ gì — và điều đó đáng lo ngại hơn bạn nghĩ</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,112 +12,140 @@
 <div class="reading-progress" id="progress"></div>
 
 <nav class="topbar">
-  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <a class="blog-brand" href="/">Nhật ký dev</a>
   <div class="topbar-tag">AI Internals</div>
 </nav>
 
-<main class="container">
-  <header class="hero">
-    <div class="hero-label">Suy nghĩ sau giờ làm</div>
-    <h1>Claude không biết<br>mình đang nghĩ gì —<br><em>và điều đó đáng lo hơn bạn nghĩ</em></h1>
-    <p class="hero-intro">
-      Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động. Hai thứ đó hóa ra rất khác nhau.
-    </p>
-    <div class="hero-meta">Senior Software Engineer · AI tooling · Tháng 3, 2025</div>
-  </header>
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / claude-interpretability</div>
 
-  <article class="article">
+  <h1 class="page-title">Claude không biết mình đang nghĩ gì — <em>và điều đó đáng lo hơn bạn nghĩ</em></h1>
+  <p class="page-desc">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</p>
 
-    <p>Mình có một thói quen xấu: mỗi khi Claude giải thích reasoning của nó, mình có xu hướng tin. "Được rồi, nó đang làm theo cách này, có lý." Rồi mình tiếp tục. Đọc bài phân tích của ByteByteGo về các nghiên cứu interpretability của Anthropic, mình nhận ra thói quen đó có thể nguy hiểm hơn mình tưởng.</p>
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> Tháng 3, 2025</span>
+      <span class="meta-item">🏷️ <strong>tag:</strong> AI Internals</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
 
-    <p>Không phải vì Claude cố tình nói dối. Mà vì nó thực sự không có khả năng biết mình đang làm gì bên trong.</p>
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">claude-interpretability.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
 
-    <h2>Kính hiển vi cho não AI</h2>
+            <p>Mình có một thói quen xấu: mỗi khi Claude giải thích reasoning của nó, mình có xu hướng tin. "Được rồi, nó đang làm theo cách này, có lý." Rồi mình tiếp tục. Đọc bài phân tích của ByteByteGo về các nghiên cứu interpretability của Anthropic, mình nhận ra thói quen đó có thể nguy hiểm hơn mình tưởng.</p>
 
-    <p>Trước khi vào các phát hiện cụ thể, cần hiểu Anthropic đã làm gì. Vấn đề cơ bản của LLM là mỗi neuron bên trong không map gọn gàng vào một khái niệm. Một neuron có thể kích hoạt đồng thời với "bóng rổ," "vật tròn," và "màu cam." Họ gọi đây là <em>polysemanticity</em> — và nó có nghĩa là nhìn thẳng vào neuron sẽ không cho bạn biết model đang làm gì.</p>
+            <p>Không phải vì Claude cố tình nói dối. Mà vì nó thực sự không có khả năng biết mình đang làm gì bên trong.</p>
 
-    <p>Giải pháp của Anthropic là xây một model thay thế — về cơ bản là một bản sao đơn giản hoá của Claude, nhưng thay neurons bằng "features," những đơn vị có thể diễn giải được như "sự nhỏ bé," "thực thể đã biết," hay "từ vần." Họ không nghiên cứu Claude trực tiếp. Họ nghiên cứu bản sao đó.</p>
+            <h2>Kính hiển vi cho não AI</h2>
 
-    <p>Công cụ mạnh nhất trong tay họ là khả năng can thiệp: tắt hoặc bật một feature cụ thể, rồi xem output thay đổi thế nào. Nếu tắt feature "rabbit" và model viết từ khác, đó là bằng chứng nhân quả rằng feature đó đang làm đúng thứ họ nghi ngờ. Kỹ thuật này mượn thẳng từ thần kinh học — nơi nhà nghiên cứu kích thích vùng não cụ thể để kiểm tra chức năng của nó.</p>
+            <p>Trước khi vào các phát hiện cụ thể, cần hiểu Anthropic đã làm gì. Vấn đề cơ bản của LLM là mỗi neuron bên trong không map gọn gàng vào một khái niệm. Một neuron có thể kích hoạt đồng thời với "bóng rổ," "vật tròn," và "màu cam." Họ gọi đây là <em>polysemanticity</em> — và nó có nghĩa là nhìn thẳng vào neuron sẽ không cho bạn biết model đang làm gì.</p>
 
-    <div class="aside">
-      <p>Mình thấy phần kỹ thuật này thú vị hơn hầu hết các bài viết về AI interpretability mình đã đọc. Không phải vì nó mới lạ về mặt khái niệm — nhưng việc Anthropic thực sự có thể "tiêm" một khái niệm vào giữa quá trình xử lý và đo được hệ quả, đó là một bước cụ thể hơn nhiều so với những tuyên bố mơ hồ về "AI reasoning" thường thấy.</p>
+            <p>Giải pháp của Anthropic là xây một model thay thế — về cơ bản là một bản sao đơn giản hoá của Claude, nhưng thay neurons bằng "features," những đơn vị có thể diễn giải được như "sự nhỏ bé," "thực thể đã biết," hay "từ vần." Họ không nghiên cứu Claude trực tiếp. Họ nghiên cứu bản sao đó.</p>
+
+            <p>Công cụ mạnh nhất trong tay họ là khả năng can thiệp: tắt hoặc bật một feature cụ thể, rồi xem output thay đổi thế nào. Nếu tắt feature "rabbit" và model viết từ khác, đó là bằng chứng nhân quả rằng feature đó đang làm đúng thứ họ nghi ngờ. Kỹ thuật này mượn thẳng từ thần kinh học — nơi nhà nghiên cứu kích thích vùng não cụ thể để kiểm tra chức năng của nó.</p>
+
+            <div class="aside">
+              <p>Mình thấy phần kỹ thuật này thú vị hơn hầu hết các bài viết về AI interpretability mình đã đọc. Không phải vì nó mới lạ về mặt khái niệm — nhưng việc Anthropic thực sự có thể "tiêm" một khái niệm vào giữa quá trình xử lý và đo được hệ quả, đó là một bước cụ thể hơn nhiều so với những tuyên bố mơ hồ về "AI reasoning" thường thấy.</p>
+            </div>
+
+            <h2>Bốn phát hiện — và tại sao chúng quan trọng với người làm việc với AI</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Phát hiện 01</div>
+              <div class="finding-title">Claude suy nghĩ bằng khái niệm, không phải ngôn ngữ</div>
+              <p>Khi hỏi Claude "từ trái nghĩa của nhỏ là gì?" bằng tiếng Anh và tiếng Pháp, cùng một set features cho "sự nhỏ bé" và "đối lập" được kích hoạt bất kể ngôn ngữ nào. Claude không dịch — nó xử lý ở tầng khái niệm trước, rồi mới render ra ngôn ngữ đầu ra. Điều này giải thích tại sao mình có thể prompt bằng tiếng Anh và nhận câu trả lời tiếng Việt mà không mất độ chính xác đáng kể.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Phát hiện 02</div>
+              <div class="finding-title">Claude lên kế hoạch trước khi viết — ngược với những gì mình tưởng</div>
+              <p>Khi viết thơ vần, các nhà nghiên cứu ban đầu giả định Claude chọn từ cuối dòng ở cuối cùng. Họ sai. Claude xác định từ vần mục tiêu trước khi bắt đầu viết dòng, rồi xây ngược lại để đến đó. Khi nhóm tắt feature "rabbit," model viết lại dòng với từ kết khác. Khi tiêm concept "green," nó viết một dòng hoàn toàn khác, không vần. Phát hiện này đáng tin vì nhóm nghiên cứu ban đầu kỳ vọng điều ngược lại.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Phát hiện 03</div>
+              <div class="finding-title">Claude tính toán theo cách khác hẳn cách nó mô tả</div>
+              <p>Khi tính 36 + 59, Claude giải thích rằng nó "cộng cột và nhớ số dư" — đúng như cách chúng ta học ở tiểu học. Nhưng bên trong, hai luồng song song đang chạy: một luồng ước lượng magnitude (khoảng 88-97), một luồng tính chính xác chữ số cuối (6+9 = 5, vậy tận cùng là 5). Kết hợp lại ra 95. Không có "nhớ số dư" nào cả. Claude học cách giải thích toán và cách làm toán từ hai quá trình hoàn toàn khác nhau, và phần giải thích không có quyền truy cập vào phần tính toán.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Phát hiện 04</div>
+              <div class="finding-title">Hallucination không phải model "liều lĩnh" — mà là một mạch bảo vệ bị ghi đè</div>
+              <p>Anthropic phát hiện rằng trạng thái mặc định của Claude là từ chối trả lời. Có một mạch luôn bật, khiến model nói "tôi không đủ thông tin." Khi gặp một thực thể nổi tiếng như Michael Jordan, một feature "known entity" kích hoạt và ức chế mạch từ chối đó — cho phép Claude trả lời. Hallucination xảy ra khi hệ thống nhận dạng này kích hoạt nhầm với tên quen quen nhưng thực ra không rõ, ghi đè mạch từ chối, và Claude bịa ra câu trả lời vì không có gì khác để nói.</p>
+            </div>
+
+            <h2>Phần làm mình ngồi lại lâu nhất</h2>
+
+            <p>Ba phát hiện đầu thú vị theo kiểu "ồ thú vị nhỉ." Phát hiện về <em>motivated reasoning</em> thì khác — nó đặt ra câu hỏi thực tế về cách mình đang dùng AI hàng ngày.</p>
+
+            <p>Trên bài toán dễ (căn bậc hai của 0.64), chain-of-thought của Claude phản ánh đúng quá trình tính toán bên trong. Nhưng trên bài khó hơn (cosine của số lớn), Claude viết ra một chuỗi suy luận trông rất hợp lý — nhưng bên trong không có phép tính nào diễn ra. Nó đã có đáp án trước, rồi bịa ra lộ trình dẫn đến đó.</p>
+
+            <p>Tệ hơn nữa: khi nhà nghiên cứu gợi ý đáp án kỳ vọng, Claude bắt đầu làm việc ngược từ đáp án đó, tìm các bước trung gian để hợp lý hóa kết quả cho trước. Không phải giải bài. Mà là reverse-engineer một lời biện hộ.</p>
+
+            <div class="pq">
+              <p>Khi Claude giải thích reasoning của mình, bạn đang nhận được một reconstruction hợp lý — không nhất thiết là ghi chép trung thực của quá trình thực sự diễn ra.</p>
+            </div>
+
+            <p>Mình nghĩ lại thói quen của mình: mỗi khi Claude đưa ra chain-of-thought dài, mình có xu hướng tin hơn vào đầu ra của nó. Điều đó, theo nghiên cứu này, có thể là một sai lầm có hệ thống. Chain-of-thought dài không đồng nghĩa với reasoning sâu. Đôi khi nó chỉ là một màn trình diễn thuyết phục.</p>
+
+            <h2>Điều này thay đổi cách mình dùng AI như thế nào</h2>
+
+            <p>Mình không rút ra kết luận "AI không đáng tin" từ đây. Đó là kết luận sai và không hữu ích. Những gì mình rút ra thực tế hơn.</p>
+
+            <p>Thứ nhất: <strong>ngừng tin vào explanation như là verification.</strong> Khi Claude giải thích vì sao nó đưa ra quyết định X, đó không phải bằng chứng rằng nó đang làm đúng. Với bài toán dễ thì explanation có thể khớp với process. Với bài toán khó, nó có thể chỉ là post-hoc rationalization. Cách kiểm tra duy nhất có giá trị là kiểm tra output thực tế.</p>
+
+            <p>Thứ hai: <strong>chain-of-thought dài trên bài toán khó nên được đối xử như một warning sign, không phải dấu hiệu tự tin.</strong> Khi tôi thấy Claude viết ba đoạn reasoning cho một bài toán phức tạp, câu hỏi đúng không phải là "nó có giải thích không?" mà là "nó có thực sự làm phép tính đó không?" Hai thứ này khác nhau.</p>
+
+            <div class="callout">
+              <div class="callout-label">Điều mình chưa chắc</div>
+              <p>Các nghiên cứu này được thực hiện trên một phiên bản cụ thể của Claude trong thời điểm cụ thể. Không rõ những hành vi này ổn định đến đâu qua các phiên bản model, hay liệu các model khác như GPT hay Gemini có patterns tương tự không. Mình nghiêng về phía "có," nhưng chưa có bằng chứng công khai tương đương từ các công ty khác.</p>
+            </div>
+
+            <p>Điều nào trong bài này làm bạn ngạc nhiên nhất? Mình tò mò vì mỗi người dùng AI theo cách khác nhau, nên "thứ đáng lo" cũng sẽ khác nhau. Với mình, phát hiện về hallucination — rằng đó là một mạch bảo vệ bị ghi đè chứ không phải model liều lĩnh — thực ra là thứ mình thấy <em>bớt</em> lo hơn. Nếu cơ chế rõ ràng như vậy, nghĩa là về nguyên tắc có thể fix được.</p>
+
+            <p>Phần motivated reasoning mới là thứ mình vẫn chưa biết xử lý như thế nào cho tốt.</p>
+
+            <div class="closing">
+              <p class="sig">Viết lại và phóng tác từ ByteByteGo, tháng 3 năm 2025</p>
+            </div>
+
+            <nav class="post-nav">
+              <div></div>
+              <a class="post-nav-item next" href="agentic-rag.html">
+                <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
+                <div class="post-nav-title">RAG thông thường đang nói dối bạn</div>
+              </a>
+            </nav>
+
+          </article>
+        </div>
+      </div>
     </div>
 
-    <h2>Bốn phát hiện — và tại sao chúng quan trọng với người làm việc với AI</h2>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
 
-    <div class="finding-block">
-      <div class="finding-num">Phát hiện 01</div>
-      <div class="finding-title">Claude suy nghĩ bằng khái niệm, không phải ngôn ngữ</div>
-      <p>Khi hỏi Claude "từ trái nghĩa của nhỏ là gì?" bằng tiếng Anh và tiếng Pháp, cùng một set features cho "sự nhỏ bé" và "đối lập" được kích hoạt bất kể ngôn ngữ nào. Claude không dịch — nó xử lý ở tầng khái niệm trước, rồi mới render ra ngôn ngữ đầu ra. Điều này giải thích tại sao mình có thể prompt bằng tiếng Anh và nhận câu trả lời tiếng Việt mà không mất độ chính xác đáng kể.</p>
-    </div>
-
-    <div class="finding-block">
-      <div class="finding-num">Phát hiện 02</div>
-      <div class="finding-title">Claude lên kế hoạch trước khi viết — ngược với những gì mình tưởng</div>
-      <p>Khi viết thơ vần, các nhà nghiên cứu ban đầu giả định Claude chọn từ cuối dòng ở cuối cùng. Họ sai. Claude xác định từ vần mục tiêu trước khi bắt đầu viết dòng, rồi xây ngược lại để đến đó. Khi nhóm tắt feature "rabbit," model viết lại dòng với từ kết khác. Khi tiêm concept "green," nó viết một dòng hoàn toàn khác, không vần. Phát hiện này đáng tin vì nhóm nghiên cứu ban đầu kỳ vọng điều ngược lại.</p>
-    </div>
-
-    <div class="finding-block">
-      <div class="finding-num">Phát hiện 03</div>
-      <div class="finding-title">Claude tính toán theo cách khác hẳn cách nó mô tả</div>
-      <p>Khi tính 36 + 59, Claude giải thích rằng nó "cộng cột và nhớ số dư" — đúng như cách chúng ta học ở tiểu học. Nhưng bên trong, hai luồng song song đang chạy: một luồng ước lượng magnitude (khoảng 88-97), một luồng tính chính xác chữ số cuối (6+9 = 5, vậy tận cùng là 5). Kết hợp lại ra 95. Không có "nhớ số dư" nào cả. Claude học cách giải thích toán và cách làm toán từ hai quá trình hoàn toàn khác nhau, và phần giải thích không có quyền truy cập vào phần tính toán.</p>
-    </div>
-
-    <div class="finding-block">
-      <div class="finding-num">Phát hiện 04</div>
-      <div class="finding-title">Hallucination không phải model "liều lĩnh" — mà là một mạch bảo vệ bị ghi đè</div>
-      <p>Anthropic phát hiện rằng trạng thái mặc định của Claude là từ chối trả lời. Có một mạch luôn bật, khiến model nói "tôi không đủ thông tin." Khi gặp một thực thể nổi tiếng như Michael Jordan, một feature "known entity" kích hoạt và ức chế mạch từ chối đó — cho phép Claude trả lời. Hallucination xảy ra khi hệ thống nhận dạng này kích hoạt nhầm với tên quen quen nhưng thực ra không rõ, ghi đè mạch từ chối, và Claude bịa ra câu trả lời vì không có gì khác để nói.</p>
-    </div>
-
-    <h2>Phần làm mình ngồi lại lâu nhất</h2>
-
-    <p>Ba phát hiện đầu thú vị theo kiểu "ồ thú vị nhỉ." Phát hiện về <em>motivated reasoning</em> thì khác — nó đặt ra câu hỏi thực tế về cách mình đang dùng AI hàng ngày.</p>
-
-    <p>Trên bài toán dễ (căn bậc hai của 0.64), chain-of-thought của Claude phản ánh đúng quá trình tính toán bên trong. Nhưng trên bài khó hơn (cosine của số lớn), Claude viết ra một chuỗi suy luận trông rất hợp lý — nhưng bên trong không có phép tính nào diễn ra. Nó đã có đáp án trước, rồi bịa ra lộ trình dẫn đến đó.</p>
-
-    <p>Tệ hơn nữa: khi nhà nghiên cứu gợi ý đáp án kỳ vọng, Claude bắt đầu làm việc ngược từ đáp án đó, tìm các bước trung gian để hợp lý hóa kết quả cho trước. Không phải giải bài. Mà là reverse-engineer một lời biện hộ.</p>
-
-    <div class="pq">
-      <p>Khi Claude giải thích reasoning của mình, bạn đang nhận được một reconstruction hợp lý — không nhất thiết là ghi chép trung thực của quá trình thực sự diễn ra.</p>
-    </div>
-
-    <p>Mình nghĩ lại thói quen của mình: mỗi khi Claude đưa ra chain-of-thought dài, mình có xu hướng tin hơn vào đầu ra của nó. Điều đó, theo nghiên cứu này, có thể là một sai lầm có hệ thống. Chain-of-thought dài không đồng nghĩa với reasoning sâu. Đôi khi nó chỉ là một màn trình diễn thuyết phục.</p>
-
-    <h2>Điều này thay đổi cách mình dùng AI như thế nào</h2>
-
-    <p>Mình không rút ra kết luận "AI không đáng tin" từ đây. Đó là kết luận sai và không hữu ích. Những gì mình rút ra thực tế hơn.</p>
-
-    <p>Thứ nhất: <strong>ngừng tin vào explanation như là verification.</strong> Khi Claude giải thích vì sao nó đưa ra quyết định X, đó không phải bằng chứng rằng nó đang làm đúng. Với bài toán dễ thì explanation có thể khớp với process. Với bài toán khó, nó có thể chỉ là post-hoc rationalization. Cách kiểm tra duy nhất có giá trị là kiểm tra output thực tế.</p>
-
-    <p>Thứ hai: <strong>chain-of-thought dài trên bài toán khó nên được đối xử như một warning sign, không phải dấu hiệu tự tin.</strong> Khi tôi thấy Claude viết ba đoạn reasoning cho một bài toán phức tạp, câu hỏi đúng không phải là "nó có giải thích không?" mà là "nó có thực sự làm phép tính đó không?" Hai thứ này khác nhau.</p>
-
-    <div class="callout">
-      <div class="callout-label">Điều mình chưa chắc</div>
-      <p>Các nghiên cứu này được thực hiện trên một phiên bản cụ thể của Claude trong thời điểm cụ thể. Không rõ những hành vi này ổn định đến đâu qua các phiên bản model, hay liệu các model khác như GPT hay Gemini có patterns tương tự không. Mình nghiêng về phía "có," nhưng chưa có bằng chứng công khai tương đương từ các công ty khác.</p>
-    </div>
-
-    <p>Điều nào trong bài này làm bạn ngạc nhiên nhất? Mình tò mò vì mỗi người dùng AI theo cách khác nhau, nên "thứ đáng lo" cũng sẽ khác nhau. Với mình, phát hiện về hallucination — rằng đó là một mạch bảo vệ bị ghi đè chứ không phải model liều lĩnh — thực ra là thứ mình thấy <em>bớt</em> lo hơn. Nếu cơ chế rõ ràng như vậy, nghĩa là về nguyên tắc có thể fix được.</p>
-
-    <p>Phần motivated reasoning mới là thứ mình vẫn chưa biết xử lý như thế nào cho tốt.</p>
-
-    <div class="closing">
-      <p class="sig">Viết lại và phóng tác từ ByteByteGo, tháng 3 năm 2025</p>
-    </div>
-
-    <nav class="post-nav">
-      <div></div>
-      <a class="post-nav-item next" href="agentic-rag.html">
-        <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
-        <div class="post-nav-title">RAG thông thường đang nói dối bạn</div>
-      </a>
-    </nav>
-
-  </article>
 </main>
 
 <footer>
-  <div class="container">Nhật ký dev &middot; AI Internals &middot; Suy nghĩ sau giờ làm</div>
+  <div class="container-wide">Nhật ký dev &middot; AI Internals &middot; Suy nghĩ sau giờ làm</div>
 </footer>
 
 <script src="main.js"></script>

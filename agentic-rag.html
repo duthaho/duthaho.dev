@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,21 +12,42 @@
 <div class="reading-progress" id="progress"></div>
 
 <nav class="topbar">
-  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <a class="blog-brand" href="/">Nhật ký dev</a>
   <div class="topbar-tag">AI Engineering</div>
 </nav>
 
-<main class="container">
-  <header class="hero">
-    <div class="hero-label">Suy nghĩ sau giờ làm</div>
-    <h1>RAG thông thường<br><em>đang nói dối bạn</em></h1>
-    <p class="hero-intro">
-      Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu. Không phải lỗi của RAG — mà là mình đã kỳ vọng sai thứ.
-    </p>
-    <div class="hero-meta">Senior Software Engineer · AI tooling · Tháng 3, 2025</div>
-  </header>
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / agentic-rag</div>
 
-  <article class="article">
+  <h1 class="page-title">RAG thông thường <em>đang nói dối bạn</em></h1>
+  <p class="page-desc">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> Tháng 3, 2025</span>
+      <span class="meta-item">🏷️ <strong>tag:</strong> AI Engineering</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">agentic-rag.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
 
     <p>Khoảng sáu tháng trước, team mình build một chatbot nội bộ dùng RAG — mục tiêu là để nhân viên hỏi về policy công ty mà không cần lục tung Google Drive. Về mặt kỹ thuật, nó hoạt động. Embedding, vector database, LLM, xong. Demo thì mượt. Nhưng sau hai tuần đưa vào dùng thật, phản hồi bắt đầu về: "nó trả lời sai," "nó trả lời câu không ai hỏi," và câu phổ biến nhất: "mình hỏi X nhưng nó trả lời Y một cách rất tự tin."</p>
 
@@ -125,11 +146,16 @@ Câu hỏi ──▶ Agent ──▶ Viết lại / phân tích câu hỏi
       </a>
     </nav>
 
-  </article>
+          </article>
+        </div>
+      </div>
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
 </main>
 
 <footer>
-  <div class="container">Nhật ký dev &middot; AI Engineering &middot; Suy nghĩ sau giờ làm</div>
+  <div class="container-wide">Nhật ký dev &middot; AI Engineering &middot; Suy nghĩ sau giờ làm</div>
 </footer>
 
 <script src="main.js"></script>

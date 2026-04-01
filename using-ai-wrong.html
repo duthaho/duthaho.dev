@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tôi đã dùng AI sai cách suốt một năm</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,21 +12,42 @@
 <div class="reading-progress" id="progress"></div>
 
 <nav class="topbar">
-  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <a class="blog-brand" href="/">Nhật ký dev</a>
   <div class="topbar-tag">Góc nhìn cá nhân</div>
 </nav>
 
-<main class="container">
-  <header class="hero">
-    <div class="hero-label">Suy nghĩ sau giờ làm</div>
-    <h1>Tôi đã dùng AI sai cách<br><em>suốt gần một năm</em></h1>
-    <p class="hero-intro">
-      Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả. Ghi lại đây để nhớ — và phòng ai đang bị tương tự.
-    </p>
-    <div class="hero-meta">Senior Software Engineer · 5 năm trong nghề · Tháng 3, 2025</div>
-  </header>
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / using-ai-wrong</div>
 
-  <article class="article">
+  <h1 class="page-title">Tôi đã dùng AI sai cách <em>suốt gần một năm</em></h1>
+  <p class="page-desc">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> Tháng 3, 2025</span>
+      <span class="meta-item">🏷️ <strong>tag:</strong> Góc nhìn cá nhân</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">using-ai-wrong.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
 
     <p>Tuần trước mình đọc một bài của một Staff Engineer người Mỹ — anh này làm ở Meta, viết về cách anh ta dùng AI để code. Ban đầu định đọc lướt rồi thôi. Nhưng đọc đến đoạn anh mô tả "tutorial hell 2.0", mình phải dừng lại. Không phải vì hay. Mà vì anh đang mô tả chính xác những gì mình đã làm trong gần một năm qua.</p>
 
@@ -103,11 +124,16 @@
       <div></div>
     </nav>
 
-  </article>
+          </article>
+        </div>
+      </div>
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
 </main>
 
 <footer>
-  <div class="container">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
 </footer>
 
 <script src="main.js"></script>

@@ -105,7 +105,117 @@ body::after {
   padding: 0 1.5rem;
 }
 
-/* ── Hero Section ─────────────────────────────── */
+/* ── Breadcrumb ───────────────────────────────── */
+.breadcrumb {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  padding: 1.5rem 0.8rem;
+  margin: 1.5rem 0 0;
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-weight: 500;
+}
+
+.breadcrumb a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* ── Page Title (above cards) ─────────────────── */
+.page-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--text-bright);
+  margin: 2rem 0 0.8rem;
+}
+
+.page-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.page-desc {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 640px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Meta Card (git log style) ────────────────── */
+.meta-card {
+  margin-bottom: 1.5rem;
+}
+
+.meta-card .terminal-header {
+  background: var(--bg-cool);
+}
+
+.meta-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding: 1rem 1.2rem !important;
+}
+
+.meta-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.meta-item strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ── Article Layout (content + sidebar) ───────── */
+.article-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1080px) {
+  .article-layout {
+    grid-template-columns: 1fr 220px;
+  }
+}
+
+.article-main {
+  min-width: 0;
+}
+
+/* ── Content Card ─────────────────────────────── */
+.content-body {
+  padding: 2.2rem 2.5rem !important;
+}
+
+/* ── Sidebar ToC ──────────────────────────────── */
+.article-sidebar {
+  display: none;
+}
+
+@media (min-width: 1080px) {
+  .article-sidebar {
+    display: block;
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+  }
+}
+
+/* ── Hero Section (fallback for pages without card) ── */
 .hero {
   padding: 5rem 0 3rem;
   border-bottom: 1px solid var(--border);
@@ -421,72 +531,115 @@ footer {
 
 
 /* ═══════════════════════════════════════════════
-   INDEX PAGE — Post Listing
+   INDEX PAGE — Terminal Card Layout
    ═══════════════════════════════════════════════ */
 
-/* ── Index Hero ───────────────────────────────── */
-.index-hero {
-  padding: 6rem 0 2.5rem;
-  position: relative;
+.container-wide {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-.index-hero h1 {
-  font-size: clamp(2.4rem, 6vw, 3.8rem);
+/* ── Terminal Card ────────────────────────────── */
+.terminal-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  background: var(--bg-cool);
+  border-bottom: 1px solid var(--border);
+  min-height: 36px;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.red    { background: #f5655b; }
+.dot.yellow { background: #f6bd3b; }
+.dot.green  { background: #3cc84a; }
+
+.terminal-filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.terminal-status {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.terminal-body {
+  padding: 1.8rem 2rem;
+}
+
+/* ── Hero Card ────────────────────────────────── */
+.hero-card {
+  margin: 3rem 0 2rem;
+}
+
+.hero-body h1 {
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
   margin-bottom: 1rem;
   letter-spacing: -0.03em;
 }
 
-.index-hero .hero-intro {
+.hero-body .hero-intro {
   margin-bottom: 0;
 }
 
-.index-hero::after {
-  content: '';
-  display: block;
-  width: 3rem;
-  height: 2px;
-  background: var(--accent);
-  margin-top: 2.5rem;
-  opacity: 0.5;
+/* ── Posts Grid ───────────────────────────────── */
+.posts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+  padding-bottom: 5rem;
 }
 
-/* ── Post List ────────────────────────────────── */
-.posts {
-  padding: 1rem 0 5rem;
-}
-
+/* ── Post Card (inside terminal card) ─────────── */
 .post-card {
   display: block;
   text-decoration: none;
   color: inherit;
-  padding: 2.5rem 0;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .post-card:hover {
-  transform: translateX(4px);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
 }
 
 .post-card:hover .post-title {
   color: var(--accent);
 }
 
-.post-card:hover .post-num {
-  color: var(--accent);
-  opacity: 1;
+.post-card:hover .terminal-header {
+  border-bottom-color: var(--accent);
 }
 
-.post-num {
-  font-family: 'Lora', serif;
-  font-size: 0.75rem;
-  color: var(--text-faint);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.8rem;
-  font-weight: 700;
-  opacity: 0.6;
-  transition: all 0.25s ease;
+.post-card:hover .dot.green {
+  box-shadow: 0 0 6px rgba(60,200,74,0.4);
 }
 
 .post-tag {
@@ -496,62 +649,38 @@ footer {
   text-transform: uppercase;
   color: var(--accent);
   font-weight: 700;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.8rem;
   display: inline-block;
 }
 
 .post-title {
   font-family: 'Lora', serif;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-bright);
   line-height: 1.3;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.7rem;
   transition: color 0.25s ease;
   letter-spacing: -0.01em;
 }
 
 .post-excerpt {
   color: var(--text-dim);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.75;
-  margin-bottom: 1rem;
-  max-width: 580px;
 }
 
-.post-meta {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 11px;
-  color: var(--text-faint);
-  letter-spacing: 0.06em;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  font-weight: 500;
+@media (min-width: 700px) {
+  .posts-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
 }
 
-.post-meta::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-/* ── Featured Post (first card) ───────────────── */
-.post-card.featured {
-  padding: 3rem 0;
-}
-
-.post-card.featured .post-title {
-  font-size: 1.8rem;
-  line-height: 1.25;
-}
-
-.post-card.featured .post-excerpt {
-  font-size: 0.95rem;
-  max-width: 600px;
+@media (max-width: 699px) {
+  .terminal-body { padding: 1.4rem 1.2rem; }
+  .post-title { font-size: 1.15rem; }
+  .hero-card { margin: 2rem 0 1.5rem; }
 }
 
 
@@ -593,63 +722,50 @@ footer {
 
 
 /* ═══════════════════════════════════════════════
-   Table of Contents — Sidebar
+   Table of Contents — Inside Terminal Card
    ═══════════════════════════════════════════════ */
 
-.toc {
-  display: none;
+.toc-body {
+  padding: 1rem 1.2rem !important;
 }
 
-@media (min-width: 1080px) {
-  .toc {
-    display: block;
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    right: calc((100vw - 680px) / 2 - 260px);
-    width: 200px;
-    z-index: 50;
-  }
+.toc-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
 
-  .toc-title {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    font-weight: 700;
-    margin-bottom: 1rem;
-    padding-left: 0.75rem;
-  }
+.toc-list {
+  list-style: none;
+  border-left: 1px solid var(--border);
+}
 
-  .toc-list {
-    list-style: none;
-    border-left: 1px solid var(--border);
-  }
+.toc-link {
+  display: block;
+  padding: 0.3rem 0 0.3rem 0.7rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-faint);
+  text-decoration: none;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  transition: all 0.2s ease;
+}
 
-  .toc-link {
-    display: block;
-    padding: 0.35rem 0 0.35rem 0.75rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--text-faint);
-    text-decoration: none;
-    line-height: 1.4;
-    border-left: 2px solid transparent;
-    margin-left: -1px;
-    transition: all 0.2s ease;
-  }
+.toc-link:hover {
+  color: var(--text-dim);
+}
 
-  .toc-link:hover {
-    color: var(--text-dim);
-  }
-
-  .toc-link.active {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    font-weight: 600;
-  }
+.toc-link.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
 }
 
 
@@ -731,16 +847,19 @@ footer {
   .pq { margin: 2rem 0; padding: 1.3rem 1.5rem; }
   .pq::before { font-size: 3.5rem; top: -0.3rem; left: 0.5rem; }
   .pq p { font-size: 1.05rem; }
-  .post-card.featured .post-title { font-size: 1.4rem; }
-  .post-title { font-size: 1.25rem; }
+  .post-title { font-size: 1.15rem; }
   .diagram { font-size: 0.65rem; padding: 1rem; }
   .callout, .finding-block { padding: 1.2rem 1.4rem; }
   .article p:first-of-type::first-letter { font-size: 3.5em; }
   .closing { margin-top: 3rem; }
+  .breadcrumb { font-size: 0.7rem; padding: 1rem 0.7rem; margin: 1rem 0 0; }
+  .article-hero-card .terminal-body { padding: 1.8rem 1.4rem; }
+  .terminal-filename { font-size: 0.7rem; }
+  .terminal-status { display: none; }
 }
 
 @media (max-width: 400px) {
-  .container { padding: 0 1rem; }
+  .container, .container-wide { padding: 0 1rem; }
   h1 { font-size: 1.7rem; }
   .hero-intro { font-size: 0.95rem; }
 }

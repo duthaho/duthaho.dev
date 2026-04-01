@@ -4,53 +4,96 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nhật ký dev — Suy nghĩ sau giờ làm</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav class="topbar">
-  <a class="blog-brand" href="index.html">Nhật ký dev</a>
+  <a class="blog-brand" href="/">Nhật ký dev</a>
   <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
 </nav>
 
-<main class="container">
-  <header class="index-hero">
-    <div class="hero-label">Blog cá nhân</div>
-    <h1>Nhật ký dev</h1>
-    <p class="hero-intro">
-      Những suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.
-    </p>
-  </header>
+<main class="container-wide">
 
-  <section class="posts reveal-stagger">
+  <div class="terminal-card hero-card reveal">
+    <div class="terminal-header">
+      <div class="terminal-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="terminal-filename">about.md</span>
+      <span class="terminal-status">~/blog</span>
+    </div>
+    <div class="terminal-body hero-body">
+      <div class="hero-label">Blog cá nhân</div>
+      <h1>Nhật ký dev</h1>
+      <p class="hero-intro">
+        Những suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.
+      </p>
+    </div>
+  </div>
 
-    <a class="post-card featured reveal" href="claude-interpretability.html">
-      <div class="post-tag">AI Internals</div>
-      <div class="post-title">Claude không biết mình đang nghĩ gì — và điều đó đáng lo hơn bạn nghĩ</div>
-      <p class="post-excerpt">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động. Hai thứ đó hóa ra rất khác nhau.</p>
-      <div class="post-meta">Tháng 3, 2025</div>
+  <section class="posts-grid reveal-stagger">
+
+    <a class="terminal-card post-card reveal" href="claude-interpretability.html">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="terminal-filename">claude-interpretability.md</span>
+        <span class="terminal-status">Tháng 3, 2025</span>
+      </div>
+      <div class="terminal-body">
+        <div class="post-tag">AI Internals</div>
+        <div class="post-title">Claude không biết mình đang nghĩ gì — và điều đó đáng lo hơn bạn nghĩ</div>
+        <p class="post-excerpt">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</p>
+      </div>
     </a>
 
-    <a class="post-card reveal" href="agentic-rag.html">
-      <div class="post-tag">AI Engineering</div>
-      <div class="post-title">RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</div>
-      <p class="post-excerpt">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu. Không phải lỗi của RAG — mà là mình đã kỳ vọng sai thứ.</p>
-      <div class="post-meta">Tháng 3, 2025</div>
+    <a class="terminal-card post-card reveal" href="agentic-rag.html">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="terminal-filename">agentic-rag.md</span>
+        <span class="terminal-status">Tháng 3, 2025</span>
+      </div>
+      <div class="terminal-body">
+        <div class="post-tag">AI Engineering</div>
+        <div class="post-title">RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</div>
+        <p class="post-excerpt">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</p>
+      </div>
     </a>
 
-    <a class="post-card reveal" href="using-ai-wrong.html">
-      <div class="post-tag">Góc nhìn cá nhân</div>
-      <div class="post-title">Tôi đã dùng AI sai cách suốt gần một năm</div>
-      <p class="post-excerpt">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả. Ghi lại đây để nhớ — và phòng ai đang bị tương tự.</p>
-      <div class="post-meta">Tháng 3, 2025</div>
+    <a class="terminal-card post-card reveal" href="using-ai-wrong.html">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="terminal-filename">using-ai-wrong.md</span>
+        <span class="terminal-status">Tháng 3, 2025</span>
+      </div>
+      <div class="terminal-body">
+        <div class="post-tag">Góc nhìn cá nhân</div>
+        <div class="post-title">Tôi đã dùng AI sai cách suốt gần một năm</div>
+        <p class="post-excerpt">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</p>
+      </div>
     </a>
 
   </section>
+
 </main>
 
 <footer>
-  <div class="container">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
 </footer>
 
 <script src="main.js"></script>

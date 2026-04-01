@@ -17,31 +17,37 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
 // ── Reading time ─────────────────────────────────
 const article = document.querySelector('.article');
-const metaEl = document.querySelector('.hero-meta');
-if (article && metaEl) {
+const readingTimeEl = document.getElementById('reading-time');
+if (article && readingTimeEl) {
   const words = article.textContent.trim().split(/\s+/).length;
   const minutes = Math.max(1, Math.round(words / 200));
-  const span = document.createElement('span');
-  span.textContent = minutes + ' phút đọc';
-  metaEl.appendChild(span);
+  readingTimeEl.textContent = minutes + ' phút';
 }
 
-// ── Table of Contents ────────────────────────────
-if (article) {
+// ── Table of Contents (terminal card in sidebar) ─
+const tocSidebar = document.getElementById('toc-sidebar');
+if (article && tocSidebar) {
   const headings = article.querySelectorAll('h2');
   if (headings.length > 1) {
-    // Build ToC element
-    const toc = document.createElement('nav');
-    toc.className = 'toc';
-    toc.setAttribute('aria-label', 'Mục lục');
+    // Build terminal card
+    const card = document.createElement('div');
+    card.className = 'terminal-card';
 
-    const tocTitle = document.createElement('div');
-    tocTitle.className = 'toc-title';
-    tocTitle.textContent = 'Mục lục';
-    toc.appendChild(tocTitle);
+    const header = document.createElement('div');
+    header.className = 'terminal-header';
+    header.innerHTML = '<div class="terminal-dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div><span class="terminal-filename">toc.md</span>';
+    card.appendChild(header);
 
-    const tocList = document.createElement('ul');
-    tocList.className = 'toc-list';
+    const body = document.createElement('div');
+    body.className = 'terminal-body toc-body';
+
+    const title = document.createElement('div');
+    title.className = 'toc-title';
+    title.textContent = 'Mục lục';
+    body.appendChild(title);
+
+    const list = document.createElement('ul');
+    list.className = 'toc-list';
 
     headings.forEach((h, i) => {
       const id = 'section-' + i;
@@ -53,20 +59,20 @@ if (article) {
       a.textContent = h.textContent;
       a.className = 'toc-link';
       li.appendChild(a);
-      tocList.appendChild(li);
+      list.appendChild(li);
     });
 
-    toc.appendChild(tocList);
-    document.body.appendChild(toc);
+    body.appendChild(list);
+    card.appendChild(body);
+    tocSidebar.appendChild(card);
 
     // Active section tracking
-    const tocLinks = toc.querySelectorAll('.toc-link');
+    const tocLinks = card.querySelectorAll('.toc-link');
     const sectionObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) {
           tocLinks.forEach(l => l.classList.remove('active'));
-          const id = e.target.id;
-          const active = toc.querySelector('a[href="#' + id + '"]');
+          const active = card.querySelector('a[href="#' + e.target.id + '"]');
           if (active) active.classList.add('active');
         }
       });
