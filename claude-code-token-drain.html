@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hai dòng code ẩn khiến Claude Code ngốn token gấp 4 lần — và cái kết không ai ngờ</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký dev</a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / claude-code-token-drain</div>
+
+  <h1 class="page-title">Hai dòng code ẩn khiến Claude Code ngốn token <em>gấp bốn lần — và cái kết không ai ngờ</em></h1>
+  <p class="page-desc">Một người dùng Reddit reverse-engineer minified source code của Claude Code, tìm ra bug caching khiến token drain về đêm, và patch nó bằng đúng hai dòng.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 02/04/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">claude-code-token-drain.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Mình dùng Claude Code hàng ngày. Và trong vài tuần gần đây, mình có cảm giác usage limit của mình đang bị ăn nhanh hơn bình thường — đặc biệt vào các session dài, khi mình resume lại conversation cũ. Cứ tưởng do mình dùng nhiều hơn. Hóa ra không phải. Có một bug thực sự trong Claude Code đã ngầm phá vỡ caching mechanism mỗi lần bạn resume session, khiến toàn bộ conversation phải rebuild từ đầu dưới dạng cache creation tokens thay vì cache read. Và một người dùng Reddit vừa tìm ra nó — với sự trợ giúp của Codex, không phải Claude, vì anh ta đã hết quota trước khi kịp dùng Claude để debug.</p>
+
+            <p>Trớ trêu theo một cách rất đặc trưng của nghề này.</p>
+
+            <h2>Cơ chế caching hoạt động như thế nào — và tại sao nó quan trọng</h2>
+
+            <p>Để hiểu bug này, cần hiểu sơ qua về prompt caching của Anthropic. Khi bạn gửi một request đến Claude, toàn bộ conversation history phải được đưa vào context — system prompt, lịch sử tin nhắn, tool definitions. Đây là input tokens, và bạn trả tiền cho chúng.</p>
+
+            <p>Prompt caching giải quyết vấn đề này bằng cách lưu một "cache prefix" — phần đầu của conversation mà ít thay đổi nhất. Lần sau khi bạn gửi request, thay vì process lại toàn bộ, Claude chỉ cần đọc từ cache cho phần đã lưu (<code>cache_read_input_tokens</code>) và chỉ process phần mới (<code>cache_creation_input_tokens</code>). Cache read rẻ hơn cache creation khoảng mười lần.</p>
+
+            <p>Trong một session khỏe mạnh, sau vài turn đầu, tỉ lệ cache read nên chiếm phần lớn. Đây là những gì OP đo được trên stock Claude Code:</p>
+
+            <div class="diagram"><span class="diagram-label">Cache ratio — TRƯỚC khi patch (stock Claude Code)</span>
+Turn  1:  cache_read: 15,451   cache_creation:  7,473   ratio: 67%
+Turn  5:  cache_read: 15,451   cache_creation: 16,881   ratio: 48%
+Turn 10:  cache_read: 15,451   cache_creation: 35,006   ratio: 31%
+Turn 15:  cache_read: 15,451   cache_creation: 42,970   ratio: 26%
+
+cache_read kẹt cứng ở 15,451 — chỉ system prompt được cache.
+Mọi thứ khác: full-price token processing.</div>
+
+            <div class="diagram"><span class="diagram-label">Cache ratio — SAU khi patch</span>
+Turn 1 (resume):  cache_read:  7,208   cache_creation: 49,748   ratio: 13%  ← structural reset
+Turn 2:           cache_read: 56,956   cache_creation:    728   ratio: 99%
+Turn 3:           cache_read: 57,684   cache_creation:    611   ratio: 99%</div>
+
+            <p>26% lên 99%. Đó là khoảng cách giữa session bình thường và session bị bug.</p>
+
+            <h2>Bug nằm ở đâu — và tại sao nó âm thầm đến vậy</h2>
+
+            <p>Claude Code lưu lịch sử conversation vào các file JSONL trong <code>~/.claude/projects/</code>. Có một hàm trong minified source — được obfuscate thành tên <code>db8</code> — chịu trách nhiệm lọc những gì được ghi vào file đó. Và hàm này có một lỗ hổng nhỏ nhưng chết người.</p>
+
+            <p>Với user không phải Anthropic internal, <code>db8</code> strip ra toàn bộ message có type là <code>attachment</code>. Nghe có vẻ vô hại — attachment thường là file đính kèm, không cần lưu vào session history. Nhưng cùng chung type <code>attachment</code> đó còn có các record <code>deferred_tools_delta</code> — những bản ghi theo dõi xem tool nào đã được announce với model.</p>
+
+            <div class="diagram"><span class="diagram-label">Hàm db8 gốc — minified</span>
+function db8(A){
+  if(A.type==="attachment"&&ss1()!=="ant"){
+    if(A.attachment.type==="hook_additional_context"
+      &&a6(process.env.CLAUDE_CODE_SAVE_HOOK_ADDITIONAL_CONTEXT))
+      return!0;
+    return!1  // ← drops EVERYTHING else, kể cả deferred_tools_delta
+  }
+  if(A.type==="progress"&&Ns6(A.data?.type))return!1;
+  return!0
+}</div>
+
+            <p>Khi bạn resume một session, Claude Code đọc lại file JSONL để xem "tôi đã announce những tool nào cho model rồi?" Nhưng vì <code>db8</code> đã xóa toàn bộ <code>deferred_tools_delta</code> khỏi file đó, nó không tìm thấy gì. Kết quả: nó re-announce toàn bộ tool từ đầu, mỗi lần resume.</p>
+
+            <p>Điều này phá vỡ cache prefix theo ba cách cùng lúc. System reminder vốn ở vị trí đầu conversation trong session mới bây giờ lại nằm ở giữa. Billing hash thay đổi vì nội dung message đầu tiên khác đi. Cache breakpoint dịch chuyển vì mảng message có độ dài khác. Ba cái đó cộng lại: toàn bộ conversation phải rebuild từ đầu, mỗi lần resume.</p>
+
+            <div class="callout">
+              <div class="callout-label">Fix — đúng hai dòng</div>
+              <p>Patch chỉ cần thêm hai type vào allowlist của <code>db8</code>, trước dòng <code>return!1</code>:</p>
+              <p><code>if(A.attachment.type==="deferred_tools_delta")return!0;</code></p>
+              <p><code>if(A.attachment.type==="mcp_instructions_delta")return!0;</code></p>
+              <p>Vậy là các deferred tool announcement tồn tại trong session file. Lần resume tiếp theo, delta computation thấy "tôi đã announce những cái này rồi" và không re-emit lại. Cache prefix giữ nguyên.</p>
+            </div>
+
+            <p>Còn một bug thứ hai liên quan đến binary standalone của Claude Code — nó dùng một custom Bun fork và rewrite một sentinel value <code>cch=00000</code> trong mọi outgoing API request. Nếu conversation của bạn tình cờ chứa chuỗi đó, nó phá vỡ cache prefix. Chạy qua <code>node cli.js</code> thay vì binary loại bỏ vấn đề này hoàn toàn.</p>
+
+            <h2>Phần mà cộng đồng Reddit bắt đầu nổi loạn</h2>
+
+            <p>Đây là lúc câu chuyện rẽ theo hướng mình không ngờ.</p>
+
+            <p>Boris Cherny — developer từ Anthropic, người tạo ra Claude Code — xuất hiện trong thread và xác nhận bug là thật và sẽ được patch trong release tiếp theo. Tin tốt. Nhưng ông cũng nói thêm: đây là "<1% win" về token usage, không phải silver bullet cho usage limit.</p>
+
+            <div class="aside">
+              <p>"So Anthropic intentionally leaked their source code to crowdsource QA and bug fixes from their user base for free. All our software engineers aren't writing code anymore — they're getting users to do it for them." — Top comment, r/ClaudeAI</p>
+            </div>
+
+            <p>Mình cười, nhưng cũng hiểu tại sao người ta nói vậy. Nhưng đó chưa phải phần thú vị nhất.</p>
+
+            <p>Phần thú vị nhất: repo GitHub mà OP link tới <em>không chỉ</em> chứa patch cho bug caching. Nó còn bao gồm một patch riêng để <strong>bypass billing controls của Anthropic</strong> bằng cách force một 1-hour cache TTL. Điều này không được đề cập trong bài post gốc.</p>
+
+            <div class="callout">
+              <div class="callout-label">Cảnh báo từ cộng đồng</div>
+              <p>Nhiều người trong thread đã chỉ ra rằng việc apply repo đó như-là vi phạm ToS của Anthropic — reverse engineering <em>và</em> bypass billing controls. Anthropic đã ban account người dùng vì những hành vi tương tự trong quá khứ.</p>
+              <p>Bug caching là thật và đáng được fix. Nhưng repo của OP bao gồm nhiều hơn mức cần thiết để fix bug đó. Nếu bạn muốn áp dụng patch, bạn cần đọc kỹ từng thay đổi trước khi chạy bất cứ thứ gì.</p>
+            </div>
+
+            <h2>Cái mình thực sự suy nghĩ sau chuyện này</h2>
+
+            <p>Có vài lớp đáng nói ở đây, không chỉ về bug.</p>
+
+            <p>Thứ nhất: việc một user tự tay reverse-engineer minified CLI code của một công ty, tìm ra bug thực sự, và post bằng chứng cụ thể kèm số liệu đo được — đó là engineering tốt. Mình tôn trọng điều đó, bất kể anh ta dùng Codex thay vì Claude để làm nó. Cách anh present data — so sánh cache ratio theo từng turn, trước và sau patch — rõ ràng hơn nhiều documentation bug report mình từng thấy trong nội bộ công ty.</p>
+
+            <p>Thứ hai: Boris Cherny confirm bug nhưng nói đây là "<1% win" — mình nghĩ con số đó misleading theo một nghĩa quan trọng. <em>Về tổng token usage</em>, có thể đúng. Nhưng nếu bạn là người hay resume session dài — đặc biệt là session làm việc với codebase lớn, nhiều tool — thì bug này không phải <1%. Nó là lý do tại sao usage limit của bạn bốc hơi nhanh một cách khó giải thích. Data của OP cho thấy 26% vs 99% cache ratio, không phải <1% difference.</p>
+
+            <p>Thứ ba — và đây là phần mình nghĩ nhiều nhất: việc OP thêm patch bypass billing vào cùng repo với bug fix, rồi không đề cập trong post, dù vô tình hay cố ý, đã làm hỏng một câu chuyện kỹ thuật tốt. Giờ thay vì "community tìm ra bug và Anthropic xác nhận," narrative là "người dùng cố bypass billing và bị cộng đồng phát hiện." Cái bug thật sự đáng được chú ý hơn mức nó đang nhận được, vì nó bị shadow bởi phần drama này.</p>
+
+            <div class="pq closing-quote">
+              <p>Workaround an toàn nhất, cho đến khi Anthropic patch chính thức: đừng resume session. Bắt đầu session mới, mang context theo bằng tay. Không đẹp — nhưng không có nguy cơ ToS violation nào cả.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="ai-hype.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">AI không phải phép màu</div>
+              </a>
+              <div></div>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Claude Code &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
