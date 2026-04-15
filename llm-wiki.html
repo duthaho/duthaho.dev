@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây — và lý do tôi sẽ thử lại</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký dev</a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / llm-wiki</div>
+
+  <h1 class="page-title">Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây — <em>và lý do tôi sẽ thử lại</em></h1>
+  <p class="page-desc">Andrej Karpathy vừa post một gist về pattern xây personal knowledge base bằng LLM. Đọc xong mình ngồi im một lúc — không phải vì ý tưởng mới, mà vì ông đặt tên đúng cho vấn đề mình đã loay hoay với nó mà không biết gọi là gì.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 16/04/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">llm-wiki.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Hai năm trước mình đã thử xây một cái gì đó tương tự. Không gọi nó là "LLM Wiki" — lúc đó thuật ngữ chưa tồn tại — nhưng ý tưởng giống hệt: dùng AI để maintain một knowledge base về những thứ mình đọc và học. Sau ba tuần, nó chết. Không phải vì AI làm kém. Mà vì mình không có cấu trúc để làm nó sống được lâu dài. Karpathy's gist, theo một nghĩa nào đó, là bản post-mortem cho cái project đó của mình — và đồng thời là design doc cho lần thứ hai.</p>
+
+            <h2>Vấn đề với RAG mà ít ai nói thẳng</h2>
+
+            <p>Karpathy mở đầu bằng một quan sát mà mình nghĩ đúng nhưng đến giờ ít người diễn đạt rõ ràng: RAG không tích lũy. Mỗi lần bạn hỏi, hệ thống tìm lại từ đầu, ghép chunks liên quan, và generate câu trả lời. Rồi mọi thứ biến mất. Lần sau bạn hỏi câu tương tự, nó làm lại y chang. Không có gì được xây lên.</p>
+
+            <div class="diagram"><span class="diagram-label">RAG thông thường vs LLM Wiki</span>
+RAG:       Query  ──▶  tìm chunks  ──▶  generate  ──▶  xong
+                                              │
+                                   (kiến thức không tích lũy,
+                                    mỗi lần hỏi lại làm lại)
+
+LLM Wiki:  Source mới  ──▶  LLM đọc  ──▶  cập nhật wiki  ──▶  flag mâu thuẫn
+                                              │
+                                   (compile một lần, tồn tại mãi —
+                                    mỗi source mới làm wiki giàu hơn)</div>
+
+            <p>Sự khác biệt không phải về kỹ thuật — cả hai đều dùng LLM, cả hai đều có documents. Sự khác biệt là về <em>thời điểm synthesis xảy ra</em>. RAG synthesis tại query time, mỗi lần một lần. LLM Wiki synthesis khi ingest, một lần, và kết quả tồn tại mãi. Karpathy gọi đây là "compilation over retrieval" — và mình thấy đây là cách đặt vấn đề đúng nhất mình từng nghe.</p>
+
+            <h2>Kiến trúc ba tầng — đơn giản hơn tưởng</h2>
+
+            <p>Phần architecture trong bài của Karpathy thoạt đầu nghe abstract, nhưng thực ra rất cụ thể khi bạn đọc kỹ. Ba tầng:</p>
+
+            <p><strong>Raw sources</strong> — immutable. Bạn không bao giờ modify chúng. Đây là truth. Bài báo bạn đọc, transcript podcast bạn nghe, PDF bạn download. LLM chỉ đọc từ đây, không bao giờ ghi.</p>
+
+            <p><strong>Wiki</strong> — LLM sở hữu hoàn toàn. Toàn bộ markdown files là của LLM. Nó tạo, cập nhật, cross-reference, maintain. Bạn chỉ đọc. Karpathy so sánh setup của ông: LLM ở một bên, Obsidian mở ở bên kia. LLM edit files, bạn xem kết quả real-time trong graph view.</p>
+
+            <p><strong>Schema</strong> — cái file <code>CLAUDE.md</code> hay <code>AGENTS.md</code> mô tả cấu trúc wiki, conventions, workflows. Đây là thứ biến LLM từ chatbot thành wiki maintainer. Karpathy nhấn mạnh đây là thứ bạn và LLM co-evolve theo thời gian — không phải config cứng nhắc mà là hợp đồng sống.</p>
+
+            <div class="callout">
+              <div class="callout-label">Điểm mình thấy quan trọng nhất</div>
+              <p>Schema không phải prompt. Nó là tài liệu mô tả cách hệ thống hoạt động — và nó được LLM đọc mỗi khi bắt đầu session mới. Điều này giải quyết vấn đề mà mình gặp hai năm trước: mỗi session LLM "quên" cách wiki đang được tổ chức. Với schema file, nó không quên — vì context được tái nạp mỗi lần.</p>
+            </div>
+
+            <h2>Ba operations — và cái hay nhất là cái ít ai nghĩ đến</h2>
+
+            <p>Karpathy mô tả ba operations chính: ingest, query, và lint. Hai cái đầu thì rõ. Cái thứ ba — lint — mới là thứ mình ít thấy ai đề cập.</p>
+
+            <p>Lint là khi bạn định kỳ nhờ LLM health-check wiki: tìm mâu thuẫn giữa các trang, tìm orphan pages không ai link đến, tìm khái niệm được nhắc đến nhưng chưa có trang riêng, tìm claims đã bị supersede bởi nguồn mới hơn. Đây là thứ làm wiki không bị mục theo thời gian — và là thứ không ai trong team muốn làm thủ công.</p>
+
+            <p>Nhưng observation mà mình thấy hay nhất trong bài không phải về lint. Nó là về query:</p>
+
+            <div class="pq">
+              <p>Câu trả lời tốt nên được file lại vào wiki như một trang mới. Không phải chỉ đọc từ wiki — mà ghi lại những gì bạn khám phá qua quá trình hỏi.</p>
+            </div>
+
+            <p>Cái này thay đổi hoàn toàn cách nghĩ về việc "dùng" knowledge base. Thay vì wiki là nguồn tĩnh và query là hành động đọc, mọi cuộc thám hiểm tốt đều làm wiki giàu hơn. Một so sánh bạn yêu cầu, một phân tích bạn hỏi, một connection bạn nhận ra — những thứ này đáng được lưu lại, không phải biến mất vào chat history.</p>
+
+            <h2>Tại sao lần trước mình thất bại — và lần này khác gì</h2>
+
+            <p>Nhìn lại project hai năm trước, mình thất bại vì ba lý do cụ thể mà bài của Karpathy đã address trực tiếp.</p>
+
+            <p>Thứ nhất: mình không có schema. Mỗi session mình phải nhắc lại LLM về cấu trúc wiki, conventions, những gì đã làm. Sau vài tuần, overhead này lớn hơn value. Với schema file, LLM tái nạp context tự động.</p>
+
+            <p>Thứ hai: mình merge raw sources và wiki. Documents gốc và summaries nằm lẫn lộn. Không có ranh giới rõ ràng giữa "truth" và "synthesis." Khi wiki cần cập nhật, mình không biết phải sửa ở đâu. Tách biệt immutable sources và LLM-owned wiki giải quyết điều này hoàn toàn.</p>
+
+            <p>Thứ ba — và đây là cái tốn nhất — mình cố tự maintain wiki bằng tay. Sửa cross-reference. Cập nhật summary khi có source mới. Đây là việc không phải con người nên làm. Karpathy viết thẳng: "Humans abandon wikis because the maintenance burden grows faster than the value." Đúng. Mình abandon wiki đúng lúc nó đủ lớn để hữu ích — vì lúc đó maintenance trở nên quá nặng.</p>
+
+            <div class="aside">
+              <p>Đoạn so sánh với Vannevar Bush's Memex (1945) trong bài của Karpathy khiến mình dừng lại khá lâu. Bush mô tả một thiết bị lưu trữ cá nhân với "associative trails" — liên kết giữa tài liệu quan trọng không kém tài liệu. Ông nói gần đúng vision này hơn web đã làm được. Phần ông không giải quyết được là: ai maintain những liên kết đó? LLM là câu trả lời ông không có.</p>
+            </div>
+
+            <h2>Điểm mình muốn phản biện</h2>
+
+            <p>Bài của Karpathy intentionally abstract — ông nói thẳng điều đó ở cuối. Không có implementation cụ thể. Không có directory structure. Không có schema example. Đây là lựa chọn có chủ đích, nhưng nó che giấu một số vấn đề thực tế.</p>
+
+            <div class="callout">
+              <div class="callout-label">Chỗ mình chưa thuyết phục</div>
+              <p>Vấn đề lớn nhất với LLM Wiki không phải là kiến trúc — mà là <strong>chất lượng tích lũy theo thời gian</strong>. Mỗi lần LLM cập nhật một trang wiki, nó có thể introduce subtle errors, lose nuance từ source gốc, hoặc flatten những chỗ mà source gốc có ý định ambiguous. Sau 50 ingest cycles, wiki có thể trông đẹp nhưng đã drift xa khỏi truth theo cách không dễ phát hiện.</p>
+              <p>Lint operation giúp một phần, nhưng LLM lint bằng chính LLM — có một circular dependency ở đây mà mình chưa thấy bài giải quyết thỏa đáng. Và citation traceability — một commenter trong gist đã chỉ ra đúng — là vấn đề thực sự nếu bạn cần biết claim nào đến từ nguồn nào cụ thể.</p>
+            </div>
+
+            <p>Điều này không phủ nhận giá trị của pattern. Nhưng nó có nghĩa là LLM Wiki phù hợp nhất cho việc <em>hiểu</em> và <em>khám phá</em> — không phải cho việc <em>cite</em> và <em>verify</em>. Đó là two very different use cases và bài của Karpathy đôi khi ngụ ý chúng giống nhau hơn thực tế.</p>
+
+            <h2>Tôi sẽ bắt đầu lại như thế nào</h2>
+
+            <p>Mình không có ý định đợi ai đó build tool hoàn chỉnh rồi mới dùng. Setup mà Karpathy mô tả — Claude Code + Obsidian + một folder markdown — đủ để bắt đầu hôm nay. Phần phức tạp không phải tooling, mà là discipline: ingest đều đặn, viết schema tốt, tin tưởng LLM làm phần maintenance.</p>
+
+            <p>Thứ mình sẽ làm khác so với lần trước: bắt đầu nhỏ hơn nhiều. Một topic duy nhất, không phải "mọi thứ mình đọc." Schema viết trước khi ingest source đầu tiên, không phải sau khi wiki đã lộn xộn. Và quan trọng nhất — không cố tự maintain gì cả. Nếu có thứ gì cần update, nhờ LLM làm, không làm tay.</p>
+
+            <p>Karpathy kết bài bằng một câu mình muốn giữ lại: "Your LLM can figure out the rest." Nghe có vẻ quá lạc quan. Nhưng đọc lại trong context của toàn bài — ông không nói LLM sẽ tự làm mọi thứ. Ông nói: nếu bạn communicate pattern đúng cách, bạn không cần specification hoàn hảo. LLM đủ thông minh để instantiate nó phù hợp với domain của bạn.</p>
+
+            <p>Đó là mức tin tưởng mình vẫn đang cố build với các AI tools. Chưa đến đó. Nhưng đây là lần đầu tiên mình đọc một bài về AI knowledge management mà không nghĩ "nghe hay nhưng sẽ không hoạt động trong thực tế." Mình nghĩ cái này có thể hoạt động — nếu làm đúng.</p>
+
+            <p>Sẽ thử lại. Lần này với schema từ đầu.</p>
+
+            <div class="pq closing-quote">
+              <p>RAG synthesis tại query time, mỗi lần một lần. LLM Wiki synthesis khi ingest, một lần, và kết quả tồn tại mãi. Compilation over retrieval.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="claude-token-habits.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Claude không đếm tin nhắn — nó đếm token</div>
+              </a>
+              <div></div>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Knowledge Systems &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude không đếm tin nhắn — nó đếm token. Và tôi đã dùng sai từ đầu.</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký dev</a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / claude-token-habits</div>
+
+  <h1 class="page-title">Claude không đếm tin nhắn — <em>nó đếm token. Và tôi đã dùng sai từ đầu.</em></h1>
+  <p class="page-desc">Một thread trên X của @0x_kaize về 10 thói quen giúp hết cảnh bị limit giữa chừng. Đọc xong mình nhận ra mình đang lãng phí token theo ít nhất ba cách khác nhau — mỗi ngày, không biết từ bao giờ.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 15/04/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">claude-token-habits.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Mình đã nghĩ mình bị limit vì dùng nhiều. Sau đó mình thử đếm: không phải. Số message trong ngày không nhiều hơn trước. Nhưng limit đến sớm hơn. Rõ ràng là mình đang đốt token theo cách mình không nhìn thấy.</p>
+
+            <p>Đọc thread của @0x_kaize xong, mình hiểu tại sao. Và quan trọng hơn, mình hiểu cái cơ chế khiến mọi thứ tệ theo cấp số nhân — không phải tuyến tính như mình vẫn nghĩ.</p>
+
+            <h2>Cái mà hầu hết người dùng Claude đều hiểu sai</h2>
+
+            <p>Claude không giới hạn số tin nhắn. Nó giới hạn token. Và đây là phần quan trọng: <strong>mỗi lần bạn gửi tin nhắn, Claude đọc lại toàn bộ lịch sử conversation từ đầu.</strong> Không phải chỉ tin nhắn mới nhất. Tất cả.</p>
+
+            <p>Điều đó có nghĩa là chi phí token không cộng tuyến tính — nó cộng theo hình thức tam giác. Conversation 10 tin nhắn ở <code>~500 token/exchange</code> không tốn 5,000 token. Nó tốn gần 27,500. Conversation 30 tin nhắn tốn hơn 232,000. Và tin nhắn thứ 30 một mình nó đã đắt gấp 31 lần tin nhắn đầu tiên — không phải vì bạn gõ nhiều hơn, mà vì lịch sử tích lũy.</p>
+
+            <div class="diagram"><span class="diagram-label">Chi phí tích lũy — công thức S × N(N+1) / 2</span>
+10 tin nhắn  →  ~27,500 token
+20 tin nhắn  →  ~105,000 token
+30 tin nhắn  →  ~232,000 token   ← chỉ để giữ conversation mở</div>
+
+            <p>Một developer đã đo usage thực tế của mình và phát hiện: <strong>98.5% token bị dùng để đọc lại lịch sử cũ. Chỉ 1.5% thực sự tạo ra output.</strong> Mình đọc số đó và ngồi im một lúc. Sau đó nhìn lại những conversation dài của mình và thấy mình hoàn toàn tin con số đó.</p>
+
+            <div class="pq">
+              <p>Bạn không bị limit vì dùng nhiều. Bạn bị limit vì conversation của bạn đang trở thành một cỗ máy đọc lại chính nó.</p>
+            </div>
+
+            <h2>10 thứ cần thay đổi — và lý do thực sự đằng sau mỗi cái</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 01</div>
+              <div class="finding-title">Edit tin nhắn thay vì gửi tin nhắn sửa</div>
+              <p>Khi Claude trả lời sai, phản ứng tự nhiên là gửi thêm: "Không phải ý tôi, tôi muốn nói..." Đừng làm vậy. Mỗi tin nhắn sửa là một layer nữa được thêm vào history — và Claude đọc lại tất cả ở turn tiếp theo, kể cả những exchange thất bại không giúp ích gì. Thay vào đó: click edit trên tin nhắn gốc, viết lại, regenerate. Exchange thất bại bị xóa, không bị chồng lên.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 02</div>
+              <div class="finding-title">Bắt đầu conversation mới thường xuyên hơn bạn nghĩ</div>
+              <p>Mình có thói quen giữ một conversation mở cả ngày vì nghĩ "giữ context." Thực ra là đang xây một quả bom token chậm nổ. Quy tắc thực tế: sau 15–20 tin nhắn, nhờ Claude tóm tắt những gì đã thảo luận, copy summary đó, mở conversation mới, paste vào đầu. Bạn có đủ context mà không có overhead của 200 tin nhắn cũ.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 03</div>
+              <div class="finding-title">Gộp nhiều câu hỏi vào một tin nhắn</div>
+              <p>Nhiều người tin rằng tách câu hỏi thành nhiều message sẽ cho kết quả tốt hơn. Thực tế thường ngược lại — và đắt hơn nhiều. Ba message riêng = ba lần load toàn bộ context. Một message với ba câu hỏi = một lần. Không chỉ tiết kiệm token: Claude thường trả lời tốt hơn khi thấy toàn bộ bức tranh trong một lần.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 04</div>
+              <div class="finding-title">Chọn model đúng với task — không phải lúc nào cũng cần Sonnet</div>
+              <p>Usage limit không phải raw token count — nó cost-based. Mỗi model có cost khác nhau. Dùng Haiku cho task đơn giản: brainstorm nhanh, format text, câu hỏi thực tế. Chuyển lên Sonnet khi cần reasoning phức tạp hoặc coding. Opus khi task thực sự đòi hỏi multi-step reasoning sâu. Bắt đầu từ model nhỏ hơn và nâng lên khi cảm thấy ceiling — đừng mặc định Sonnet cho mọi thứ.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 05</div>
+              <div class="finding-title">Đừng upload file không cần thiết — hoặc upload nhiều lần</div>
+              <p>Mỗi lần upload file là toàn bộ nội dung đó được đếm vào token. Nếu bạn upload cùng một PDF trong ba conversation khác nhau, Claude đếm token đó ba lần. Cũng vậy với screenshot — nếu câu hỏi có thể được trả lời bằng text description, đừng attach ảnh. Image token thường đắt hơn text tương đương đáng kể.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 06</div>
+              <div class="finding-title">Tắt extended thinking khi không cần</div>
+              <p>Extended thinking thêm token vào response ngay cả khi bạn không thấy nó. Claude "nghĩ" trong một space ẩn trước khi trả lời — và những token đó vẫn bị tính. Để mặc định off. Bật lên khi bạn cần Claude xử lý bài toán phức tạp thực sự. Đừng để nó chạy mặc định cho mọi câu hỏi.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 07</div>
+              <div class="finding-title">Chỉ định độ dài response khi cần response ngắn</div>
+              <p>Claude mặc định trả lời đầy đủ — và "đầy đủ" theo tiêu chuẩn của nó đôi khi dài hơn bạn cần. Nếu bạn chỉ cần một câu trả lời ngắn, nói rõ: "trả lời ngắn gọn," "một câu thôi," "chỉ code, không giải thích." Output token cũng tính vào limit. Response 500 từ khi bạn chỉ cần 50 từ là lãng phí thật sự.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 08</div>
+              <div class="finding-title">Prompt rõ ràng ngay từ đầu — đừng để clarification loop</div>
+              <p>Mỗi vòng clarification — Claude hỏi lại, bạn trả lời, Claude hỏi tiếp — là thêm nhiều exchange vào history, và tất cả đều bị đọc lại ở những turn sau. Đầu tư 30 giây thêm vào prompt đầu tiên để nó rõ ràng hơn thường tiết kiệm nhiều token hơn bất kỳ tip nào khác. Context đầy đủ ngay từ đầu &gt; clarification loop sau đó.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 09</div>
+              <div class="finding-title">Dàn đều usage — đừng dồn vào buổi sáng</div>
+              <p>Limit của Claude chạy trên rolling 5-hour window, không phải reset theo ngày. Nếu bạn dùng nhiều từ 9h–11h sáng, những token đó sẽ ngừng tính vào limit lúc 2h–4h chiều. Điều đó có nghĩa: nếu bạn dàn đều thay vì dồn vào một session dài, bạn có nhiều room hơn trong ngày. Mình từng dùng cạn limit lúc 11h sáng — giờ thì không còn vậy nữa.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Thói quen 10</div>
+              <div class="finding-title">Paste text thay vì attach file khi có thể</div>
+              <p>Attach một file PDF tốn nhiều token hơn paste nội dung relevant dưới dạng text. Nếu bạn chỉ cần Claude đọc một đoạn cụ thể trong tài liệu dài, copy đoạn đó ra và paste — đừng upload cả file. Claude không cần đọc 80 trang để trả lời câu hỏi về trang 12.</p>
+            </div>
+
+            <h2>Cái mình thực sự thay đổi sau khi đọc</h2>
+
+            <p>Trong 10 thứ trên, mình đang vi phạm ít nhất ba cái đều đặn: không edit mà gửi tin nhắn sửa, giữ conversation mở quá lâu, và không chỉ định độ dài response. Tất cả đều là thói quen không có lý do cụ thể — mình làm vậy vì quen tay, không phải vì nghĩ đó là cách đúng.</p>
+
+            <p>Tip mà mình nghĩ có impact lớn nhất với mình cá nhân: <strong>edit thay vì gửi tin nhắn sửa.</strong> Mình có habit rất xấu là gửi "hmm không phải, ý tôi là X" rồi Claude sửa lại, rồi mình lại thấy chưa đúng, rồi gửi tiếp. Cả chuỗi exchange thất bại đó nằm trong history và bị đọc lại mãi. Chỉ cần discipline một chút — click edit, viết lại — là cắt đứt cái vòng lặp đó.</p>
+
+            <div class="callout">
+              <div class="callout-label">Một điểm thêm từ context gần đây</div>
+              <p>Anthropic vừa thắt chặt limit trong giờ cao điểm buổi sáng (giờ Pacific) — ảnh hưởng khoảng 7% người dùng. Cộng với bug caching trong Claude Code mà mình đã viết trước đó, tình trạng "hết limit nhanh hơn bình thường" đang có nhiều nguyên nhân cùng lúc.</p>
+              <p>Tin tốt: phần lớn những nguyên nhân đó có thể giảm thiểu bằng thói quen dùng — không cần nâng plan, không cần chờ Anthropic fix. Chỉ cần dùng khác đi.</p>
+            </div>
+
+            <div class="aside">
+              <p>Thread gốc của @0x_kaize có 10 triệu views trong vài ngày. Mình không chắc đó là vì nội dung quá tốt hay vì quá nhiều người đang bực vì bị limit. Có lẽ cả hai. Dù sao thì những tips đó đều đúng về mặt kỹ thuật và đáng áp dụng.</p>
+            </div>
+
+            <p>Mình không nghĩ mình sẽ không bao giờ bị limit nữa. Nhưng ít nhất giờ mình biết mình đang tiêu token ở đâu — và có thể chủ động hơn thay vì ngồi tự hỏi tại sao limit đến sớm hơn hôm qua.</p>
+
+            <div class="pq closing-quote">
+              <p>Bạn không bị limit vì dùng nhiều. Bạn bị limit vì conversation của bạn đang trở thành một cỗ máy đọc lại chính nó.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="claude-code-token-drain.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Hai dòng code ẩn khiến Claude Code ngốn token</div>
+              </a>
+              <a class="post-nav-item next" href="llm-wiki.html">
+                <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
+                <div class="post-nav-title">Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây</div>
+              </a>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Claude &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
