@@ -1,3 +1,13 @@
+// ── Auto-number lead + archive (index page) ──────
+const grid = document.querySelector('.posts-grid');
+if (grid) {
+  const total = grid.querySelectorAll(':scope > a').length + 1;
+  const pad = String(total).padStart(2, '0');
+  grid.style.setProperty('--archive-start', total);
+  document.querySelectorAll('.lead-numeral, [data-lead-num]')
+    .forEach(el => { el.textContent = pad; });
+}
+
 // ── Reading progress bar ─────────────────────────
 const bar = document.getElementById('progress');
 if (bar) {

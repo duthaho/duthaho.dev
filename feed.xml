@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Nhật ký dev</title>
+  <link>https://duthaho.dev/</link>
+  <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
+  <language>vi</language>
+  <lastBuildDate>Sat, 25 Apr 2026 09:00:00 +0700</lastBuildDate>
+  <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
+  <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
+  <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu</title>
+    <link>https://duthaho.dev/agentic-patterns.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/agentic-patterns.html</guid>
+    <pubDate>Sat, 25 Apr 2026 09:00:00 +0700</pubDate>
+    <description>Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây — và lý do tôi sẽ thử lại</title>
+    <link>https://duthaho.dev/llm-wiki.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/llm-wiki.html</guid>
+    <pubDate>Thu, 16 Apr 2026 09:00:00 +0700</pubDate>
+    <description>Andrej Karpathy vừa post một gist về pattern xây personal knowledge base bằng LLM. Đọc xong mình ngồi im một lúc — không phải vì ý tưởng mới, mà vì ông đặt tên đúng cho vấn đề mình đã loay hoay với nó mà không biết gọi là gì.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Claude không đếm tin nhắn — nó đếm token. Và tôi đã dùng sai từ đầu.</title>
+    <link>https://duthaho.dev/claude-token-habits.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/claude-token-habits.html</guid>
+    <pubDate>Wed, 15 Apr 2026 09:00:00 +0700</pubDate>
+    <description>Một thread trên X của @0x_kaize về 10 thói quen giúp hết cảnh bị limit giữa chừng. Đọc xong mình nhận ra mình đang lãng phí token theo ít nhất ba cách khác nhau — mỗi ngày, không biết từ bao giờ.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Hai dòng code ẩn khiến Claude Code ngốn token gấp 4 lần — và cái kết không ai ngờ</title>
+    <link>https://duthaho.dev/claude-code-token-drain.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/claude-code-token-drain.html</guid>
+    <pubDate>Thu, 02 Apr 2026 09:00:00 +0700</pubDate>
+    <description>Một người dùng Reddit reverse-engineer minified source code của Claude Code, tìm ra bug caching khiến token drain về đêm, và patch nó bằng đúng hai dòng.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>AI không phải phép màu — nhưng bạn đang bị ai đó cố tình làm bạn quên điều đó</title>
+    <link>https://duthaho.dev/ai-hype.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/ai-hype.html</guid>
+    <pubDate>Wed, 01 Apr 2026 09:00:00 +0700</pubDate>
+    <description>Đọc một bài khá nặng tay về hype AI, có chỗ đồng ý, có chỗ không. Viết lại theo góc nhìn của người đang xây sản phẩm thật bằng AI thật.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Claude không biết mình đang nghĩ gì — và điều đó đáng lo ngại hơn bạn nghĩ</title>
+    <link>https://duthaho.dev/claude-interpretability.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/claude-interpretability.html</guid>
+    <pubDate>Wed, 25 Mar 2026 09:00:00 +0700</pubDate>
+    <description>Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</title>
+    <link>https://duthaho.dev/agentic-rag.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/agentic-rag.html</guid>
+    <pubDate>Wed, 18 Mar 2026 09:00:00 +0700</pubDate>
+    <description>Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Tôi đã dùng AI sai cách suốt một năm</title>
+    <link>https://duthaho.dev/using-ai-wrong.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/using-ai-wrong.html</guid>
+    <pubDate>Tue, 10 Mar 2026 09:00:00 +0700</pubDate>
+    <description>Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+</channel>
+</rss>

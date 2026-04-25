@@ -4,154 +4,178 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nhật ký dev — Suy nghĩ sau giờ làm</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- SEO:auto-meta -->
+<meta name="description" content="Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.">
+<link rel="canonical" href="https://duthaho.dev/">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/">
+<meta property="og:title" content="Nhật ký dev — Suy nghĩ sau giờ làm">
+<meta property="og:description" content="Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.">
+<meta property="og:image" content="https://duthaho.dev/og-default.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nhật ký dev — Suy nghĩ sau giờ làm">
+<meta name="twitter:description" content="Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.">
+<meta name="twitter:image" content="https://duthaho.dev/og-default.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Nhật ký dev","alternateName":"Suy nghĩ sau giờ làm","url":"https://duthaho.dev/","description":"Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.","inLanguage":"vi","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"image":"https://duthaho.dev/og-default.jpg"}</script>
+<!-- /SEO:auto-jsonld -->
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav class="topbar">
-  <a class="blog-brand" href="/">Nhật ký dev</a>
+  <div class="topbar-date"><em>Số mới nhất</em>25 · 04 · 2026</div>
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
   <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
 </nav>
 
 <main class="container-wide">
 
-  <div class="terminal-card hero-card reveal">
-    <div class="terminal-header">
-      <div class="terminal-dots">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-      </div>
-      <span class="terminal-filename">about.md</span>
-      <span class="terminal-status">~/blog</span>
+  <section class="lead reveal">
+    <div class="lead-grid">
+
+      <a class="lead-link" href="agentic-patterns.html">
+        <div class="lead-overline">
+          <span class="lead-kicker">Số <span data-lead-num>08</span> — Long Read</span>
+          <span class="lead-date">25 / 04 / 2026</span>
+        </div>
+        <h1 class="lead-headline">
+          Tôi đọc source code bị leak của Claude Code
+          <em>và nhận ra mình đang build agent sai từ đầu</em>
+        </h1>
+        <p class="lead-dek">
+          12 patterns mình rút ra từ harness của Claude Code, chia thành bốn nhóm —
+          memory, workflow, tools, automation. Ba cái khiến mình phải dừng lại suy nghĩ lại.
+        </p>
+        <span class="lead-cta">
+          <span>Đọc tiếp</span>
+          <span class="lead-cta-arrow">→</span>
+        </span>
+        <div class="lead-numeral" aria-hidden="true">08</div>
+      </a>
+
+      <aside class="workbench">
+        <div class="workbench-label">Workbench</div>
+        <p class="workbench-desc">Những thứ mình đang xây ngoài giờ làm.</p>
+        <ul class="workbench-list">
+          <li>
+            <a href="https://about.duthaho.dev" target="_blank" rel="noopener noreferrer">
+              about.duthaho.dev
+              <em>— giới thiệu, các dự án và liên hệ</em>
+            </a>
+          </li>
+          <li>
+            <a href="https://claudekit.duthaho.dev" target="_blank" rel="noopener noreferrer">
+              claudekit.duthaho.dev
+              <em>— plugin Claude Code · 35 skills, 24 agents</em>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
     </div>
-    <div class="terminal-body hero-body">
-      <div class="hero-label">Blog cá nhân</div>
-      <h1>Nhật ký dev</h1>
-      <p class="hero-intro">
-        Những suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.
-      </p>
-    </div>
-  </div>
+  </section>
 
   <section class="posts-grid reveal-stagger">
 
-    <a class="terminal-card post-card reveal" href="llm-wiki.html">
+    <a class="post-card reveal" href="llm-wiki.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">llm-wiki.md</span>
-        <span class="terminal-status">16/04/2026</span>
+        <span class="terminal-status">16 / 04 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây — và lý do tôi sẽ thử lại</div>
+        <div class="post-title">
+          Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây
+          <em>và lý do tôi sẽ thử lại</em>
+        </div>
         <p class="post-excerpt">Andrej Karpathy post một gist về pattern xây personal knowledge base bằng LLM. Đọc xong mình ngồi im — ông đặt tên đúng cho vấn đề mình loay hoay hai năm trước.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="claude-token-habits.html">
+    <a class="post-card reveal" href="claude-token-habits.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">claude-token-habits.md</span>
-        <span class="terminal-status">15/04/2026</span>
+        <span class="terminal-status">15 / 04 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">Claude không đếm tin nhắn — nó đếm token. Và tôi đã dùng sai từ đầu.</div>
+        <div class="post-title">
+          Claude không đếm tin nhắn — nó đếm token.
+          <em>Và tôi đã dùng sai từ đầu.</em>
+        </div>
         <p class="post-excerpt">10 thói quen giúp hết cảnh bị limit giữa chừng — đọc xong mình nhận ra mình đang lãng phí token theo ít nhất ba cách khác nhau.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="claude-code-token-drain.html">
+    <a class="post-card reveal" href="claude-code-token-drain.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">claude-code-token-drain.md</span>
-        <span class="terminal-status">02/04/2026</span>
+        <span class="terminal-status">02 / 04 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">Hai dòng code ẩn khiến Claude Code ngốn token gấp bốn lần</div>
+        <div class="post-title">
+          Hai dòng code ẩn khiến Claude Code <em>ngốn token gấp bốn lần</em>
+        </div>
         <p class="post-excerpt">Một người dùng Reddit reverse-engineer minified source, tìm ra bug caching khiến token drain, và patch bằng đúng hai dòng.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="ai-hype.html">
+    <a class="post-card reveal" href="ai-hype.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">ai-hype.md</span>
-        <span class="terminal-status">01/04/2026</span>
+        <span class="terminal-status">01 / 04 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">AI không phải phép màu — nhưng ai đó đang cố làm bạn quên điều đó</div>
+        <div class="post-title">
+          AI không phải phép màu —
+          <em>nhưng ai đó đang cố làm bạn quên điều đó</em>
+        </div>
         <p class="post-excerpt">Đọc một bài khá nặng tay về hype AI, có chỗ đồng ý, có chỗ không. Viết lại theo góc nhìn của người đang xây sản phẩm thật.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="claude-interpretability.html">
+    <a class="post-card reveal" href="claude-interpretability.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">claude-interpretability.md</span>
-        <span class="terminal-status">25/03/2026</span>
+        <span class="terminal-status">25 / 03 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">Claude không biết mình đang nghĩ gì — và điều đó đáng lo hơn bạn nghĩ</div>
+        <div class="post-title">
+          Claude không biết mình đang nghĩ gì
+          <em>— và điều đó đáng lo hơn bạn nghĩ</em>
+        </div>
         <p class="post-excerpt">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="agentic-rag.html">
+    <a class="post-card reveal" href="agentic-rag.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">agentic-rag.md</span>
-        <span class="terminal-status">18/03/2026</span>
+        <span class="terminal-status">18 / 03 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">RAG thông thường đang nói dối bạn — và bạn chưa nhận ra</div>
+        <div class="post-title">
+          RAG thông thường đang nói dối bạn
+          <em>— và bạn chưa nhận ra</em>
+        </div>
         <p class="post-excerpt">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</p>
       </div>
     </a>
 
-    <a class="terminal-card post-card reveal" href="using-ai-wrong.html">
+    <a class="post-card reveal" href="using-ai-wrong.html">
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
         <span class="terminal-filename">using-ai-wrong.md</span>
-        <span class="terminal-status">10/03/2026</span>
+        <span class="terminal-status">10 / 03 / 2026</span>
       </div>
       <div class="terminal-body">
-
-        <div class="post-title">Tôi đã dùng AI sai cách suốt gần một năm</div>
+        <div class="post-title">
+          Tôi đã dùng AI <em>sai cách</em> suốt gần một năm
+        </div>
         <p class="post-excerpt">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</p>
       </div>
     </a>
@@ -161,7 +185,11 @@
 </main>
 
 <footer>
-  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+  <div class="container-wide">
+    <span>Nhật ký dev · Viết khi đêm xuống</span>
+    <span><em>Set in Fraunces &amp; Newsreader.</em></span>
+    <span>© 2026 duthaho</span>
+  </div>
 </footer>
 
 <script src="main.js"></script>

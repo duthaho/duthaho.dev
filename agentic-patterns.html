@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.">
+<link rel="canonical" href="https://duthaho.dev/agentic-patterns.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/agentic-patterns.html">
+<meta property="og:title" content="Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu">
+<meta property="og:description" content="Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.">
+<meta property="og:image" content="https://duthaho.dev/og/agentic-patterns.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-04-25">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu">
+<meta name="twitter:description" content="Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.">
+<meta name="twitter:image" content="https://duthaho.dev/og/agentic-patterns.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu","description":"Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.","image":"https://duthaho.dev/og/agentic-patterns.jpg","datePublished":"2026-04-25","dateModified":"2026-04-25","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/agentic-patterns.html"},"url":"https://duthaho.dev/agentic-patterns.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / agentic-patterns</div>
+
+  <h1 class="page-title">Tôi đọc source code bị leak của Claude Code — <em>và nhận ra mình đang build agent sai từ đầu</em></h1>
+  <p class="page-desc">Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 25/04/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">agentic-patterns.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Trong năm qua mình đã build một số agent — tool nội bộ, automation workflow, chatbot gọi API. Không phải scale lớn, nhưng đủ để gặp những vấn đề quen thuộc: agent quên context giữa session, thực hiện hành động nguy hiểm mà không hỏi, chạy tuần tự những việc hoàn toàn có thể song song, và hành vi không nhất quán tuỳ theo độ dài conversation. Mỗi lần gặp mình fix theo kiểu ad-hoc. Chưa bao giờ nghĩ đến chúng như một hệ thống có cấu trúc.</p>
+
+            <p>Khi source code Claude Code bị leak, mình dành một buổi tối đọc phần harness. Và cái mình thấy ở đó không phải là code thần kỳ hay thuật toán phức tạp — mà là một tập hợp các quyết định kiến trúc rất có chủ đích, giải quyết đúng những vấn đề mình đã gặp, theo cách mình chưa từng nghĩ đến. Mình ngồi formulate chúng thành 12 patterns để dễ nhớ và dễ áp dụng.</p>
+
+            <h2>Tại sao source code nói được những thứ documentation không nói</h2>
+
+            <p>Anthropic có documentation về Claude Code. Có blog posts, có hướng dẫn. Nhưng documentation nói về cách dùng — không phải cách nó được xây dựng bên trong. Đây là khoảng cách mà mọi production system đều có giữa public narrative và private reality.</p>
+
+            <p>Claude Code được dùng bởi hàng triệu developer. Những quyết định architecture trong harness của nó đã trải qua kiểm chứng thực tế ở scale mà hầu hết các agent framework chưa bao giờ đạt đến. Khi nhìn vào source code thật, bạn đang nhìn vào những gì thực sự work — không phải những gì ai đó nghĩ sẽ work trong lúc viết blog post.</p>
+
+            <div class="callout">
+              <div class="callout-label">Cách mình đọc code này</div>
+              <p>Mình không đọc theo kiểu "Claude Code làm gì." Mình đọc theo kiểu "vấn đề nào đây đang giải quyết, và tại sao họ chọn giải pháp này chứ không phải giải pháp khác." Pattern không phải implementation — pattern là tên gọi cho một solution đã được kiểm chứng cho một vấn đề tái diễn. Khi bạn có tên, bạn nhận ra vấn đề nhanh hơn khi nó xuất hiện lần sau.</p>
+            </div>
+
+            <p>Mình chia 12 patterns thành 4 nhóm theo loại vấn đề chúng giải quyết: memory &amp; context, workflow &amp; orchestration, tools &amp; permissions, và automation. Cùng nhau, chúng không phải là một framework — chúng là một bộ công cụ tư duy để nhận diện và xử lý các vấn đề tái diễn của agentic systems.</p>
+
+            <h2>Nhóm 1 — Memory &amp; Context</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 01</div>
+              <div class="finding-title">Persistent Instruction File</div>
+              <p>File config project-level (<code>CLAUDE.md</code>) được load tự động mỗi session. Chứa build commands, naming conventions, architecture rules. Đi kèm với repo. Không có file này, mỗi session bắt đầu từ đầu — agent lặp lại cùng sai lầm từ session trước. Trade-off: file stale có thể tệ hơn không có file — agent học quy tắc cũ và apply nhầm.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 02</div>
+              <div class="finding-title">Scoped Context Assembly</div>
+              <p>Instructions được load từ nhiều files theo scope lồng nhau: organization → user → project root → parent dirs → current dir. Agent thấy rules khác nhau tuỳ vào nó đang làm việc ở đâu trong codebase. Phù hợp với monorepo hay codebase đa ngôn ngữ. Trade-off: rules từ nhiều scope có thể conflict, gây behavior khó predict và debug.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 03</div>
+              <div class="finding-title">Tiered Memory</div>
+              <p>Memory chia ba tầng với cách load khác nhau: compact index (capped 200 lines) luôn trong context; topic-specific files load on demand khi task liên quan; full session transcripts chỉ được search khi cần. Không phải nhớ nhiều hơn — mà nhớ đúng thứ đúng lúc. Trade-off: cần logic để quyết định thông tin nào thuộc tầng nào, và khi nào promote hoặc demote.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 04</div>
+              <div class="finding-title">Dream Consolidation</div>
+              <p>Background process chạy lúc agent idle: merge duplicates, prune contradictions, reorganize memory index. Code gọi là <code>autoDream</code> — 8 phases memory management, 5 types context compaction. Garbage collection cho agent state, không phải cho data. Trade-off: consolidation dùng token và có thể prune thứ user vẫn cần nếu quá aggressive.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 05</div>
+              <div class="finding-title">Progressive Context Compaction</div>
+              <p>Khi context window gần full, áp dụng nhiều tầng compression theo độ tuổi: recent turns giữ nguyên, older turns summarize nhẹ, rất cũ thì collapse aggressively. Harness dùng bốn tầng: <code>HISTORY_SNIP</code> → <code>Microcompact</code> → <code>CONTEXT_COLLAPSE</code> → <code>Autocompact</code>. Trade-off: lossy — agent có thể hallucinate khi cần thứ đã bị collapse thay vì thừa nhận nó quên.</p>
+            </div>
+
+            <h2>Nhóm 2 — Workflow &amp; Orchestration</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 06</div>
+              <div class="finding-title">Explore-Plan-Act Loop</div>
+              <p>Ba phases với write permissions tăng dần. Explore: chỉ read, search, map codebase — không được edit. Plan: thảo luận approach với user. Act: full tool access. System prompt chủ động ngăn agent edit file khi chưa hiểu đủ context. Trade-off: thêm turns trước khi có output — cảm giác chậm với task nhỏ, nhưng cần thiết với task lớn.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 07</div>
+              <div class="finding-title">Context-Isolated Subagents</div>
+              <p>Các agent riêng biệt với context window, system prompt, và tool access riêng. Research agent không thể edit code. Planning agent không thể execute commands. Mỗi subagent chỉ thấy thứ nó cần — context không bị ô nhiễm bởi output của phase khác. Trade-off: coordination overhead, và nuance từ phase trước có thể mất trong handoff.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 08</div>
+              <div class="finding-title">Fork-Join Parallelism</div>
+              <p>Spawn nhiều subagents song song, mỗi cái trong git worktree riêng. Parent's cached context được reuse bởi mỗi fork — parallel branching gần như free về token cost. Merge khi tất cả branches xong. Task 20 files độc lập không cần chạy 20 steps tuần tự. Trade-off: khi parallel branches đụng cùng files, merge conflict phức tạp hơn sequential work nhiều.</p>
+            </div>
+
+            <h2>Nhóm 3 — Tools &amp; Permissions</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 09</div>
+              <div class="finding-title">Progressive Tool Expansion</div>
+              <p>Default tool set nhỏ hơn 20 tools — Read, Edit, Write, Bash, Grep, Glob và một số nữa. MCP tools, remote tools, custom skills chỉ activate khi cần. Ít tools hơn nghĩa là model chọn đúng hơn, ít bị overwhelmed bởi tool selection problem. Trade-off: expansion logic phức tạp — activate quá muộn khiến agent waste turns không có đúng tool.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 10</div>
+              <div class="finding-title">Command Risk Classification</div>
+              <p>Deterministic pre-parsing trước khi execute shell command: phân tích verb, flags, target để assess risk. Low-risk actions auto-approve. Dangerous actions qua safety classifier. Per-tool permission rules với allow/ask/deny pattern matching — không phải approval fatigue, không phải blind trust. Trade-off: classifier cứng nhắc, không anticipate được mọi edge case — cần tune liên tục.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 11</div>
+              <div class="finding-title">Single-Purpose Tool Design</div>
+              <p>Thay vì dùng general shell cho mọi file operation, xây purpose-built tools riêng: <code>FileReadTool</code>, <code>FileEditTool</code>, <code>GrepTool</code>, <code>GlobTool</code>. Mỗi tool có typed inputs, constrained scope, permission rules riêng. Dễ review, dễ permission, model dùng đúng hơn, và dễ restrict hơn khi cần. Trade-off: không cover hết edge cases, vẫn cần general shell làm fallback cho những thứ không fit vào tool nào.</p>
+            </div>
+
+            <h2>Nhóm 4 — Automation</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Pattern 12</div>
+              <div class="finding-title">Deterministic Lifecycle Hooks</div>
+              <p>Shell commands chạy tự động tại các điểm xác định trong agent lifecycle — hoàn toàn ngoài prompt. Harness có 25+ hook points: <code>PreToolUse</code>, <code>PostToolUse</code>, <code>SessionStart</code>, <code>CwdChanged</code> và nhiều nữa. Thứ gì <em>phải</em> xảy ra mỗi lần không có ngoại lệ — đặt vào hook, không đặt trong instruction. Trade-off: debug hooks khó hơn prompt instructions vì chúng chạy ngoài conversation flow.</p>
+            </div>
+
+            <h2>Ba cái làm mình ngừng đọc và suy nghĩ lại</h2>
+
+            <p>Không phải tất cả 12 patterns đều gây cho mình cùng một phản ứng. Có những cái mình đọc và nghĩ "ừ hợp lý, mình cũng làm gần giống vậy." Nhưng có ba cái khiến mình phải dừng lại thật sự.</p>
+
+            <p><strong>Dream Consolidation</strong> là cái mình chưa bao giờ nghĩ đến, dù vấn đề nó giải quyết thì mình đã gặp. Memory của agent tích lũy mà không có cơ chế dọn dẹp — entries trùng lặp, facts cũ mâu thuẫn với facts mới, index phình to đến mức không còn compact nữa. Mình fix bằng cách reset memory thủ công. <code>autoDream</code> giải quyết vấn đề đó tự động, trong idle time, với 8 phases và 5 types compaction. Tên cũng khá hay — ẩn dụ về cách não người consolidate memory lúc ngủ là accurate hơn mình nghĩ.</p>
+
+            <p><strong>Explore-Plan-Act Loop</strong> là cái mình đồng ý mạnh nhất từ kinh nghiệm thực tế. Lỗi phổ biến nhất mình thấy trong các agent mình build là agent nhảy vào edit file trước khi đọc đủ context — sửa đúng vấn đề nhưng sai file, hoặc đúng file nhưng sai pattern vì không biết codebase hiện tại đang làm gì. Tách phase explore khỏi act, và enforce điều đó qua system prompt và tool permissions, không phải qua lời nhắc — đó là thứ mình cần làm từ lâu mà chưa làm.</p>
+
+            <div class="pq">
+              <p>Model không "quên" procedural steps. Nó không nhất quán dưới load. Hooks loại bỏ sự không nhất quán đó — vì chúng không nằm trong prompt, chúng không bị ảnh hưởng bởi context pressure.</p>
+            </div>
+
+            <p><strong>Lifecycle Hooks</strong> là cái có impact thực tế lớn nhất với mình và cũng là cái mình hiểu sai lâu nhất. Mình hay viết instruction "sau mỗi lần edit file, chạy formatter." Model nghe lời — đôi khi. Dưới context pressure, trong session dài, nó skip. Không phải vì nó "quên" — mà vì khi probabilistic system xử lý nhiều thứ cùng lúc, nó có thể bỏ qua thứ mà trong điều kiện bình thường nó nhớ. Hook là cơ chế deterministic đặt ngoài probabilistic model. Formatter chạy sau mỗi edit không phải vì model nhớ phải chạy — mà vì có code được gọi ở <code>PostToolUse</code> hook, và code đó không quan tâm đến context window.</p>
+
+            <h2>Chỗ mình vẫn chưa có câu trả lời rõ</h2>
+
+            <div class="callout">
+              <div class="callout-label">Hai câu hỏi mình chưa giải quyết được</div>
+              <p><strong>Với Dream Consolidation:</strong> Làm sao biết consolidation đang hoạt động đúng? Nếu nó prune thứ quan trọng, mình có biết không? Không có metric rõ ràng thì khó đánh giá chất lượng của quá trình đó. Mình chưa tìm được cách evaluate điều này một cách systematic.</p>
+              <p><strong>Với Fork-Join Parallelism:</strong> Pattern đẹp trên lý thuyết — nhưng quyết định "task này có thể chia song song không?" là phần khó nhất, và đó là phần con người phải làm, không phải agent. Bao nhiêu phần trăm real coding tasks thực sự independent hoàn toàn? Trong kinh nghiệm của mình, con số đó ít hơn nhiều so với vẻ ngoài.</p>
+            </div>
+
+            <h2>Những thứ mình sẽ làm khác từ bây giờ</h2>
+
+            <p>Đọc hết 12 patterns này, mình không nghĩ "cần implement tất cả ngay." Hầu hết trong số chúng có độ phức tạp implementation cao hơn nhiều so với value mà mình sẽ nhận được ở scale hiện tại. Nhưng có ba thứ cụ thể mình sẽ làm khác ngay hôm nay:</p>
+
+            <p><strong>Persistent Instruction File</strong> — không có lý do gì không làm. Chi phí gần như bằng không, benefit rõ ràng. Mỗi project từ bây giờ có một <code>CLAUDE.md</code> đi kèm repo.</p>
+
+            <p><strong>Lifecycle Hooks cho formatter và linter</strong> — đây là invariant behavior quan trọng nhất với user của mình. Formatter phải chạy sau mỗi edit, không có ngoại lệ. Đặt vào hook, bỏ ra khỏi instruction.</p>
+
+            <p><strong>Explore trước Act</strong> — không phải kiến trúc phức tạp, chỉ cần thay đổi cách mình prompt agent trong giai đoạn đầu của task. Trước khi agent được phép edit bất cứ thứ gì, nó phải report lại codebase map và approach. Đây là thứ mình có thể làm ngay hôm nay mà không cần build gì thêm.</p>
+
+            <p>Phần còn lại — Tiered Memory, Dream Consolidation, Fork-Join — sẽ đến khi mình có vấn đề cụ thể mà chúng giải quyết. Pattern là menu, không phải checklist bắt buộc. Điều quan trọng là biết chúng tồn tại, biết tên gọi của chúng, để khi vấn đề xuất hiện mình không phải mò tìm giải pháp từ đầu.</p>
+
+            <div class="aside">
+              <p>Source code Claude Code sẽ không bị leak mãi. Anthropic sẽ obfuscate lại, hay đổi kiến trúc, hay làm gì đó. Nhưng 12 patterns này không phải sản phẩm của một implementation cụ thể — chúng là giải pháp cho những vấn đề cơ bản của agentic systems. Những vấn đề đó sẽ không biến mất khi Anthropic patch source code của họ.</p>
+            </div>
+
+            <div class="pq closing-quote">
+              <p>Pattern không phải implementation. Pattern là tên gọi cho một solution đã được kiểm chứng cho một vấn đề tái diễn. Khi bạn có tên, bạn nhận ra vấn đề nhanh hơn khi nó xuất hiện lần sau.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="llm-wiki.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây</div>
+              </a>
+              <div></div>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Agentic Systems &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
