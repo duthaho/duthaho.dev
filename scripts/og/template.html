@@ -3,17 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <title>OG Card — Nhật ký dev</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --paper:        #ECE3D0;
-    --paper-tint:   #E5DCC7;
-    --ink:          #1B1814;
-    --ink-soft:     #2F2A23;
-    --ink-mute:     #6E6557;
-    --vermillion:   #C13B14;
+    --bg:           #fbfaf6;
+    --bg-elevated:  #ffffff;
+    --bg-panel:     #f4f1ea;
+    --border:       #d6d2c4;
+    --border-soft:  #e8e3d4;
+    --text:         #1f2328;
+    --text-strong:  #0d1117;
+    --text-muted:   #5d5b54;
+    --text-fade:    #8a8775;
+    --vermillion:        #C13B14;
+    --vermillion-soft:   rgba(193, 59, 20, 0.10);
   }
 
   html, body { margin: 0; padding: 0; }
@@ -21,98 +26,73 @@
     width: 1200px;
     height: 630px;
     overflow: hidden;
-  }
-
-  body {
     background:
-      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(193,59,20,0.10), transparent 65%),
-      var(--paper);
-    color: var(--ink);
-    font-family: 'Newsreader', serif;
-    position: relative;
-    padding: 52px 80px 44px;
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(193,59,20,0.06), transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Fraunces', Georgia, serif;
+    padding: 56px 80px 52px;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     isolation: isolate;
+    position: relative;
   }
 
-  /* paper grain */
-  body::after {
-    content: '';
-    position: absolute; inset: 0;
-    pointer-events: none;
-    opacity: 0.06;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* ── top row ───────────────────────────────────── */
-  .top {
+  /* ── Top brand strip ────────────────────────────── */
+  .brand-strip {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
+    align-items: center;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30, 'WONK' 0;
+    font-size: 32px;
     font-weight: 500;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--ink);
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
   }
-
-  .top em {
-    color: var(--vermillion);
-    font-family: 'Newsreader', serif;
+  .brand em {
     font-style: italic;
-    font-size: 18px;
-    letter-spacing: 0.04em;
-    text-transform: none;
-    margin-right: 8px;
+    font-weight: 400;
+    color: var(--vermillion);
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+  }
+  .domain {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    font-weight: 500;
   }
 
-  /* ── body ──────────────────────────────────────── */
-  .body {
+  /* ── Body row (auto-centered content) ───────────── */
+  .body-row {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    align-items: center;
     position: relative;
-    padding: 4px 0;
+    padding: 24px 0;
     overflow: hidden;
   }
 
-  .content { position: relative; z-index: 1; max-width: 920px; }
-
-  .kicker {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 0.36em;
-    text-transform: uppercase;
-    color: var(--vermillion);
-    font-weight: 600;
-    margin-bottom: 18px;
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
+  /* Default mode: huge wordmark + tagline */
+  .default-content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1040px;
   }
-
-  .kicker::before {
-    content: '';
-    width: 36px; height: 1px;
-    background: var(--vermillion);
-  }
-
-  /* default mode — brand wordmark */
   .wordmark {
     font-family: 'Fraunces', serif;
     font-variation-settings: 'opsz' 144, 'SOFT' 50, 'WONK' 1;
     font-style: italic;
     font-weight: 500;
-    font-size: 132px;
-    line-height: 0.95;
+    font-size: 168px;
+    line-height: 0.92;
     letter-spacing: -0.035em;
-    color: var(--ink);
-    white-space: nowrap;
+    color: var(--text-strong);
   }
   .wordmark em {
     font-style: italic;
@@ -120,224 +100,185 @@
     font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
     font-weight: 400;
   }
-
   .tagline {
-    font-family: 'Newsreader', serif;
+    font-family: 'Fraunces', serif;
     font-style: italic;
     font-weight: 400;
-    font-size: 28px;
-    line-height: 1.35;
-    color: var(--ink-soft);
-    margin-top: 22px;
-    max-width: 720px;
+    font-size: 32px;
+    line-height: 1.4;
+    color: var(--text-muted);
+    max-width: 800px;
   }
 
-  /* ornament — absolutely positioned background flourish on default card */
-  .ornament {
-    position: absolute;
-    right: -40px;
-    top: 50%;
-    transform: translateY(-50%) rotate(-8deg);
-    font-family: 'Fraunces', serif;
-    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
-    font-style: italic;
-    color: var(--vermillion);
-    font-size: 320px;
-    line-height: 0.7;
-    opacity: 0.10;
-    user-select: none;
-    pointer-events: none;
-    z-index: 0;
+  /* Per-post mode: chip + meta + big title */
+  .post-content {
+    display: none;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1040px;
+    width: 100%;
   }
-
-  /* per-post mode (body.post) — smaller brand line, big title */
-  body.post { padding: 56px 80px 52px; }
-
-  body.post .body { padding: 12px 0; }
-
-  body.post .small-brand {
+  .post-meta {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 14px;
-    margin-bottom: 18px;
-  }
-  body.post .small-brand .wm {
-    font-family: 'Fraunces', serif;
-    font-variation-settings: 'opsz' 144, 'SOFT' 50, 'WONK' 1;
-    font-style: italic;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
     font-weight: 500;
-    font-size: 38px;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--ink);
   }
-  body.post .small-brand .wm em {
-    font-style: italic;
+  .post-meta .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: var(--vermillion-soft);
     color: var(--vermillion);
-    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
-    font-weight: 400;
-  }
-  body.post .small-brand .meta {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
+    font-size: 16px;
+    letter-spacing: 0.04em;
     font-weight: 500;
   }
-
-  body.post .post-title {
+  .post-meta .num { color: var(--text-strong); }
+  .post-meta .dot { color: var(--text-fade); }
+  .post-title {
     font-family: 'Fraunces', serif;
     font-variation-settings: 'opsz' 144, 'SOFT' 30, 'WONK' 0;
     font-weight: 500;
-    font-size: 68px;
+    font-size: 72px;
     line-height: 1.04;
     letter-spacing: -0.025em;
-    color: var(--ink);
-    max-width: 1040px;
+    color: var(--text-strong);
     text-wrap: balance;
   }
-  body.post .post-title em {
+  .post-title em {
     font-style: italic;
     color: var(--vermillion);
     font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
     font-weight: 400;
   }
 
-  body.post .ornament,
-  body.post .wordmark,
-  body.post .tagline,
-  body.post .kicker { display: none; }
-
-  body.post .post-kicker {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.36em;
-    text-transform: uppercase;
-    color: var(--vermillion);
-    font-weight: 600;
-    margin-bottom: 18px;
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-  }
-  body.post .post-kicker::before {
-    content: '';
-    width: 32px; height: 1px;
-    background: var(--vermillion);
-  }
-
-  /* the giant numeral on per-post cards */
-  body.post .num {
+  /* Watermark numeral on per-post (vestigial editorial flourish) */
+  .num-watermark {
     position: absolute;
-    right: -12px;
+    right: -32px;
     top: 50%;
     transform: translateY(-50%);
     font-family: 'Fraunces', serif;
     font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
     font-style: italic;
     font-weight: 300;
-    font-size: 380px;
+    font-size: 360px;
     line-height: 0.85;
     color: var(--vermillion);
-    opacity: 0.09;
+    opacity: 0.07;
     letter-spacing: -0.06em;
     user-select: none;
     pointer-events: none;
     z-index: -1;
   }
 
-  /* default-only post-kicker hidden */
-  body:not(.post) .post-kicker,
-  body:not(.post) .post-title,
-  body:not(.post) .small-brand,
-  body:not(.post) .num { display: none; }
+  body.post .default-content { display: none; }
+  body.post .post-content { display: flex; }
+  body:not(.post) .num-watermark { display: none; }
 
-  /* ── bottom row ────────────────────────────────── */
+  /* ── Bottom strip ───────────────────────────────── */
   .bottom {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    padding-top: 20px;
-    border-top: 1px solid var(--ink);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--ink);
-    font-weight: 600;
+    align-items: center;
+    padding-top: 22px;
+    border-top: 1px solid var(--border-soft);
   }
-  .bottom .domain {
-    color: var(--vermillion);
-  }
-  .bottom .domain::before {
-    content: '→ ';
-    font-family: 'Newsreader', serif;
+  .bottom-left {
+    font-family: 'Fraunces', serif;
     font-style: italic;
     font-size: 22px;
-    margin-right: 4px;
-    letter-spacing: 0;
+    color: var(--vermillion);
+    font-weight: 400;
+    font-variation-settings: 'opsz' 96, 'SOFT' 100, 'WONK' 1;
+  }
+  .bottom-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
   }
 </style>
 </head>
 <body>
 
-  <div class="top">
-    <span class="brand-label"><em>Nhật ký dev</em>Vol · 01</span>
-    <span class="url-label">duthaho.dev</span>
-  </div>
-
-  <div class="body">
-    <div class="content">
-
-      <!-- DEFAULT MODE -->
-      <span class="kicker">Suy nghĩ sau giờ làm</span>
-      <h1 class="wordmark">Nhật ký <em>dev</em></h1>
-      <p class="tagline">Về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân, sau giờ làm.</p>
-
-      <!-- PER-POST MODE (hidden unless body.post) -->
-      <div class="small-brand">
-        <span class="wm">Nhật ký <em>dev</em></span>
-        <span class="meta" id="meta-slot">Số 08 · 25/04/2026</span>
-      </div>
-      <span class="post-kicker" id="kicker-slot">Long Read</span>
-      <h1 class="post-title" id="title-slot">Tiêu đề bài viết.</h1>
-
-    </div>
-    <div class="ornament">✻</div>
-    <div class="num" id="num-slot">08</div>
-  </div>
-
-  <div class="bottom">
-    <span class="bottom-meta" id="bottom-meta-slot">Số mới nhất · 25 · 04 · 2026</span>
+  <header class="brand-strip">
+    <span class="brand">Nhật ký <em>dev</em></span>
     <span class="domain">duthaho.dev</span>
+  </header>
+
+  <div class="body-row">
+
+    <!-- DEFAULT MODE — shown when no `title` URL param -->
+    <div class="default-content">
+      <h1 class="wordmark">Nhật ký <em>dev</em></h1>
+      <p class="tagline">Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</p>
+    </div>
+
+    <!-- PER-POST MODE — shown when body.post is set by JS below -->
+    <div class="post-content">
+      <div class="post-meta">
+        <span class="chip" id="chip-slot">Bài viết</span>
+        <span class="num" id="num-slot">#08</span>
+        <span class="dot">·</span>
+        <span id="date-slot">25 Apr 2026</span>
+      </div>
+      <h1 class="post-title" id="title-slot">Tiêu đề bài viết.</h1>
+    </div>
+
+    <span class="num-watermark" id="num-bg-slot">08</span>
+
   </div>
+
+  <footer class="bottom">
+    <span class="bottom-left">Suy nghĩ sau giờ làm</span>
+    <span class="bottom-right">duthaho.dev</span>
+  </footer>
 
 <script>
-  // Read URL params; if `title` is given, switch to per-post mode.
-  const q = new URLSearchParams(location.search);
+  // URL contract preserved from old template: ?title=…|…&num=08&date=25/04/2026&kicker=…
+  const q      = new URLSearchParams(location.search);
   const title  = q.get('title');
   const num    = q.get('num');
-  const date   = q.get('date');     // expects "DD/MM/YYYY"
-  const kicker = q.get('kicker');   // e.g. "Long Read"
+  const date   = q.get('date');     // expects DD/MM/YYYY
+  const kicker = q.get('kicker');
 
   if (title) {
     document.body.classList.add('post');
 
-    // Title supports an em-clause. Mark it with `|` in the URL,
-    // e.g. ?title=Headline|italic clause
+    // Title supports an em-clause split with `|`
     const slot = document.getElementById('title-slot');
     const [a, b] = title.split('|');
-    slot.innerHTML = b
-      ? `${a.trim()} <em>${b.trim()}</em>`
-      : a;
+    slot.innerHTML = b ? `${a.trim()} <em>${b.trim()}</em>` : a;
 
-    if (kicker) document.getElementById('kicker-slot').textContent = kicker;
-    if (num)    document.getElementById('num-slot').textContent = num.padStart(2, '0');
+    if (num) {
+      const padded = num.padStart(2, '0');
+      document.getElementById('num-slot').textContent = '#' + padded;
+      document.getElementById('num-bg-slot').textContent = padded;
+    }
 
-    const meta = [num ? `Số ${num.padStart(2,'0')}` : null, date].filter(Boolean).join(' · ');
-    if (meta) document.getElementById('meta-slot').textContent = meta;
-    if (date) document.getElementById('bottom-meta-slot').textContent = `Đăng ngày · ${date.replaceAll('/', ' · ')}`;
+    // DD/MM/YYYY → DD Mmm YYYY (English month abbrev to match the home feed)
+    if (date) {
+      const m = date.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (m) {
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const idx = parseInt(m[2], 10) - 1;
+        document.getElementById('date-slot').textContent =
+          (idx >= 0 && idx < 12) ? `${m[1]} ${months[idx]} ${m[3]}` : date;
+      } else {
+        document.getElementById('date-slot').textContent = date;
+      }
+    }
+
+    if (kicker) document.getElementById('chip-slot').textContent = kicker;
   }
 </script>
 </body>

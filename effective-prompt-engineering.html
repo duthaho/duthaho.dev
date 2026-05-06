@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Prompt engineering không khó như bạn nghĩ — và không dễ như người ta nói</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.">
+<link rel="canonical" href="https://duthaho.dev/effective-prompt-engineering.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/effective-prompt-engineering.html">
+<meta property="og:title" content="Prompt engineering không khó như bạn nghĩ — và không dễ như người ta nói">
+<meta property="og:description" content="Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.">
+<meta property="og:image" content="https://duthaho.dev/og/effective-prompt-engineering.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-05-01">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt engineering không khó như bạn nghĩ — và không dễ như người ta nói">
+<meta name="twitter:description" content="Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.">
+<meta name="twitter:image" content="https://duthaho.dev/og/effective-prompt-engineering.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Prompt engineering không khó như bạn nghĩ — và không dễ như người ta nói","description":"Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.","image":"https://duthaho.dev/og/effective-prompt-engineering.jpg","datePublished":"2026-05-01","dateModified":"2026-05-01","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/effective-prompt-engineering.html"},"url":"https://duthaho.dev/effective-prompt-engineering.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / effective-prompt-engineering</div>
+
+  <h1 class="page-title">Prompt engineering không khó như bạn nghĩ — <em>và không dễ như người ta nói</em></h1>
+  <p class="page-desc">Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 01/05/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">effective-prompt-engineering.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Lần đầu tôi đọc một bài hướng dẫn prompt engineering, tôi nghĩ: đây là kỹ năng tôi có thể học trong một buổi chiều. Đọc xong, viết thử vài prompt, thấy ổn, tự cho mình là hiểu. Sau đó tôi build một feature thật — chatbot trả lời câu hỏi về sản phẩm — và mất ba tuần để làm nó không bị embarrassing. Khoảng cách giữa "hiểu prompt engineering" và "viết được prompt tốt cho production" lớn hơn bất kỳ bài tutorial nào thừa nhận.</p>
+
+            <p>ByteByteGo vừa có bài tổng hợp về các kỹ thuật prompt engineering — zero-shot, few-shot, chain-of-thought, role prompting, prompt chaining. Đọc bài đó, tôi thấy nội dung chính xác về mặt kỹ thuật. Nhưng cũng thiếu vài thứ mà chỉ biết được sau khi đã build thứ gì đó thật sự và failed đủ lần. Bài này là phần bổ sung đó.</p>
+
+            <h2>Năm kỹ thuật — và thứ bài tutorial không nói về mỗi cái</h2>
+
+            <div class="finding-block">
+              <div class="finding-num">Kỹ thuật 01</div>
+              <div class="finding-title">Zero-Shot Prompting</div>
+              <p>Đưa instruction, không đưa example. Model dùng training knowledge để hiểu và thực hiện. Đây là cách hầu hết mọi người bắt đầu — và cũng là cách hầu hết mọi người stuck khi kết quả không như ý.</p>
+              <p>Điều tôi học được: zero-shot thất bại không phải vì thiếu example — mà vì instruction mơ hồ. Lần đầu tôi viết "classify this customer feedback as positive, negative, or neutral," tôi không định nghĩa gì cả. "Neutral" nghĩa là gì? Feedback vừa tích cực vừa tiêu cực thì là gì? Model phải đoán. Và nó đoán khác nhau mỗi lần. Trước khi nghĩ đến few-shot, hãy chắc chắn instruction của bạn đủ cụ thể để chính bạn có thể làm theo được.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Kỹ thuật 02</div>
+              <div class="finding-title">Few-Shot Prompting</div>
+              <p>Cung cấp 2–5 ví dụ trước khi đưa ra task thật. Model học pattern từ example và áp dụng vào input mới. Hiệu quả khi output format phức tạp hoặc khi behavior mong muốn khó describe bằng lời.</p>
+              <p>Cái này hay bị dùng sai: người ta thêm example vào khi model làm sai, hy vọng example sẽ "correct" model. Thường không work. Nếu model làm sai, thêm example cho đúng thứ sai đó — model học làm đúng thứ đó, nhưng có thể bắt đầu sai ở thứ khác. Vấn đề gốc rễ thường là instruction không rõ, không phải thiếu example. Sửa instruction trước, example sau.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Kỹ thuật 03</div>
+              <div class="finding-title">Chain-of-Thought Prompting</div>
+              <p>"Think step by step." Yêu cầu model show reasoning trước khi đưa ra kết luận. Cải thiện đáng kể với reasoning tasks, math, logic. Giảm hallucination vì model phải justify từng bước.</p>
+              <p>CoT có một trade-off mà bài tutorial hay underplay: nó chậm hơn và tốn token hơn đáng kể. Trong production, với latency requirement nghiêm ngặt, bạn không thể dùng CoT cho mọi request. Tôi hay dùng nó trong offline processing — phân tích batch, generation offline — và dùng zero-shot cho real-time user-facing responses. Biết khi nào không cần CoT quan trọng không kém biết khi nào cần.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Kỹ thuật 04</div>
+              <div class="finding-title">Role Prompting</div>
+              <p>Gán persona cho model: "act as an experienced data engineer," "you are a patient first-grade teacher." Ảnh hưởng đến tone, vocabulary, level of detail, và góc nhìn của response.</p>
+              <p>Role prompting work tốt hơn nhiều khi bạn specific về role thay vì chung chung. "Act as a teacher" cho kết quả mediocre. "Act as an encouraging middle school math teacher who knows this student struggles with fractions and responds in simple language without condescending" cho kết quả tốt hơn hẳn. Càng nhiều context về role, model càng có ít chỗ để tự đoán.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Kỹ thuật 05</div>
+              <div class="finding-title">Prompt Chaining</div>
+              <p>Chia task phức tạp thành nhiều prompt nhỏ, output của prompt trước làm input cho prompt sau. Mỗi bước đơn giản, dễ debug, dễ monitor. Có thể dùng model khác nhau cho từng bước.</p>
+              <p>Đây là kỹ thuật underrated nhất trong danh sách — và là thứ tôi recommend nhất với người đang build AI features thật. Một mega-prompt xử lý mọi thứ nghe hay trên giấy. Trong thực tế, khi nó fail, bạn không biết fail ở bước nào. Khi nó tốt, bạn không biết tại sao tốt và không reproduce được. Chain cho phép bạn test từng bước độc lập, version control từng bước, và swap ra bước nào không work mà không break toàn bộ pipeline.</p>
+            </div>
+
+            <h2>Thứ tôi thực sự dùng hàng ngày</h2>
+
+            <p>Đọc bài tutorial về prompt engineering và thực sự prompt engineering trong production là hai thứ khác nhau. Đây là những gì tôi thực sự áp dụng — không phải những gì tôi biết về lý thuyết.</p>
+
+            <p><strong>Đặt thông tin quan trọng ở đầu prompt, không phải cuối.</strong> Một commenter trong bài gốc dẫn một observation hay: model có xu hướng "lạc" nếu context quá dài và câu hỏi nằm ở cuối. Ngoài ra, phần đầu của prompt được cache hiệu quả hơn — với bài toán cần nhiều requests trên cùng system prompt, đặt system prompt ở đầu và ổn định giúp tiết kiệm đáng kể. Tôi đã đổi cấu trúc prompt theo hướng này và thấy consistency tốt hơn rõ rệt.</p>
+
+            <p><strong>XML tags cho structured output đáng tin cậy hơn "respond in JSON."</strong> Tôi đã mất nhiều giờ debug vì model trả về JSON với trailing comma, comment trong JSON, hoặc text trước và sau JSON block. XML tags với schema rõ ràng — và validation programmatic phía sau — ổn định hơn nhiều. Nếu bạn cần structured output, define schema chính xác, validate bằng code, không chỉ hy vọng model làm đúng.</p>
+
+            <div class="callout">
+              <div class="callout-label">Pattern tôi thấy work nhất trong production</div>
+              <p>Tách reasoning khỏi structured output thành hai bước riêng. Bước một: chain-of-thought để model reason, không yêu cầu format cụ thể. Bước hai: dùng reasoning đó làm context, yêu cầu model produce structured output với strict schema. Bạn vừa có accuracy của CoT vừa có reliability của structured output — thay vì phải chọn một trong hai. Tốn thêm một API call, nhưng failure rate giảm đáng kể.</p>
+            </div>
+
+            <p><strong>Version control prompt như code.</strong> Prompt không phải config. Prompt là behavior của system. Nếu bạn không version control prompt, bạn không biết tại sao output thay đổi sau một lần "chỉnh nhỏ." Tôi maintain prompt trong file riêng, với comment giải thích tại sao từng đoạn tồn tại, và dùng git history để trace thay đổi. Một prompt tốt có history của nó, không phải tự nhiên xuất hiện.</p>
+
+            <h2>Thứ bài tutorial hay bỏ qua</h2>
+
+            <p>Bài ByteByteGo có phần "Common Pitfalls" khá tốt, nhưng còn một pitfall nữa mà tôi không thấy ai nói đủ thẳng:</p>
+
+            <div class="callout">
+              <div class="callout-label">Pitfall ít được nói đến nhất</div>
+              <p><strong>Overfitting prompt vào test cases của bạn.</strong> Bạn viết prompt, test với 10 examples, kết quả tốt, deploy. Rồi trong production, user nhập thứ hơi khác một chút — và prompt fail theo cách không ai dự đoán. Prompt engineering không phải chỉ là viết prompt work với test set của bạn. Nó là viết prompt work với distribution thật của input từ user thật.</p>
+              <p>Cách tôi combat vấn đề này: sau khi deploy, lấy 50–100 production requests thật (anonymized), chạy lại qua prompt, review kết quả. Rất nhiều lần tôi tìm thấy pattern thất bại mà test set không cover. Eval set từ production data quan trọng hơn eval set bạn tự tạo.</p>
+            </div>
+
+            <p>Một thứ khác: <strong>prompt engineering không phải giải pháp cho mọi vấn đề accuracy.</strong> Đôi khi output không tốt không phải vì prompt sai — mà vì task vượt quá capability của model, hoặc vì model không có đủ information trong context. Trước khi tiếp tục tune prompt, hãy hỏi: với người thông minh nhất bạn biết, nếu họ chỉ có thông tin trong prompt này, họ có làm được task không? Nếu không — vấn đề là context, không phải prompting technique.</p>
+
+            <div class="pq">
+              <p>Prompt tốt nhất là prompt đơn giản nhất mà vẫn cho kết quả bạn cần. Mọi thứ thêm vào đều là debt bạn phải maintain.</p>
+            </div>
+
+            <h2>Điều thay đổi cách tôi nghĩ về prompting</h2>
+
+            <p>Có một chuyển dịch trong cách tôi nghĩ về prompt engineering xảy ra sau khoảng 6 tháng làm việc với LLMs: tôi ngừng nghĩ về nó như "writing prompts" và bắt đầu nghĩ về nó như "designing interfaces."</p>
+
+            <p>Prompt là interface giữa intent của bạn và behavior của model. Như mọi interface design, nó cần rõ ràng, nhất quán, và fault-tolerant — nghĩa là không chỉ work trong điều kiện lý tưởng mà còn degrade gracefully khi input không như kỳ vọng. Bạn không thể control mọi thứ user sẽ input. Bạn chỉ có thể design prompt đủ robust để handle khoảng biến động đó.</p>
+
+            <p>Từ cái nhìn đó, tất cả các kỹ thuật — few-shot, CoT, chaining — đều là tools để làm interface robust hơn theo những chiều khác nhau. Few-shot giảm ambiguity về format. CoT giảm ambiguity về reasoning path. Chaining giảm cognitive load của một single prompt quá phức tạp. Không có kỹ thuật nào magic. Chúng đều là cách trade-off khác nhau giữa complexity, cost, latency, và reliability.</p>
+
+            <div class="aside">
+              <p>Hiểu trade-off đó — không phải chỉ biết tên kỹ thuật — là thứ phân biệt người biết prompt engineering và người làm được prompt engineering trong production.</p>
+            </div>
+
+            <div class="pq closing-quote">
+              <p>Prompt là interface giữa intent của bạn và behavior của model. Bạn không thể control mọi thứ user sẽ input. Bạn chỉ có thể design prompt đủ robust để handle khoảng biến động đó.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="agentic-patterns.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Tôi đọc source code bị leak của Claude Code</div>
+              </a>
+              <a class="post-nav-item next" href="things-ive-learned.html">
+                <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
+                <div class="post-nav-title">Những thứ tôi học được sau 5 năm làm engineer</div>
+              </a>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Prompting &middot; AI Engineering &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

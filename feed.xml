@@ -5,10 +5,26 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Sat, 25 Apr 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Tue, 05 May 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Những thứ tôi học được sau 5 năm làm engineer — viết lúc hơi ngà ngà</title>
+    <link>https://duthaho.dev/things-ive-learned.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/things-ive-learned.html</guid>
+    <pubDate>Tue, 05 May 2026 09:00:00 +0700</pubDate>
+    <description>Đọc một bài Reddit cũ — một data engineer say rượu viết thật thà về 10 năm đi làm. Bài đó hay đến mức tôi phải ngồi viết lại theo góc nhìn của mình. Không phải tóm tắt, không phải dịch — là phản ứng thật, từ người đang ngồi uống bia một mình và đồng ý với khoảng 80% những gì ông ấy nói.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
+  <item>
+    <title>Prompt engineering không khó như bạn nghĩ — và không dễ như người ta nói</title>
+    <link>https://duthaho.dev/effective-prompt-engineering.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/effective-prompt-engineering.html</guid>
+    <pubDate>Fri, 01 May 2026 09:00:00 +0700</pubDate>
+    <description>Có hàng trăm bài viết về prompt engineering. Hầu hết đều giải thích lại cùng những khái niệm: zero-shot, few-shot, chain-of-thought. Bài này không cố giải thích khác — mà nói thẳng tại sao hầu hết advice không apply được vào production, và những gì thực sự quan trọng khi bạn không phải đang demo mà đang build.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu</title>
     <link>https://duthaho.dev/agentic-patterns.html</link>

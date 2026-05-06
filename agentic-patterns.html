@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
 <title>Tôi đọc source code bị leak của Claude Code — và nhận ra mình đang build agent sai từ đầu</title>
 <!-- SEO:auto-meta -->
 <meta name="description" content="Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.">
@@ -29,7 +30,7 @@
 <!-- /SEO:auto-jsonld -->
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="article-page">
 
 <div class="reading-progress" id="progress"></div>
 
@@ -39,7 +40,7 @@
 </nav>
 
 <main class="container-wide">
-  <div class="breadcrumb">$ pwd: ~ / <a href="/">blog</a> / agentic-patterns</div>
+  <div class="breadcrumb"><a href="/">blog</a> / agentic-patterns</div>
 
   <h1 class="page-title">Tôi đọc source code bị leak của Claude Code — <em>và nhận ra mình đang build agent sai từ đầu</em></h1>
   <p class="page-desc">Khi Claude Code bị leak, mọi người chú ý đến drama xung quanh vụ leak. Mình chú ý đến harness. Đọc kỹ phần đó, mình thấy mình đang nhìn vào một production agentic system thật sự được vận hành ở scale lớn — và hầu hết những thứ mình tự làm từ trước đến nay đều thiếu những thành phần quan trọng.</p>
@@ -214,7 +215,10 @@
                 <div class="post-nav-dir">&larr; Bài trước</div>
                 <div class="post-nav-title">Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây</div>
               </a>
-              <div></div>
+              <a class="post-nav-item next" href="effective-prompt-engineering.html">
+                <div class="post-nav-dir">Bài tiếp theo &rarr;</div>
+                <div class="post-nav-title">Prompt engineering không khó như bạn nghĩ</div>
+              </a>
             </nav>
 
           </article>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
 <title>Nhật ký dev — Suy nghĩ sau giờ làm</title>
 <!-- SEO:auto-meta -->
 <meta name="description" content="Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.">
@@ -27,167 +28,232 @@
 <!-- /SEO:auto-jsonld -->
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="feed-page">
 
 <nav class="topbar">
-  <div class="topbar-date"><em>Số mới nhất</em>25 · 04 · 2026</div>
   <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
   <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
 </nav>
 
-<main class="container-wide">
+<main class="feed-shell">
 
-  <section class="lead reveal">
-    <div class="lead-grid">
+  <aside class="feed-sidebar">
+    <div class="feed-sidebar__inner">
 
-      <a class="lead-link" href="agentic-patterns.html">
-        <div class="lead-overline">
-          <span class="lead-kicker">Số <span data-lead-num>08</span> — Long Read</span>
-          <span class="lead-date">25 / 04 / 2026</span>
-        </div>
-        <h1 class="lead-headline">
-          Tôi đọc source code bị leak của Claude Code
-          <em>và nhận ra mình đang build agent sai từ đầu</em>
-        </h1>
-        <p class="lead-dek">
-          12 patterns mình rút ra từ harness của Claude Code, chia thành bốn nhóm —
-          memory, workflow, tools, automation. Ba cái khiến mình phải dừng lại suy nghĩ lại.
-        </p>
-        <span class="lead-cta">
-          <span>Đọc tiếp</span>
-          <span class="lead-cta-arrow">→</span>
-        </span>
-        <div class="lead-numeral" aria-hidden="true">08</div>
-      </a>
-
-      <aside class="workbench">
-        <div class="workbench-label">Workbench</div>
-        <p class="workbench-desc">Những thứ mình đang xây ngoài giờ làm.</p>
-        <ul class="workbench-list">
+      <section class="feed-block">
+        <h3 class="feed-block__title">Workbench</h3>
+        <p class="feed-block__hint">Những thứ mình đang xây ngoài giờ làm.</p>
+        <ul class="workbench">
           <li>
             <a href="https://about.duthaho.dev" target="_blank" rel="noopener noreferrer">
-              about.duthaho.dev
-              <em>— giới thiệu, các dự án và liên hệ</em>
+              <span class="workbench__name">about.duthaho.dev</span>
+              <span class="workbench__desc">giới thiệu, các dự án và liên hệ</span>
             </a>
           </li>
           <li>
             <a href="https://claudekit.duthaho.dev" target="_blank" rel="noopener noreferrer">
-              claudekit.duthaho.dev
-              <em>— plugin Claude Code · 35 skills, 24 agents</em>
+              <span class="workbench__name">claudekit.duthaho.dev</span>
+              <span class="workbench__desc">plugin Claude Code · 35 skills, 24 agents</span>
             </a>
           </li>
         </ul>
-      </aside>
+      </section>
+
+      <section class="feed-block">
+        <h3 class="feed-block__title">Archive</h3>
+        <ul class="archive">
+          <li><a href="#feed">2026 <span class="archive__count">10</span></a></li>
+        </ul>
+      </section>
+
+      <section class="feed-block">
+        <h3 class="feed-block__title">Subscribe</h3>
+        <ul class="sub-links">
+          <li><a href="feed.xml">RSS feed</a></li>
+          <li><a href="https://duthaho.substack.com/" target="_blank" rel="noopener noreferrer">Substack</a></li>
+        </ul>
+      </section>
 
     </div>
-  </section>
+  </aside>
 
-  <section class="posts-grid reveal-stagger">
+  <div class="feed-main">
 
-    <a class="post-card reveal" href="llm-wiki.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">llm-wiki.md</span>
-        <span class="terminal-status">16 / 04 / 2026</span>
+    <article class="discussion-pinned reveal">
+      <header class="discussion-pinned__head">
+        <span class="chip chip--pinned">
+          <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M9.585.687a2.25 2.25 0 0 1 3.182 0l2.546 2.546a2.25 2.25 0 0 1 0 3.182L13.06 8.667l.005.005-1.06 1.061-3.5 3.5-1.06-1.06.354-.355-2.474-2.474-3.91 1.477a.75.75 0 0 1-.81-.169L.74 10.21a.75.75 0 0 1-.169-.81l1.477-3.91L4.95 1.586l1.06-1.06.005.004L9.585.687Z"/></svg>
+          Pinned
+        </span>
+        <span class="discussion-pinned__num">#10</span>
+      </header>
+      <a class="discussion-pinned__link" href="things-ive-learned.html">
+        <span class="discussion-pinned__slug">things-ive-learned.md</span>
+        <h2 class="discussion-pinned__title">
+          Những thứ tôi học được sau 5 năm làm engineer
+          <em>— viết lúc hơi ngà ngà</em>
+        </h2>
+        <p class="discussion-pinned__excerpt">
+          Đọc một bài Reddit cũ của data engineer say rượu viết thật thà về 10 năm đi làm.
+          Mình ngồi viết lại theo góc nhìn của mình — đồng ý khoảng 80%.
+        </p>
+      </a>
+      <div class="discussion-pinned__meta">
+        <time datetime="2026-05-05">05 May 2026</time>
+        <span class="dot-sep" aria-hidden="true">·</span>
+        <span>~10 phút đọc</span>
       </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây
-          <em>và lý do tôi sẽ thử lại</em>
+    </article>
+
+    <section class="feed reveal-stagger" id="feed">
+      <header class="feed__head">
+        <h3 class="feed__title">Recent</h3>
+        <span class="feed__count">9</span>
+      </header>
+
+      <a class="discussion-card reveal" href="effective-prompt-engineering.html">
+        <span class="discussion-card__num">#09</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Prompt engineering không khó như bạn nghĩ —
+            <em>và không dễ như người ta nói</em>
+          </h4>
+          <p class="discussion-card__excerpt">Có hàng trăm bài về prompt engineering, hầu hết giải thích lại cùng những khái niệm. Bài này nói thứ không bài nào nói thẳng: tại sao advice không apply được vào production.</p>
         </div>
-        <p class="post-excerpt">Andrej Karpathy post một gist về pattern xây personal knowledge base bằng LLM. Đọc xong mình ngồi im — ông đặt tên đúng cho vấn đề mình loay hoay hai năm trước.</p>
-      </div>
-    </a>
-
-    <a class="post-card reveal" href="claude-token-habits.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">claude-token-habits.md</span>
-        <span class="terminal-status">15 / 04 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          Claude không đếm tin nhắn — nó đếm token.
-          <em>Và tôi đã dùng sai từ đầu.</em>
+        <div class="discussion-card__meta">
+          <time datetime="2026-05-01">01 May</time>
+          <span>~9 phút</span>
         </div>
-        <p class="post-excerpt">10 thói quen giúp hết cảnh bị limit giữa chừng — đọc xong mình nhận ra mình đang lãng phí token theo ít nhất ba cách khác nhau.</p>
-      </div>
-    </a>
+      </a>
 
-    <a class="post-card reveal" href="claude-code-token-drain.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">claude-code-token-drain.md</span>
-        <span class="terminal-status">02 / 04 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          Hai dòng code ẩn khiến Claude Code <em>ngốn token gấp bốn lần</em>
+      <a class="discussion-card reveal" href="agentic-patterns.html">
+        <span class="discussion-card__num">#08</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Tôi đọc source code bị leak của Claude Code
+            <em>và nhận ra mình đang build agent sai từ đầu</em>
+          </h4>
+          <p class="discussion-card__excerpt">12 patterns mình rút ra từ harness của Claude Code, chia thành bốn nhóm — memory, workflow, tools, automation. Ba cái khiến mình phải dừng lại suy nghĩ lại.</p>
         </div>
-        <p class="post-excerpt">Một người dùng Reddit reverse-engineer minified source, tìm ra bug caching khiến token drain, và patch bằng đúng hai dòng.</p>
-      </div>
-    </a>
-
-    <a class="post-card reveal" href="ai-hype.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">ai-hype.md</span>
-        <span class="terminal-status">01 / 04 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          AI không phải phép màu —
-          <em>nhưng ai đó đang cố làm bạn quên điều đó</em>
+        <div class="discussion-card__meta">
+          <time datetime="2026-04-25">25 Apr</time>
+          <span>~12 phút</span>
         </div>
-        <p class="post-excerpt">Đọc một bài khá nặng tay về hype AI, có chỗ đồng ý, có chỗ không. Viết lại theo góc nhìn của người đang xây sản phẩm thật.</p>
-      </div>
-    </a>
+      </a>
 
-    <a class="post-card reveal" href="claude-interpretability.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">claude-interpretability.md</span>
-        <span class="terminal-status">25 / 03 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          Claude không biết mình đang nghĩ gì
-          <em>— và điều đó đáng lo hơn bạn nghĩ</em>
+      <a class="discussion-card reveal" href="llm-wiki.html">
+        <span class="discussion-card__num">#07</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Karpathy vừa mô tả đúng thứ tôi đã thất bại khi xây
+            <em>và lý do tôi sẽ thử lại</em>
+          </h4>
+          <p class="discussion-card__excerpt">Andrej Karpathy post một gist về pattern xây personal knowledge base bằng LLM. Đọc xong mình ngồi im — ông đặt tên đúng cho vấn đề mình loay hoay hai năm trước.</p>
         </div>
-        <p class="post-excerpt">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</p>
-      </div>
-    </a>
-
-    <a class="post-card reveal" href="agentic-rag.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">agentic-rag.md</span>
-        <span class="terminal-status">18 / 03 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          RAG thông thường đang nói dối bạn
-          <em>— và bạn chưa nhận ra</em>
+        <div class="discussion-card__meta">
+          <time datetime="2026-04-16">16 Apr</time>
+          <span>~7 phút</span>
         </div>
-        <p class="post-excerpt">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</p>
-      </div>
-    </a>
+      </a>
 
-    <a class="post-card reveal" href="using-ai-wrong.html">
-      <div class="terminal-header">
-        <span class="terminal-filename">using-ai-wrong.md</span>
-        <span class="terminal-status">10 / 03 / 2026</span>
-      </div>
-      <div class="terminal-body">
-        <div class="post-title">
-          Tôi đã dùng AI <em>sai cách</em> suốt gần một năm
+      <a class="discussion-card reveal" href="claude-token-habits.html">
+        <span class="discussion-card__num">#06</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Claude không đếm tin nhắn — nó đếm token.
+            <em>Và tôi đã dùng sai từ đầu.</em>
+          </h4>
+          <p class="discussion-card__excerpt">10 thói quen giúp hết cảnh bị limit giữa chừng — đọc xong mình nhận ra mình đang lãng phí token theo ít nhất ba cách khác nhau.</p>
         </div>
-        <p class="post-excerpt">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</p>
-      </div>
-    </a>
+        <div class="discussion-card__meta">
+          <time datetime="2026-04-15">15 Apr</time>
+          <span>~6 phút</span>
+        </div>
+      </a>
 
-  </section>
+      <a class="discussion-card reveal" href="claude-code-token-drain.html">
+        <span class="discussion-card__num">#05</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Hai dòng code ẩn khiến Claude Code <em>ngốn token gấp bốn lần</em>
+          </h4>
+          <p class="discussion-card__excerpt">Một người dùng Reddit reverse-engineer minified source, tìm ra bug caching khiến token drain, và patch bằng đúng hai dòng.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-04-02">02 Apr</time>
+          <span>~5 phút</span>
+        </div>
+      </a>
+
+      <a class="discussion-card reveal" href="ai-hype.html">
+        <span class="discussion-card__num">#04</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            AI không phải phép màu
+            <em>nhưng ai đó đang cố làm bạn quên điều đó</em>
+          </h4>
+          <p class="discussion-card__excerpt">Đọc một bài khá nặng tay về hype AI, có chỗ đồng ý, có chỗ không. Viết lại theo góc nhìn của người đang xây sản phẩm thật.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-04-01">01 Apr</time>
+          <span>~6 phút</span>
+        </div>
+      </a>
+
+      <a class="discussion-card reveal" href="claude-interpretability.html">
+        <span class="discussion-card__num">#03</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Claude không biết mình đang nghĩ gì
+            <em>và điều đó đáng lo hơn bạn nghĩ</em>
+          </h4>
+          <p class="discussion-card__excerpt">Anthropic vừa công bố loạt nghiên cứu về cách Claude thực sự vận hành bên trong. Không phải cách nó tự mô tả. Mà là cách nó thực sự hoạt động.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-03-25">25 Mar</time>
+          <span>~9 phút</span>
+        </div>
+      </a>
+
+      <a class="discussion-card reveal" href="agentic-rag.html">
+        <span class="discussion-card__num">#02</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            RAG thông thường đang nói dối bạn
+            <em>và bạn chưa nhận ra</em>
+          </h4>
+          <p class="discussion-card__excerpt">Sau một thời gian build chatbot nội bộ bằng RAG, mình nhận ra mình đã hiểu nhầm vấn đề cốt lõi ngay từ đầu.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-03-18">18 Mar</time>
+          <span>~8 phút</span>
+        </div>
+      </a>
+
+      <a class="discussion-card reveal" href="using-ai-wrong.html">
+        <span class="discussion-card__num">#01</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Tôi đã dùng AI <em>sai cách</em> suốt gần một năm
+          </h4>
+          <p class="discussion-card__excerpt">Đọc một bài viết của kỹ sư bên Mỹ, giật mình nhận ra mình đang mắc đúng cái bẫy họ mô tả.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-03-10">10 Mar</time>
+          <span>~6 phút</span>
+        </div>
+      </a>
+
+    </section>
+
+  </div>
 
 </main>
 
-<footer>
-  <div class="container-wide">
+<footer class="feed-foot">
+  <div class="feed-foot__inner">
     <span>Nhật ký dev · Viết khi đêm xuống</span>
-    <span><em>Set in Fraunces &amp; Newsreader.</em></span>
+    <span><em>Set in Fraunces &amp; JetBrains Mono.</em></span>
     <span>© 2026 duthaho</span>
   </div>
 </footer>
