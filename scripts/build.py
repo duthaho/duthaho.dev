@@ -45,16 +45,20 @@ def main() -> None:
     if not args.skip_og:
         cmd = [PYTHON, str(SCRIPTS / "og" / "render.py")]
         if args.post: cmd += ["--post", args.post]
-        step("1/3  render OG cards", cmd)
+        step("1/4  render OG cards", cmd)
     else:
         print("== skipping OG render ==")
 
-    step("2/3  build sitemap + RSS",
+    step("2/4  build sitemap + RSS",
          [PYTHON, str(SCRIPTS / "build-feeds.py")])
 
     cmd = [PYTHON, str(SCRIPTS / "inject-meta.py")]
     if args.post: cmd += ["--post", args.post]
-    step("3/3  inject meta + JSON-LD", cmd)
+    step("3/4  inject meta + JSON-LD", cmd)
+
+    cmd = [PYTHON, str(SCRIPTS / "inject-comments.py")]
+    if args.post: cmd += ["--post", args.post]
+    step("4/4  inject comments", cmd)
 
     print("\nBuild complete. Ready to deploy.")
 
