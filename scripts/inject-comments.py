@@ -30,7 +30,7 @@ REPO        = "duthaho/duthaho.dev"
 REPO_ID     = "R_kgDOR2nYrQ"
 CATEGORY    = "Blog"
 CATEGORY_ID = "DIC_kwDOR2nYrc4C9gvp"
-THEME_URL   = "https://duthaho.dev/giscus-theme.css"
+THEME_URL   = "https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
 LANG        = "vi"
 
 COMMENTS_START = "<!-- comments:start -->"
