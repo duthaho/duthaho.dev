@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.">
+<link rel="canonical" href="https://duthaho.dev/notes-that-get-used.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/notes-that-get-used.html">
+<meta property="og:title" content="Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm">
+<meta property="og:description" content="Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.">
+<meta property="og:image" content="https://duthaho.dev/og/notes-that-get-used.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-05-29">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm">
+<meta name="twitter:description" content="Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.">
+<meta name="twitter:image" content="https://duthaho.dev/og/notes-that-get-used.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm","description":"Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.","image":"https://duthaho.dev/og/notes-that-get-used.jpg","datePublished":"2026-05-29","dateModified":"2026-05-29","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/notes-that-get-used.html"},"url":"https://duthaho.dev/notes-that-get-used.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / notes-that-get-used</div>
+
+  <h1 class="page-title">Hầu hết note của tôi chết trong một cái folder — <em>và tôi đã sửa nhầm vấn đề suốt hai năm</em></h1>
+  <p class="page-desc">Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 29/05/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">notes-that-get-used.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+            <p>Mình từng tin lưu nhiều note là một dạng thông minh. Mỗi bài hay mình đọc, mỗi ý hay mình nghe được, mình đều cắt một mẩu và bỏ vào vault. Sau hai năm mình có mấy trăm note. Và mình gần như không bao giờ mở lại cái nào.</p>
+
+            <p>Cảm giác đó quen thuộc một cách đau lòng: search một thứ mơ hồ liên quan, vô tình thấy một note cũ, đọc lại, nghĩ "ồ mình từng biết cái này," rồi đóng lại và đi tiếp. Note đó không bao giờ trở thành cái gì cả. Nó chỉ ngồi đó, chiếm chỗ, làm mình thấy yên tâm giả tạo rằng mình "có kiến thức."</p>
+
+            <p>Rồi mình đọc một guide xây hệ thống Obsidian được thiết kế từ phía ngược lại. Câu mở của nó làm mình ngồi im: <strong>lưu và dùng là hai hoạt động hoàn toàn khác nhau, và gần như mọi hệ thống note đều tối ưu cho cái đầu tiên trong khi phớt lờ hoàn toàn cái thứ hai.</strong> Đọc xong mình hiểu ra — suốt hai năm mình không thiếu note. Mình tối ưu nhầm đầu.</p>
+
+            <h2>Khoảng cách giữa lưu và dùng</h2>
+
+            <p>Trước khi xây bất cứ thứ gì, phải hiểu tại sao cái khoảng cách đó tồn tại. Và lý do thì đơn giản đến mức khó chịu: <strong>lưu thì dễ vì nó không có cái giá nào.</strong></p>
+
+            <p>Bạn highlight một đoạn, viết một note nhanh, lưu lại. Hành động đó <em>cảm thấy</em> năng suất. Bạn không mất thông tin. Nó an toàn. Còn dùng thì đòi hỏi thứ khó hơn nhiều: chủ động lôi ra đúng mẩu thông tin vào đúng khoảnh khắc bạn cần, ghép nó với những gì bạn đang biết, rồi biến nó thành một thứ gì đó — một quyết định, một đoạn viết, một hành động, một framework.</p>
+
+            <p>Khoảng cách giữa lưu và dùng chính là khoảng cách giữa <em>thu thập thụ động</em> và <em>tổng hợp chủ động</em>. Hầu hết hệ thống note được thiết kế cho thu thập: file, folder, tag, search — tất cả tối ưu cho khoảnh khắc lưu vào và việc lấy lại một thứ bạn đã biết là nó tồn tại. Cái guide này thì xây quanh một câu hỏi khác hẳn: <em>mình nên tạo ra cái gì từ những gì mình biết, và làm sao hệ thống tự đẩy đúng thông tin lên mặt vào đúng lúc để việc tạo ra đó khả thi?</em></p>
+
+            <h2>Một note chỉ được tính là "đã dùng" khi nào?</h2>
+
+            <p>Phần này là phần mình thấy đắt nhất, vì nó đặt ra một tiêu chuẩn mà mình chưa bao giờ dám áp lên vault của mình. Một note được tính là <strong>đã dùng</strong> khi nó đóng góp cho một trong bốn thứ:</p>
+
+            <p><strong>Hỗ trợ quyết định.</strong> Note nổi lên đúng lúc bạn đang ra một quyết định và cung cấp ngữ cảnh, bằng chứng hoặc góc nhìn làm quyết định đó tốt hơn. <strong>Nhiên liệu cho việc viết.</strong> Note đóng góp nội dung, dẫn chứng, cấu trúc hoặc insight cho một thứ bạn đang viết. <strong>Chất liệu cho hội thoại.</strong> Note cho bạn một thứ cụ thể để nói trong một cuộc họp, một buổi present mà nếu không có nó bạn đã không có. <strong>Cò súng cho hành động.</strong> Note đẩy một ý lên mặt vào đúng khoảnh khắc bạn có thể hành động, thay vì vào cái khoảnh khắc ngẫu nhiên bạn tình cờ lưu nó.</p>
+
+            <p>Mọi note trong vault nên có khả năng đóng góp cho ít nhất một trong bốn cái đó. Note nào không đóng góp được cho cái nào thì không nên ở trong vault. Nghe thì hiển nhiên, nhưng đem cái thước này đo vault thật của mình thì khoảng 70% note rớt ngay.</p>
+
+            <div class="pq">
+              <p>Một vault 500 note mà mỗi note từng đóng góp cho một quyết định, một bài viết, một hành động — đáng giá hơn nhiều một vault 5.000 note được lưu rồi không bao giờ chạm lại.</p>
+            </div>
+
+            <h2>Kiến trúc: ba vùng</h2>
+
+            <p>Hệ thống chia làm ba vùng. Mỗi vùng giữ một loại note ở một giai đoạn xử lý khác nhau, và note di chuyển qua các vùng <em>khi nó trở nên hữu ích hơn</em> — chứ không phải khi nó được sắp cho gọn.</p>
+
+            <p><strong>Vùng 1 — Capture:</strong> nguyên liệu thô, hộp thư đến của tư duy. Note ở đây chưa hữu ích; chúng chỉ là <em>ứng viên</em> của sự hữu ích. <strong>Vùng 2 — Active:</strong> note đã xử lý, hữu ích ngay bây giờ. Note vĩnh viễn viết bằng lời của chính bạn, note project gắn với việc đang làm, note tra cứu sắp xếp để lấy ra nhanh. <strong>Vùng 3 — Deep Archive:</strong> project đã xong, quyết định đã chốt, lịch sử. Không còn hữu ích tức thời nhưng đáng giữ để tra sau.</p>
+
+            <div class="diagram"><span class="diagram-label">Cấu trúc vault — note chảy từ trên xuống khi nó hữu ích hơn</span>
+VAULT/
+  00 - CAPTURE/        ← note thô, chưa xử lý
+  01 - ACTIVE/
+       permanent/      ← note nguyên tử, viết bằng lời của mình
+       projects/       ← project đang chạy
+       decisions/      ← quyết định đang cân nhắc
+       references/     ← thứ mình tra thường xuyên
+  02 - ARCHIVE/
+  03 - OUTPUT/         ← thành phẩm: bài viết, báo cáo, quyết định
+  04 - SYSTEM/         ← CLAUDE.md, skills, templates</div>
+
+            <p>Cái folder mà gần như mọi hệ thống note không bao giờ có, là <code>03 - OUTPUT</code>. Đây là nơi <em>thành phẩm</em> sống — những bài viết, báo cáo, framework mà note của bạn đã góp phần tạo ra. Để nó nằm ngay trong vault tạo ra một sợi dây nhìn thấy được giữa note bạn lưu và thứ bạn thật sự sản xuất. Sau vài tháng, nó cho bạn thấy note nào từng sinh ra cái gì và note nào chưa bao giờ được dùng — và điều đó dạy ngược lại cách bạn nên lưu trong tương lai.</p>
+
+            <h2>CLAUDE.md — thứ dạy Claude "hữu ích" nghĩa là gì với riêng tôi</h2>
+
+            <p>Đây là chỗ Claude bước vào. Toàn bộ hệ thống xoay quanh một file: <code>CLAUDE.md</code> — tài liệu khai báo <em>hữu ích nghĩa là gì với cá nhân bạn</em>. Mình dùng note để làm gì. Project nào đang chạy. Quyết định nào đang mở. Mình viết về chủ đề gì. Một note thế nào thì với mình là hữu ích, thế nào thì không. Tiêu chuẩn để một note đủ điều kiện lên Vùng 2.</p>
+
+            <p>Nghe đơn giản nhưng đây là mảnh thay đổi cả trò chơi: nó biến "hữu ích" từ một khái niệm mơ hồ trong đầu bạn thành một thứ Claude có thể đọc và <em>thực thi</em>. Khi định nghĩa hữu ích nằm trên giấy, mọi workflow phía sau mới có thể tự động ra quyết định thay bạn.</p>
+
+            <h2>Năm workflow biến note thành output</h2>
+
+            <p>Đây là tầng sản xuất của hệ thống — năm workflow, mỗi cái chuyển note thụ động thành output chủ động. Mình chép lại theo cách mình hiểu, không phải nguyên văn:</p>
+
+            <div class="finding-block">
+              <div class="finding-num">Workflow 01</div>
+              <div class="finding-title">Lượt xử lý cuối ngày</div>
+              <p>Mỗi tối, Claude quét mọi note thô gom trong ngày ở vùng Capture. Với từng note nó hỏi đúng một câu: cái này có đóng góp được cho project / quyết định / chủ đề viết nào đang active trong CLAUDE.md không? Có thì viết lại bằng giọng của mình — không phải tóm tắt nguồn, mà là <em>cách mình hiểu ý đó</em> — rồi nối vào note cũ. Không thì archive thẳng. Mục tiêu không phải sắp cho gọn. Mục tiêu là lọc ra cái đáng giữ và tạo sẵn liên kết để sau này nó tự nổi lên.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Workflow 02</div>
+              <div class="finding-title">Nuôi quyết định đang mở</div>
+              <p>Mỗi khi mình đang phân vân một quyết định, Claude quét cả Vùng 2 tìm mọi note liên quan — không chỉ note được tag, mà bất kỳ note nào chứa thông tin, góc nhìn, bằng chứng mà một người cẩn thận sẽ cân nhắc khi ra quyết định đó. Với mỗi note: nó nói rõ note chứa gì liên quan, và note đó ủng hộ, phản bác hay thêm sắc thái cho quyết định. Rồi tổng hợp tất cả thành một bản brief. Đây là workflow gói trọn cái tinh thần của hệ thống: câu trả lời cho câu hỏi hôm nay có thể đã nằm sẵn trong những gì mình lưu hôm qua.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Workflow 03</div>
+              <div class="finding-title">Kích hoạt việc viết</div>
+              <p>Trước khi viết bất cứ thứ gì, mình hỏi vault trước. Claude trả về một bản brief: luận điểm mạnh nhất mà note của mình chống đỡ được, bằng chứng cụ thể kèm tên note, các phản biện làm phức tạp luận điểm đó, những số liệu / ví dụ / câu trích cụ thể đáng đưa vào, và <em>chỗ còn thiếu</em> cần research thêm. Viết từ cái brief này khác hẳn viết từ con số 0 — mình đang diễn đạt lại cái mình đã biết, chứ không vắt óc nghĩ ra ý tại chỗ. Đúng là bài viết bạn đang đọc cũng ra đời theo cách này.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Workflow 04</div>
+              <div class="finding-title">Bề mặt liên kết</div>
+              <p>Mỗi tuần một lần, Claude đọc các note mới rồi tìm liên kết tới note cũ — cùng một nguyên lý áp ở hai lĩnh vực khác nhau, hai khẳng định mâu thuẫn đáng đặt cạnh nhau, một note làm bằng chứng cho hay chống lại một note khác, một pattern lặp đi lặp lại mà không note đơn lẻ nào gọi tên. Nó chỉ đẩy lên những liên kết thực sự không hiển nhiên, bỏ qua thứ đã nối rồi. Đây là workflow khiến vault "lãi kép": những liên kết bạn không cố ý tạo ra trở nên nhìn thấy được khi Claude đọc xuyên qua toàn bộ kho.</p>
+            </div>
+
+            <div class="finding-block">
+              <div class="finding-num">Workflow 05</div>
+              <div class="finding-title">Máy tạo output</div>
+              <p>Khi một bài viết, một bản tổng kết quyết định hay một báo cáo project đã đến lúc phải ra lò, Claude đọc toàn bộ note theo chủ đề cộng những liên kết mà Bề mặt liên kết đã nối, rồi dựng một bản nháp hoàn chỉnh: chỉ dùng thông tin trong vault, viết bằng giọng mình như mô tả trong CLAUDE.md, tổng hợp xuyên các note thay vì tóm tắt từng cái, và — phần quan trọng nhất — tạo ra một insight mà <em>không note đơn lẻ nào chứa</em> nhưng tổ hợp của chúng thì có. Đây là khoảnh khắc cả hệ thống tự chứng minh nó đáng giá: mấy tháng note được tổng hợp thành thành phẩm trong vài phút thay vì vài giờ.</p>
+            </div>
+
+            <h2>Cái khiến nó "lãi kép" — và cái tôi từng làm sai</h2>
+
+            <p>Có một workflow thứ sáu kín đáo hơn: <strong>audit hằng tuần.</strong> Mỗi tuần Claude đọc các note ở Vùng 2 đã nằm im không được chạm tới quá hai tuần. Note nào không nối được vào bất cứ thứ gì đang active thì bị gắn tag <code>REVIEW</code>. Nó được thêm một tuần ân hạn. Nếu sau hai lần audit liên tiếp vẫn không kết nối với gì — archive. Cái audit này thực thi đúng nguyên tắc cốt lõi: note không nối vào cái gì đang sống thì hiện tại không hữu ích, và nó thuộc về kho lưu trữ cho tới khi có gì đó làm nó liên quan trở lại.</p>
+
+            <p>Đọc đến đây mình nhận ra mình từng thử xây một thứ gần như y hệt — và thất bại. Mình từng viết về <a href="llm-wiki.html">cái gist của Karpathy về personal knowledge base bằng LLM</a>, và mình đã loay hoay với chính ý tưởng đó hai năm trước. Lần đó mình thất bại vì mình xây phần lưu rất kỹ — cấu trúc folder đẹp, tag gọn gàng — nhưng không hề xây phần <em>dùng</em>. Mình không có lượt xử lý cuối ngày, không có máy tạo output, không có cái audit dám archive note chết. Mình tưởng mình đang xây một bộ não thứ hai. Thực ra mình đang xây một nghĩa trang ngăn nắp.</p>
+
+            <div class="callout">
+              <div class="callout-label">Cái dòng thời gian mình tin nhất trong guide</div>
+              <p>Tuần một: bạn có vault có cấu trúc và mấy workflow, nhưng chưa đủ note để liên kết bất ngờ nào xuất hiện. Tháng hai: Bề mặt liên kết bắt đầu nối những note bạn viết về chủ đề này với note về chủ đề khác theo cách bạn không cố ý. Tháng ba: Nuôi quyết định trở thành workflow giá trị nhất — bạn ra một quyết định và Claude lôi ra tám note rải qua ba tháng, từ ba ngữ cảnh khác nhau, không cái nào bạn tự nhớ để đi tìm.</p>
+              <p>Tháng sáu: folder Output đủ thành phẩm để bạn thấy note nào sinh sản, note nào chưa bao giờ được dùng — và bạn chỉnh lại cách lưu. Hệ thống không chỉ tích lũy kiến thức nữa. Nó đang học xem loại kiến thức nào hữu ích với <em>riêng bạn</em>.</p>
+            </div>
+
+            <h2>Metric duy nhất quan trọng</h2>
+
+            <p>Hầu hết mọi người đo hệ thống note của họ bằng số lượng note. Cái guide này nói thẳng metric duy nhất đáng đo là <strong>số lần một note đã đóng góp cho một thứ gì đó.</strong> Mọi workflow trong hệ thống được thiết kế để tăng tỷ lệ đóng góp đó. Mọi quy ước lúc lưu được thiết kế để giữ lại cái ngữ cảnh khiến note có thể đóng góp về sau.</p>
+
+            <p>Mình thích cách diễn đạt này vì nó lật ngược cảm giác năng suất giả mà mình bị nghiện hai năm qua. Lưu một note không còn là một chiến thắng nhỏ nữa. Nó là một lời hứa chưa trả. Note chỉ "thắng" vào cái ngày nó góp phần làm ra một thứ — và nếu cái ngày đó không bao giờ đến, thì việc lưu nó vốn dĩ đã là lãng phí ngay từ đầu, mình chỉ không nhìn thấy.</p>
+
+            <div class="aside">
+              <p>Mình vẫn chưa rebuild lại vault — viết bài này xong mới là bước đầu. Nhưng lần này mình sẽ bắt đầu từ <code>04 - SYSTEM/CLAUDE.md</code> chứ không phải từ cấu trúc folder. Định nghĩa "hữu ích" trước, kiến trúc sau. Đúng thứ tự ngược lại với lần trước.</p>
+            </div>
+
+            <p>Nếu bạn cũng có một vault mấy trăm note mà gần như không bao giờ mở lại, mình nghĩ vấn đề của bạn cũng không phải thiếu note — và cũng không phải thiếu kỷ luật lưu. Mà là bạn chưa bao giờ xây cái nửa còn lại: nửa <em>dùng</em>. Tin tốt là nửa đó dựng được trong một cuối tuần, và tỷ lệ đóng góp bắt đầu lãi kép ngay từ note đầu tiên được xử lý.</p>
+
+            <div class="pq closing-quote">
+              <p>Mình tưởng mình đang xây một bộ não thứ hai. Thực ra mình đang xây một nghĩa trang ngăn nắp.</p>
+            </div>
+
+            <nav class="post-nav">
+              <a class="post-nav-item prev" href="things-ive-learned.html">
+                <div class="post-nav-dir">&larr; Bài trước</div>
+                <div class="post-nav-title">Những thứ tôi học được sau 5 năm làm engineer</div>
+              </a>
+              <div></div>
+            </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Claude &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

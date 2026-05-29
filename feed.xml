@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Tue, 05 May 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Fri, 29 May 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm</title>
+    <link>https://duthaho.dev/notes-that-get-used.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/notes-that-get-used.html</guid>
+    <pubDate>Fri, 29 May 2026 09:00:00 +0700</pubDate>
+    <description>Đọc một guide về cách xây hệ thống Obsidian thiết kế từ phía ngược lại: không tối ưu cho lúc lưu, mà cho lúc dùng. Đọc xong mình hiểu tại sao cái vault mấy trăm note của mình chưa bao giờ trả lại cái gì.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Những thứ tôi học được sau 5 năm làm engineer — viết lúc hơi ngà ngà</title>
     <link>https://duthaho.dev/things-ive-learned.html</link>
