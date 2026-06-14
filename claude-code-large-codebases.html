@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Claude Code trong codebase lớn: cách nó hoạt động và bắt đầu từ đâu</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Claude Code vận hành trong monorepo nhiều triệu dòng bằng agentic search thay vì index. Bài này tóm tắt cách nó hoạt động, các lớp harness cần dựng để mở rộng, và một lộ trình bắt đầu cụ thể cho codebase lớn.">
+<link rel="canonical" href="https://duthaho.dev/claude-code-large-codebases.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/claude-code-large-codebases.html">
+<meta property="og:title" content="Claude Code trong codebase lớn: cách nó hoạt động và bắt đầu từ đâu">
+<meta property="og:description" content="Claude Code vận hành trong monorepo nhiều triệu dòng bằng agentic search thay vì index. Bài này tóm tắt cách nó hoạt động, các lớp harness cần dựng để mở rộng, và một lộ trình bắt đầu cụ thể cho codebase lớn.">
+<meta property="og:image" content="https://duthaho.dev/og/claude-code-large-codebases.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-06-15">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Code trong codebase lớn: cách nó hoạt động và bắt đầu từ đâu">
+<meta name="twitter:description" content="Claude Code vận hành trong monorepo nhiều triệu dòng bằng agentic search thay vì index. Bài này tóm tắt cách nó hoạt động, các lớp harness cần dựng để mở rộng, và một lộ trình bắt đầu cụ thể cho codebase lớn.">
+<meta name="twitter:image" content="https://duthaho.dev/og/claude-code-large-codebases.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Claude Code trong codebase lớn: cách nó hoạt động và bắt đầu từ đâu","description":"Claude Code vận hành trong monorepo nhiều triệu dòng bằng agentic search thay vì index. Bài này tóm tắt cách nó hoạt động, các lớp harness cần dựng để mở rộng, và một lộ trình bắt đầu cụ thể cho codebase lớn.","image":"https://duthaho.dev/og/claude-code-large-codebases.jpg","datePublished":"2026-06-15","dateModified":"2026-06-15","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/claude-code-large-codebases.html"},"url":"https://duthaho.dev/claude-code-large-codebases.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / claude-code-large-codebases</div>
+
+  <h1 class="page-title">Claude Code trong codebase lớn: <em>cách nó hoạt động và bắt đầu từ đâu</em></h1>
+  <p class="page-desc">Claude Code vận hành trong monorepo nhiều triệu dòng bằng agentic search thay vì index. Bài này tóm tắt cách nó hoạt động, các lớp harness cần dựng để mở rộng, và một lộ trình bắt đầu cụ thể cho codebase lớn.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 15/06/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">claude-code-large-codebases.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+    <p>Claude Code đang chạy trong production ở những codebase quy mô thật: monorepo nhiều triệu dòng, hệ thống legacy hàng chục năm tuổi, kiến trúc phân tán trải trên hàng chục repo, ở các tổ chức có hàng nghìn engineer và cả những ngôn ngữ ít được coi là "thân thiện với AI" như C, C++, C#, Java, PHP. Điều khiến nó hoạt động được ở quy mô đó không phải bản thân model, mà là <strong>cái harness dựng quanh model</strong> — và mức độ bạn làm cho codebase của mình "đọc được" với một agent.</p>
+
+    <p>Bài này tóm tắt ba thứ: Claude Code điều hướng code bằng cách nào, những lớp mở rộng nào tạo nên harness, và bắt đầu từ đâu nếu bạn muốn triển khai trong một codebase lớn.</p>
+
+    <h2>Vì sao Claude Code không index codebase của bạn</h2>
+
+    <p>Cách tiếp cận thường thấy với codebase lớn là index trước: embedding toàn bộ repo, lưu vào vector database, rồi truy hồi các đoạn liên quan tại thời điểm hỏi — tức là RAG. Claude Code không làm vậy. Nó dùng <strong>agentic search</strong>: duyệt hệ thống file ngay tại chỗ, <code>grep</code> theo nội dung, glob theo pattern, đọc file cụ thể, lần theo reference — đúng cách một engineer điều hướng code. Không có index trung tâm nào cần dựng hay duy trì.</p>
+
+    <p>Đáng chú ý: các bản Claude Code thời đầu <em>có</em> dùng RAG với vector DB cục bộ, nhưng nhóm phát triển nhận thấy agentic search cho kết quả tốt hơn một cách nhất quán — đủ bất ngờ để chính họ ghi nhận lại. Lý do nằm ở chi phí ẩn của việc index ở quy mô lớn:</p>
+
+    <ul>
+      <li><strong>Lỗi thời và trôi lệch.</strong> Khi hàng nghìn engineer commit liên tục, pipeline embedding không đuổi kịp. Index dễ trả về một hàm đã đổi tên tuần trước hoặc một module vừa bị xóa.</li>
+      <li><strong>Rủi ro bảo mật.</strong> Index phải nằm ở đâu đó — một bản sao của toàn bộ code, trở thành trách nhiệm pháp lý và bề mặt tấn công mới.</li>
+      <li><strong>Chi phí bảo trì.</strong> Index là một hệ thống nữa phải nuôi: tái dựng, đồng bộ, theo dõi.</li>
+    </ul>
+
+    <p>Agentic search né được cả ba, vì mỗi phiên làm việc trực tiếp trên code sống. Cái giá phải trả là token và độ trễ — nó đọc nhiều file hơn cho mỗi tác vụ. Với phần lớn workflow lập trình, đánh đổi này là xứng đáng. Hệ quả kéo theo cũng quan trọng không kém: nếu agent điều hướng code như một con người, thì một codebase khó cho người mới cũng sẽ khó cho agent. Làm codebase dễ đọc trở thành điều kiện tiên quyết, không phải tùy chọn.</p>
+
+    <h2>Harness: bảy điểm mở rộng</h2>
+
+    <p>Phần lớn khác biệt giữa "Claude Code dùng được" và "Claude Code dùng tốt ở quy mô lớn" nằm ở bảy điểm mở rộng dưới đây. Mỗi điểm giải một bài toán riêng, và mỗi điểm có một sai lầm phổ biến đi kèm.</p>
+
+    <h3>1. <code>CLAUDE.md</code> — nạp mỗi phiên</h3>
+    <p>File context Claude tự đọc khi bắt đầu mỗi phiên. Dùng cấu trúc phân lớp: file gốc cho bức tranh lớn, file ở thư mục con cho quy ước cục bộ. <span class="inline-flag">Lỗi thường gặp:</span> nhồi vào đây những chuyên môn tái sử dụng lẽ ra nên nằm trong skill, khiến mọi phiên đều nặng lên.</p>
+
+    <h3>2. Hooks — kích theo sự kiện</h3>
+    <p>Tự động hóa hành vi nhất quán xuyên suốt các phiên: ép lint và format một cách tất định, nạp context theo module khi khởi động, đề xuất cập nhật <code>CLAUDE.md</code> khi context còn tươi. <span class="inline-flag">Lỗi thường gặp:</span> dùng prompt cho những việc đáng lẽ phải tự động hóa bằng hook.</p>
+
+    <h3>3. Skills — nạp khi cần</h3>
+    <p>Đóng gói chuyên môn chuyên biệt mà không làm phình mọi phiên, theo cơ chế progressive disclosure — chỉ nạp khi liên quan, và có thể giới hạn theo đường dẫn. Ví dụ: skill review bảo mật chỉ kích hoạt khi đang đánh giá lỗ hổng. <span class="inline-flag">Lỗi thường gặp:</span> dồn tất cả vào <code>CLAUDE.md</code> thay vì tách thành skill.</p>
+
+    <h3>4. Plugins — luôn sẵn sàng sau khi cài</h3>
+    <p>Gói skill, hook và cấu hình MCP thành một package cài được, để phân phối một bộ thiết lập đã chạy tốt ra toàn tổ chức qua marketplace có quản lý. <span class="inline-flag">Lỗi thường gặp:</span> để những thiết lập tốt nằm yên trong đầu vài người thay vì chia sẻ.</p>
+
+    <h3>5. Language Server Protocol (LSP)</h3>
+    <p>Cho Claude khả năng điều hướng ở cấp ký hiệu như IDE của lập trình viên: "go to definition", "find all references", phân biệt hai hàm trùng tên. LSP lọc hàng nghìn match không liên quan <em>trước khi</em> Claude phải đọc file — đặc biệt quan trọng với codebase đa ngôn ngữ và C/C++ ở quy mô lớn. <span class="inline-flag">Lỗi thường gặp:</span> tưởng LSP tự cấu hình sẵn.</p>
+
+    <h3>6. MCP servers</h3>
+    <p>Nối Claude tới công cụ nội bộ, nguồn dữ liệu và API: tài liệu nội bộ, hệ thống ticket, nền tảng analytics. Các đội tiến xa còn phơi bày tìm kiếm có cấu trúc thành tool gọi được. <span class="inline-flag">Lỗi thường gặp:</span> dựng kết nối MCP trước khi những thứ cơ bản chạy được.</p>
+
+    <h3>7. Subagents — khi được gọi</h3>
+    <p>Những instance Claude tách biệt với cửa sổ context riêng. Một subagent read-only đi khảo sát một subsystem rồi trả findings về cho agent cha; agent cha mới chỉnh sửa với bức tranh đầy đủ. Mô hình này cho phép làm song song và tách phần khám phá khỏi phần chỉnh sửa. <span class="inline-flag">Lỗi thường gặp:</span> chạy khám phá và chỉnh sửa trong cùng một phiên, để ngõ cụt và thử-sai chất đống làm nhiễm context.</p>
+
+    <h2>Làm codebase dễ điều hướng ở quy mô lớn</h2>
+
+    <p>Các đội triển khai thành công có một điểm chung: họ đầu tư trước để làm codebase <em>legible</em> — dễ đọc — với Claude, thay vì kỳ vọng model tự xoay sở. Những việc cụ thể:</p>
+
+    <ul>
+      <li><strong>Giữ <code>CLAUDE.md</code> mỏng và phân lớp.</strong> Vì nó nạp ở mọi phiên bất kể tác vụ, mỗi dòng thừa là một khoản thuế đánh lên mọi lần chạy.</li>
+      <li><strong>Khởi tạo ở thư mục con, không phải ở gốc repo.</strong> Claude tự đi ngược lên cây thư mục và nạp mọi <code>CLAUDE.md</code> trên đường, nên context gốc không bao giờ mất — còn quy ước cục bộ thì ở đúng chỗ của nó.</li>
+      <li><strong>Scope lệnh test và lint theo thư mục con.</strong> Chạy nguyên bộ test của cả repo cho một thay đổi nhỏ gây timeout và nhét đầy context bằng output không liên quan. Khai báo lệnh áp riêng cho từng phần.</li>
+      <li><strong>Dùng <code>.claudeignore</code></strong> (quản lý qua <code>.claude/settings.json</code>) để loại file sinh tự động, build artifact và code bên thứ ba.</li>
+      <li><strong>Viết bản đồ codebase bằng markdown</strong> khi cấu trúc thư mục không tự nói lên tổ chức.</li>
+      <li><strong>Triển khai LSP</strong> cho các ngôn ngữ có kiểu, để tìm theo ký hiệu thay vì khớp chuỗi.</li>
+    </ul>
+
+    <div class="aside">
+      <p>Một chỉ dẫn thực dụng từ cộng đồng: đừng để context vượt khoảng 60% sức chứa — chất lượng output bắt đầu tụt từ quãng 20–40% cửa sổ, trước cả khi chạm giới hạn. Cái bẫy âm thầm nhất là nhúng nguyên file tài liệu vào <code>CLAUDE.md</code> qua <code>@</code>-reference: bạn tiêu hết ngân sách chỉ dẫn trước khi cuộc hội thoại kịp bắt đầu.</p>
+    </div>
+
+    <h2>Cấu hình cũng cần bảo trì</h2>
+
+    <p>Một mẫu hình lặp lại ở các đội duy trì hiệu quả lâu dài: <strong>rà lại <code>CLAUDE.md</code> mỗi 3–6 tháng</strong>. Model tiến hóa, và những luật viết cho model cũ có thể trở thành xiềng cho model mới.</p>
+
+    <p>Ví dụ điển hình: một quy tắc "chia mọi refactor thành các thay đổi một-file-một-lần" — hợp lý cho model thế hệ trước — về sau lại chặn những chỉnh sửa xuyên file mà model mới làm tốt hơn. Tương tự, một skill dựng ra chỉ để bù cho một điểm yếu cụ thể của model sẽ thành gánh nặng khi điểm yếu đó được khắc phục. Cấu hình AI nên được đối xử như code: review định kỳ, và xóa thứ đã hết tác dụng.</p>
+
+    <h2>Ai sở hữu nó: từ DRI đến "agent manager"</h2>
+
+    <p>Ở quy mô tổ chức, nút thắt thường không phải kỹ thuật mà là quyền sở hữu. Các công ty triển khai tốt thường có một đội nhỏ — đôi khi đúng một người — đứng ra nối tooling, dựng plugin và viết quy ước <code>CLAUDE.md</code> chung <em>trước</em> khi mở rộng. Nhờ vậy, trải nghiệm đầu tiên của lập trình viên là một thứ chạy được ngay, và việc dùng lan ra tự nhiên.</p>
+
+    <p>Phiên bản tối giản là một <strong>DRI</strong> (Directly Responsible Individual): một người sở hữu cấu hình Claude Code, chính sách quyền hạn, marketplace plugin và quy ước <code>CLAUDE.md</code>, đồng thời có trách nhiệm giữ mọi thứ luôn cập nhật. Một số tổ chức đã hình thức hóa thành vai trò mới — <strong>agent manager</strong>, nửa PM nửa engineer — thường trực thuộc Developer Experience hoặc Developer Productivity.</p>
+
+    <div class="callout">
+      <div class="callout-label">Vì sao cần tập trung</div>
+      <p>Adoption từ dưới lên tạo hứng khởi nhưng phân mảnh nếu không ai điều phối: mỗi người một <code>CLAUDE.md</code> riêng, mẹo hay nằm trong đầu vài người, kiến thức trở thành "bộ lạc" rồi mất dần — và việc dùng chững lại ở một cái trần. Cần ai đó gom lại và lan tỏa quy ước chung.</p>
+    </div>
+
+    <h2>Bắt đầu từ đâu</h2>
+
+    <p>Một lộ trình theo từng giai đoạn, đi từ nền tảng tới năng lực nâng cao:</p>
+
+    <ol>
+      <li><strong>Nền tảng.</strong> Viết <code>CLAUDE.md</code> mỏng, phân lớp; khởi tạo ở các thư mục con. Scope lệnh test/lint. Thêm <code>.claudeignore</code> cho file sinh ra và code bên thứ ba.</li>
+      <li><strong>Điều hướng.</strong> Bật LSP cho các ngôn ngữ có kiểu. Viết bản đồ codebase ở nơi cấu trúc thư mục không tự rõ.</li>
+      <li><strong>Tự động hóa và chia sẻ.</strong> Thêm hook cho lint/format. Tách chuyên môn thành skill. Đóng gói thành plugin và phân phối qua marketplace.</li>
+      <li><strong>Kết nối.</strong> Thêm MCP server tới doc, ticket, analytics — sau khi những lớp trên đã chạy.</li>
+      <li><strong>Quản trị.</strong> Lập nhóm liên chức năng (engineering, infosec, governance) để định nghĩa skill/plugin được duyệt, quy trình review, giới hạn quyền truy cập ban đầu rồi mở rộng dần khi đủ tự tin. Chỉ định một DRI.</li>
+    </ol>
+
+    <hr class="divider">
+
+    <h2>Phạm vi và giới hạn</h2>
+
+    <p>Những thực hành trên giả định một môi trường kỹ thuật phần mềm khá quy ước: engineer là người đóng góp chính, dùng Git, cấu trúc thư mục tiêu chuẩn. Một số bối cảnh cần thêm việc: game engine với khối tài sản nhị phân lớn, hệ thống version control không quy ước, codebase có hàng trăm nghìn thư mục và hàng triệu file, hoặc nơi người không phải engineer cũng đóng góp.</p>
+
+    <p>Điểm đáng lưu ý cuối: phần lớn công sức ở đây không phải "tối ưu cho máy". Làm codebase dễ đọc với một agent gần như trùng khít với làm nó dễ đọc cho một người mới vào team. Ngay cả khi bỏ AI ra khỏi phương trình, một <code>CLAUDE.md</code> mỏng, lệnh test scope đúng chỗ và một bản đồ kiến trúc rõ ràng vẫn là khoản đầu tư có lãi.</p>
+
+    <section class="read-more">
+      <h2>Đọc thêm</h2>
+      <ul class="read-more-list">
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://claude.com/blog/how-claude-code-works-in-large-codebases-best-practices-and-where-to-start" target="_blank" rel="noopener noreferrer">How Claude Code works in large codebases: Best practices and where to start<span class="rm-by">claude.com — bài gốc</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://vadim.blog/claude-code-no-indexing/" target="_blank" rel="noopener noreferrer">Claude Code Doesn't Index Your Codebase. Here's What It Does Instead<span class="rm-by">vadim.blog — agentic search, giải thích kỹ</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="agentic-rag.html">RAG thông thường đang nói dối bạn<span class="rm-by">vì sao bỏ index không phải bước lùi</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="agentic-patterns.html">Tôi đọc source code bị leak của Claude Code<span class="rm-by">harness gồm gì: memory · workflow · tools · automation</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="loop-engineering.html">Đừng prompt agent nữa — hãy thiết kế cái vòng lặp prompt nó<span class="rm-by">khi máy chạy nhanh hơn mình kịp đọc</span></a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="loop-engineering.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Đừng prompt agent nữa — hãy thiết kế cái vòng lặp prompt nó</div>
+      </a>
+      <div></div>
+    </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>
