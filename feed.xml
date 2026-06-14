@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Fri, 29 May 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Sun, 14 Jun 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Đừng prompt agent nữa — hãy thiết kế vòng lặp prompt nó</title>
+    <link>https://duthaho.dev/loop-engineering.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/loop-engineering.html</guid>
+    <pubDate>Sun, 14 Jun 2026 09:00:00 +0700</pubDate>
+    <description>Một câu của Peter Steinberger đạt 2.2 triệu view khiến cả giới dev cãi nhau cả tuần. Đọc xong mình nhận ra mình vẫn đang kẹt ở thời "chat" — và cái giá thật sự không nằm ở token.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Hầu hết note của tôi chết trong một cái folder — và tôi đã sửa nhầm vấn đề suốt hai năm</title>
     <link>https://duthaho.dev/notes-that-get-used.html</link>
