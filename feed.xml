@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Mon, 15 Jun 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Tue, 16 Jun 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Chín câu hỏi mình giờ luôn hỏi khi đi phỏng vấn</title>
+    <link>https://duthaho.dev/questions-i-ask-in-interviews.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/questions-i-ask-in-interviews.html</guid>
+    <pubDate>Tue, 16 Jun 2026 09:00:00 +0700</pubDate>
+    <description>Một bài của Louise Deason về chín câu hỏi nên hỏi ngược nhà tuyển dụng — không phải để gây ấn tượng, mà để biết mình sắp bước vào đâu. Đọc xong mình nhận ra suốt mấy năm đi phỏng vấn, mình toàn ngồi sai phía của cái bàn.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Claude Code trong codebase lớn: cách nó hoạt động và bắt đầu từ đâu</title>
     <link>https://duthaho.dev/claude-code-large-codebases.html</link>
