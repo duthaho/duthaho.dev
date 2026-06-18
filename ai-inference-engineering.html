@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Hai người thợ trong cỗ máy AI</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.">
+<link rel="canonical" href="https://duthaho.dev/ai-inference-engineering.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/ai-inference-engineering.html">
+<meta property="og:title" content="Hai người thợ trong cỗ máy AI">
+<meta property="og:description" content="Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.">
+<meta property="og:image" content="https://duthaho.dev/og/ai-inference-engineering.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-06-18">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hai người thợ trong cỗ máy AI">
+<meta name="twitter:description" content="Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.">
+<meta name="twitter:image" content="https://duthaho.dev/og/ai-inference-engineering.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Hai người thợ trong cỗ máy AI","description":"Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.","image":"https://duthaho.dev/og/ai-inference-engineering.jpg","datePublished":"2026-06-18","dateModified":"2026-06-18","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/ai-inference-engineering.html"},"url":"https://duthaho.dev/ai-inference-engineering.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / ai-inference-engineering</div>
+
+  <h1 class="page-title">Hai người thợ <em>trong cỗ máy AI</em></h1>
+  <p class="page-desc">Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 18/06/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">ai-inference-engineering.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+    <p>Bạn gõ một câu hỏi, nhấn Enter. Khoảng một giây trôi qua. Rồi con chữ bắt đầu hiện ra — không phải cả đoạn cùng lúc, mà nhỏ giọt, từng chữ một, như có ai đó đang gõ phía sau tấm kính. Cái khoảng lặng một giây đó, và cái nhịp gõ nhỏ giọt sau đó, không phải là một quá trình. Chúng là <em>hai</em> — hai người thợ hoàn toàn khác nhau, đụng phải hai bức tường khác nhau. Hiểu được vì sao họ khác nhau là hiểu được gần như toàn bộ ngành kỹ thuật suy luận (inference).</p>
+
+    <p><strong>Inference engineering</strong> — tạm dịch là kỹ thuật suy luận — là nghề lo cho các mô hình <em>đã huấn luyện xong</em> chạy thật hiệu quả trong production. Nó trải dài từ code GPU tầng thấp, qua các framework phục vụ mô hình, tới hạ tầng cloud buộc tất cả lại với nhau; và người làm nghề lúc nào cũng phải cân cùng lúc bốn thứ kéo nhau: <strong>độ trễ, sản lượng, chi phí, chất lượng</strong>. Ba năm trước, đây gần như là đặc sản riêng của vài phòng lab tiên phong. Giờ thì bất kỳ công ty nào chạy AI nghiêm túc đều phải đầu tư vào nó.</p>
+
+    <p>Hãy bước vào trong xưởng.</p>
+
+    <h2>Cái nhà kho không ai dọn đi được</h2>
+
+    <p>Giữa xưởng là một nhà kho khổng lồ: đó là <strong>trọng số của mô hình</strong> (model weights) — hàng chục, có khi hàng trăm gigabyte, nằm lì trong bộ nhớ GPU. Không ai bê nó đi chỗ khác giữa chừng được. Mọi việc trong xưởng, suy cho cùng, là chuyện <em>đi lại với cái nhà kho này</em>: ai phải chạm vào nó, chạm bao nhiêu lần, và mỗi lần lôi ra bao nhiêu. Giữ trong đầu hình ảnh đó, vì hai người thợ sắp xuất hiện đối xử với nhà kho theo hai cách trái ngược.</p>
+
+    <h2>Người thợ thứ nhất: kẻ đọc ngấu nghiến</h2>
+
+    <p>Khi câu hỏi của bạn vừa tới, người thợ thứ nhất chộp lấy. Anh ta đọc <em>toàn bộ</em> đề bài cùng một lúc — mọi token trong prompt, đẩy qua mọi tầng của mô hình trong một loạt phép tính dồn dập. Đây là pha <strong>prefill</strong>.</p>
+
+    <div class="aside">
+      <p><strong>Token</strong> là đơn vị nhỏ nhất mà mô hình làm việc — đại khái một từ hoặc một mẩu từ. Chữ "inference" có thể gói gọn trong một token, còn "engineering" có khi tách làm hai. Mọi con số kiểu "token mỗi giây" đều đếm theo đơn vị này.</p>
+    </div>
+
+    <p>Anh ta làm xong hai việc. Một: nhả ra <strong>token đầu tiên</strong> của câu trả lời. Hai — và đây mới là phần ít người để ý — anh ta để lại một chồng ghi chú dày cộp gọi là <strong>KV cache</strong>: những giá trị attention trung gian đã tính cho từng token đầu vào, ghi sẵn ra để người đến sau khỏi phải tính lại từ đầu.</p>
+
+    <p>Người thợ này nghẽn ở đâu? Ở chính đôi tay của mình. Anh phải làm một núi phép tính song song, nên thứ giới hạn anh là <em>sức tính</em> của GPU — các nhân toán học chạy hết công suất. Dân trong nghề gọi đây là <strong>compute-bound</strong>: nghẽn vì tính. Và thước đo dành cho anh là <strong>TTFT</strong> (Time To First Token) — cái khoảng lặng một giây bạn chờ trước khi chữ đầu tiên hiện ra chính là anh đang làm việc.</p>
+
+    <h2>Người thợ thứ hai: kẻ viết và những chuyến chạy kho</h2>
+
+    <p>Token đầu tiên xong, người thợ thứ hai vào ca. Việc của anh là viết nốt câu trả lời — nhưng mỗi lần chỉ một chữ. Viết một token, rồi token đó thành đầu vào để đoán token kế tiếp, cứ thế lặp lại. Đây là pha <strong>decode</strong>, và nó <em>tuần tự</em>: chữ sau phải đợi chữ trước.</p>
+
+    <p>Nghe thì nhàn. Nhưng đây là chỗ trớ trêu nhất của cả cỗ máy: <strong>để viết được một chữ duy nhất, anh ta phải lôi gần như toàn bộ nhà kho trọng số chạy ngang qua bàn mình một lượt.</strong> Phép tính để sinh ra một token thì cỏn con; cái tốn kém là chuyến vận chuyển. Viết xong một chữ, anh chạy lại nhà kho lần nữa cho chữ tiếp theo. Lại một chuyến. Lại một chữ.</p>
+
+    <p>Cho nên người thợ thứ hai gần như chẳng bao giờ dùng hết sức tính — đôi tay anh ngồi không phần lớn thời gian, trong khi anh mòn chân chạy kho. Anh nghẽn ở <em>băng thông bộ nhớ</em>: tốc độ đọc trọng số từ memory ra. Đây là <strong>memory-bandwidth-bound</strong>. Thước đo của anh là <strong>TPS</strong> (Tokens Per Second) — nhịp gõ chữ nhỏ giọt mà bạn thấy trên màn hình. May là chồng ghi chú KV cache người thứ nhất để lại giúp anh khỏi phải đọc lại cả đoạn hội thoại mỗi lượt — không có nó, mỗi chữ sẽ là một cơn ác mộng.</p>
+
+    <div class="diagram"><span class="diagram-label">Hai người thợ — hai bức tường ngược nhau</span>
+PREFILL  · "kẻ đọc"   đọc cả prompt một lần   nghẽn: SỨC TÍNH        thước đo: TTFT
+DECODE   · "kẻ viết"  viết từng chữ, lặp lại   nghẽn: BĂNG THÔNG KHO  thước đo: TPS</div>
+
+    <div class="pq">
+      <p>Hai người thợ đụng hai bức tường khác nhau. Nên một mẹo giúp người này chạy nhanh hơn thường chẳng nhúc nhích gì người kia.</p>
+    </div>
+
+    <p>Đây là câu nói cần khắc lên tường xưởng. Gần như mọi kỹ thuật tối ưu inference đều phải khai báo trước: nó cứu <em>kẻ đọc</em>, hay cứu <em>kẻ viết</em>? Nhầm địa chỉ là tiền và công đổ sông đổ biển.</p>
+
+    <p>Nói cho gọn, mọi kỹ thuật rơi vào đúng <strong>ba cái rổ</strong>: thứ <em>tăng tốc kẻ đọc</em> (prefill), thứ <em>tăng tốc kẻ viết</em> (decode), và thứ <em>sắp xếp lại cán cân</em> giữa hai người. Đó cũng là lý do mọi benchmark báo TTFT và TPS thành hai con số tách biệt — đo riêng từng người thợ, vì cải thiện người này không tự động cải thiện người kia.</p>
+
+    <h2>Sáu mẹo của ông quản đốc</h2>
+
+    <p>Người trông coi cái xưởng này — tạm gọi là ông quản đốc — có một xâu chìa khóa gồm sáu mẹo. Mỗi mẹo đánh vào một trong hai bức tường, và mỗi mẹo đều có cái giá của nó.</p>
+
+    <h2>1 · Gộp khách — đông vui nhưng phải xếp hàng</h2>
+
+    <p>Thay vì phục vụ từng người một, ông quản đốc <strong>gộp nhiều yêu cầu</strong> (batching) lại để mỗi chuyến chạy kho của kẻ viết phục vụ được cả chục khách cùng lúc. Trọng số đã lôi ra rồi thì cho nhiều người dùng ké luôn. Tổng sản lượng (<strong>throughput</strong>) tăng vọt vì sức tính của GPU được dùng hết thay vì ngồi không giữa các request. Cái giá: từng khách lẻ phải chờ lâu hơn một chút vì bị xếp chung. Đây là sự đánh đổi gốc rễ, lặp lại ở mọi mẹo phía sau — <em>nhanh cho cả đám</em> thường nghĩa là <em>chậm hơn cho một người</em>.</p>
+
+    <p>Mỗi loại sản phẩm chọn một điểm khác nhau trên cái thang đó: chatbot cho người dùng cuối nghiêng về độ trễ thấp, còn pipeline xử lý hàng loạt thì nghiêng hẳn về sản lượng tối đa.</p>
+
+    <h2>2 · Nhớ phần mở đầu — đừng đọc lại cái đã đọc</h2>
+
+    <p>Nếu hai lá thư mở đầu giống hệt nhau, hà cớ gì đọc lại từ đầu? <strong>Prefix caching</strong> giữ lại KV cache của đoạn đầu dùng chung, tái dùng cho tới đúng token đầu tiên khác đi. Hệ quả rất thực dụng cho người viết prompt: <strong>đặt phần cố định lên trước, phần thay đổi xuống cuối.</strong> Một system prompt dài giống nhau ở mọi request là bạn của cache; nhét cái biến thiên (tên user, timestamp) lên đầu là tự tay phá cache, trả tiền đọc lại từ con số không mỗi lần. Đây cũng chính là lý do các nhà cung cấp API tính phí <em>rẻ hơn hẳn</em> cho phần input đã nằm trong cache.</p>
+
+    <h2>3 · Bóp nhỏ trọng số — nhưng đừng đụng vào xương</h2>
+
+    <p><strong>Quantization</strong> nén trọng số từ 16-bit xuống 8-bit, thậm chí 4-bit. Một mũi tên trúng cả hai người thợ: kẻ đọc tính nhanh hơn vì phép tính độ chính xác thấp rẻ hơn, kẻ viết chạy kho nhẹ hơn vì có ít byte phải vác. Mức lợi điển hình tầm <strong>30–50%</strong>.</p>
+
+    <p>Nhưng không phải chỗ nào cũng bóp được như nhau. Thứ tự nhạy cảm, từ dễ hỏng nhất tới chịu đòn tốt nhất: <strong>tầng attention → KV cache → activations → trọng số tuyến tính</strong>. Phần lớn hệ thống production giữ nguyên attention ở độ chính xác đầy đủ, vì sai số ở đó <em>tích lũy</em> qua từng token — bóp nhầm chỗ này thì cả câu trả lời trôi dần khỏi quỹ đạo. Bóp mỡ thì được, đừng đụng vào xương.</p>
+
+    <h2>4 · Thằng học việc đoán trước — thầy chỉ chấm</h2>
+
+    <p>Đây là mẹo tôi thấy thanh lịch nhất. Cho một <strong>mô hình nháp</strong> nhỏ và nhanh chạy trước, phỏng đoán vài token kế tiếp. Rồi mô hình chính — thay vì è cổ sinh từng token từ đầu — chỉ cần <em>kiểm</em> cả loạt phỏng đoán đó trong một lượt chạy duy nhất. Mẹo này khai thác một bất đối xứng: <strong>sinh một token từ con số không thì đắt, nhưng xác nhận xem một token có khớp với cái mô hình chính sẽ chọn không thì rẻ hơn nhiều.</strong> Như thầy giáo: bắt thầy tự viết bài thì lâu, đưa bài học trò làm sẵn cho thầy gạch đúng-sai thì nhanh. (Hoặc như chơi Sudoku: giải thì toát mồ hôi, nhưng kiểm một bảng đã điền thì liếc cái là xong.) Mô hình chính nhận đúng những token khớp với dự đoán của mình, gạt phần còn lại — kết quả là <strong>nhiều token bật ra sau một lượt chạy</strong>, chỗ lẽ ra chỉ có đúng một.</p>
+
+    <p>Tên gọi: <strong>speculative decoding</strong>. Nó kéo TPS lên mà không đụng tới TTFT — tức cứu kẻ viết, kệ kẻ đọc. Lưu ý: nó chỉ lời khi GPU còn rảnh tay. Lúc máy đã chật khách (batch lớn, GPU bão hòa), người ta tắt nó đi — vì khi ấy đôi tay tính toán đã bận, chẳng còn chỗ trống để kiểm bài hộ miễn phí nữa.</p>
+
+    <h2>5 · Một xưởng không chứa nổi — chia ra nhiều phòng</h2>
+
+    <p>Có những mô hình to tới mức một GPU không ôm xuể — hoặc nhét vừa nhưng chạy trên một GPU thì độ trễ cao quá. Khi đó phải <strong>chia mô hình ra nhiều GPU</strong> (parallelism), và có hai kiểu chia thống trị thế giới mô hình mở:</p>
+
+    <ul>
+      <li><strong>Tensor parallelism</strong> — xẻ <em>từng tầng</em> của mô hình ra nhiều GPU, mỗi con giữ một mảnh và cùng gánh phần việc của tầng đó. Sau mỗi tầng phải ghép kết quả lại, nên đòi đường truyền cực nhanh giữa các GPU — kiểu <strong>NVLink</strong> của NVIDIA. Chia kiểu này "đau" về giao tiếp, nhưng là lựa chọn mặc định để phục vụ các mô hình <em>dense</em> rất lớn, và hợp khi các GPU nằm sát nhau trong cùng một node.</li>
+      <li><strong>Expert parallelism</strong> — dành cho mô hình kiểu <em>mixture-of-experts</em>, nơi mỗi token chỉ đánh thức một nhúm "chuyên gia" chứ không phải toàn bộ. Rải các chuyên gia khác nhau ra các GPU khác nhau, và vì mỗi token chỉ gọi vài chuyên gia nên lượng nói chuyện giữa các GPU ít hơn — hợp cho setup nhiều node, đường truyền giữa các máy hạn chế.</li>
+    </ul>
+
+    <p>Thực tế người ta phối cả hai: tensor parallelism <em>trong</em> một node (nơi có NVLink), expert parallelism <em>giữa</em> các node.</p>
+
+    <h2>6 · Tách hẳn hai người thợ ra hai phòng</h2>
+
+    <p>Mẹo cuối là mẹo triệt để nhất, và nó đi thẳng từ cái insight ban đầu. Nếu kẻ đọc nghẽn vì <em>tính</em> còn kẻ viết nghẽn vì <em>băng thông</em> — sao lại bắt cả hai dùng chung một loại bàn ghế? <strong>Disaggregation</strong> tách prefill và decode ra hai cụm GPU riêng, mỗi cụm chọn phần cứng tối ưu đúng cho bức tường của mình, và chuyển KV cache qua lại bằng đường truyền tốc độ cao.</p>
+
+    <div class="diagram"><span class="diagram-label">Disaggregation — mỗi người thợ một phòng riêng</span>
+[PHÒNG ĐỌC]  prefill  ──(gửi tập ghi chú KV)──▶  [PHÒNG VIẾT]  decode
+GPU mạnh về sức tính                              GPU mạnh về băng thông
+   ▲
+   └── request ngắn / đã cache  ──(bỏ qua, chạy thẳng phòng viết)──┘</div>
+
+    <p>Quy trình ba bước: cụm prefill sinh token đầu + KV cache → đẩy cache sang cụm decode để viết nốt → và một nước cờ khôn: những request ngắn hoặc đã có sẵn cache thì <em>bỏ qua</em> chặng bàn giao, chạy thẳng trên phần cứng decode. Hai cụm cũng được <strong>co giãn độc lập</strong>: hôm nay nhiều prompt dài thì thêm máy cho phòng đọc, không phải đụng tới phòng viết.</p>
+
+    <p>Đây là kỹ thuật "kiến trúc" nhất trong cả sáu — nó coi đọc và viết là hai <em>dịch vụ</em> riêng, vận hành riêng, có cần gạt riêng để co giãn. Với những hệ thống chạy inference quy mô lớn, một khi đã hiểu rõ hình dạng lưu lượng của mình, bước này gần như là bắt buộc.</p>
+
+    <h2>Vậy có nên tự dựng xưởng riêng?</h2>
+
+    <p>Tới đây câu hỏi thực tế hiện ra: bạn có cần biết hết những thứ này không, hay cứ thuê xưởng của người khác (gọi API) là xong? Câu trả lời thẳng thắn từ bài gốc: <strong>giai đoạn đầu, cứ thuê.</strong> Tối ưu có ý nghĩa chỉ khi có ràng buộc thật để mà tối ưu, mà sản phẩm non trẻ thì còn mơ hồ về lưu lượng, về yêu cầu độ trễ, về bài toán đơn vị kinh tế. Tự dựng xưởng lúc đó là tối ưu cho một tương lai bạn còn chưa biết mặt.</p>
+
+    <p>Ba tín hiệu cho biết đã đến lúc tự nuôi server:</p>
+
+    <div class="callout">
+      <div class="callout-label">Ba lằn ranh build-vs-buy</div>
+      <p><strong>Chi phí</strong> API leo lên thành một dòng đáng kể trong bảng kế toán. <strong>Độ trễ</strong> bạn cần đã vượt khỏi khả năng của API đóng. <strong>Độ tin cậy</strong> bạn đòi hỏi cao hơn mức SLA mà nhà cung cấp cam kết. Chạm một trong ba, bài toán bắt đầu nghiêng về phía tự dựng.</p>
+    </div>
+
+    <p>Ví dụ kinh điển: Cursor, với Composer 2.0, cần độ trễ autocomplete <strong>dưới một giây</strong> — điều một API đa dụng (vốn phải tối ưu trung bình cho cả nghìn khách hàng) gần như không thể chiều. Chỉ khi tự host và tự làm inference engineering, cái mốc đó mới chạm tới được.</p>
+
+    <p>Và sân chơi tự host giờ dễ thở hơn xưa nhiều. Hugging Face đang chứa <strong>hơn hai triệu mô hình mở</strong> — gấp khoảng 25 lần so với năm năm trước. Những mô hình như DeepSeek V3 đã thu hẹp khoảng cách năng lực với mô hình đóng, cho doanh nghiệp một lựa chọn thật sự. Đổi lại công sức kỹ thuật: chi phí thường <strong>giảm chừng 80%</strong> khi đã đủ quy mô, và độ sẵn sàng có thể đạt <em>bốn số chín</em> với cụm chuyên dụng, so với <em>hai số chín</em> thường thấy ở API công cộng. Cũng vì thế mà giờ đủ loại công ty dựng inference stack nghiêm túc — từ startup AI-native, sản phẩm có sẵn tích hợp thêm AI, tới cả những ngành vốn rất thận trọng như y tế.</p>
+
+    <h2>Tóm lại trong một cái khung</h2>
+
+    <p>Suy luận LLM là hai thao tác với ràng buộc vật lý ngược nhau: <strong>prefill</strong> nghẽn tính, chạy một lần cho mỗi request; <strong>decode</strong> nghẽn băng thông, chạy một lần cho mỗi token. Nắm được cái chia đôi đó, sáu mẹo còn lại tự xếp vào chỗ:</p>
+
+    <ul>
+      <li><strong>Gộp khách</strong> — đổi độ trễ từng người lấy tổng sản lượng.</li>
+      <li><strong>Nhớ phần đầu</strong> — cắt việc của kẻ đọc khi các prompt chung đoạn mở đầu.</li>
+      <li><strong>Bóp trọng số</strong> — nén weights, lợi cho cả hai người thợ.</li>
+      <li><strong>Đoán trước</strong> — vắt thêm token từ kẻ viết bằng cách tận dụng sức tính đang nhàn rỗi.</li>
+      <li><strong>Chia GPU</strong> — trải mô hình quá khổ ra nhiều máy.</li>
+      <li><strong>Tách phòng</strong> — cho kẻ đọc và kẻ viết chạy trên phần cứng riêng, mỗi người một bức tường.</li>
+    </ul>
+
+    <p>Trên tất cả còn là câu hỏi thuê-hay-dựng: cứ thuê API khi còn non trẻ, và chỉ tự dựng khi chi phí, độ trễ, hoặc độ tin cậy chạm lằn ranh.</p>
+
+    <hr class="divider">
+
+    <p>Lần tới khi bạn gõ một câu và thấy con chữ hiện ra nhỏ giọt phía sau tấm kính, hãy nhớ: đó không phải một cỗ máy đang "nghĩ". Đó là kẻ đọc vừa buông bút sau một giây tính toán cật lực, và kẻ viết đang cắm cúi chạy đi chạy lại cái nhà kho, mỗi vòng đổi lấy đúng một chữ. Mọi con số trên hóa đơn, mọi mili-giây độ trễ, mọi quyết định thuê-hay-dựng, đều quy về một câu hỏi đẹp đẽ và giản dị: <em>lúc này, ta đang đụng phải bức tường nào?</em></p>
+
+    <section class="read-more">
+      <h2>Đọc thêm</h2>
+      <ul class="read-more-list">
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://blog.bytebytego.com/p/a-guide-to-ai-inference-engineering" target="_blank" rel="noopener noreferrer">A Guide to AI Inference Engineering<span class="rm-by">bytebytego.com — bài gốc</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://blog.vllm.ai/2023/06/20/vllm.html" target="_blank" rel="noopener noreferrer">vLLM &amp; PagedAttention: quản lý KV cache như phân trang bộ nhớ<span class="rm-by">blog.vllm.ai — cơ chế đằng sau continuous batching</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://machinelearningmastery.com/from-prompt-to-prediction-understanding-prefill-decode-and-the-kv-cache-in-llms/" target="_blank" rel="noopener noreferrer">Từ prompt tới prediction: prefill, decode và KV cache<span class="rm-by">machinelearningmastery.com — giải thích kỹ phần nền</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="claude-code-token-drain.html">Hai dòng code ẩn khiến Claude Code ngốn token gấp bốn lần<span class="rm-by">khi caching hỏng, cái giá hiện ra ngay</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="claude-token-habits.html">Claude không đếm tin nhắn — nó đếm token<span class="rm-by">vì sao thiết kế prompt đụng thẳng vào hóa đơn</span></a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="questions-i-ask-in-interviews.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Chín câu hỏi mình giờ luôn hỏi khi đi phỏng vấn</div>
+      </a>
+      <div></div>
+    </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

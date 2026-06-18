@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Tue, 16 Jun 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Thu, 18 Jun 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Hai người thợ trong cỗ máy AI</title>
+    <link>https://duthaho.dev/ai-inference-engineering.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/ai-inference-engineering.html</guid>
+    <pubDate>Thu, 18 Jun 2026 09:00:00 +0700</pubDate>
+    <description>Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Chín câu hỏi mình giờ luôn hỏi khi đi phỏng vấn</title>
     <link>https://duthaho.dev/questions-i-ask-in-interviews.html</link>
