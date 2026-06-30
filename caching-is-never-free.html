@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Hồi mới đi làm, với mình caching là &quot;API chậm thì quăng con Redis vào&quot;. Ngồi ôn phỏng vấn architect, mình mới thấy cái &quot;quăng vào&quot; đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.">
+<link rel="canonical" href="https://duthaho.dev/caching-is-never-free.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/caching-is-never-free.html">
+<meta property="og:title" content="Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache">
+<meta property="og:description" content="Hồi mới đi làm, với mình caching là &quot;API chậm thì quăng con Redis vào&quot;. Ngồi ôn phỏng vấn architect, mình mới thấy cái &quot;quăng vào&quot; đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.">
+<meta property="og:image" content="https://duthaho.dev/og/caching-is-never-free.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-07-01">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache">
+<meta name="twitter:description" content="Hồi mới đi làm, với mình caching là &quot;API chậm thì quăng con Redis vào&quot;. Ngồi ôn phỏng vấn architect, mình mới thấy cái &quot;quăng vào&quot; đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.">
+<meta name="twitter:image" content="https://duthaho.dev/og/caching-is-never-free.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache","description":"Hồi mới đi làm, với mình caching là \"API chậm thì quăng con Redis vào\". Ngồi ôn phỏng vấn architect, mình mới thấy cái \"quăng vào\" đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.","image":"https://duthaho.dev/og/caching-is-never-free.jpg","datePublished":"2026-07-01","dateModified":"2026-07-01","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/caching-is-never-free.html"},"url":"https://duthaho.dev/caching-is-never-free.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / caching-is-never-free</div>
+
+  <h1 class="page-title">Con Redis không cho không cái gì: <em>cái giá ẩn sau mỗi lớp cache</em></h1>
+  <p class="page-desc">Hồi mới đi làm, với mình caching là "API chậm thì quăng con Redis vào". Ngồi ôn phỏng vấn architect, mình mới thấy cái "quăng vào" đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 01/07/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">caching-is-never-free.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+    <p>Hồi mới đi làm, với mình caching đơn giản lắm: API chậm hả? Quăng con Redis vào, cache lại, xong. Nó nhanh thật, nên mình tưởng mình hiểu caching rồi. Nhưng dạo này ngồi ôn nghiêm túc để phỏng vấn vị trí architect, mình mới vỡ ra: cái động tác "quăng Redis vào" đó kéo theo cả một chuỗi bài toán mà nếu không hiểu, bạn sẽ vá được chỗ này lại lòi chỗ kia.</p>
+
+    <p>Mình muốn kể lại cả hành trình này, vì khi xâu chuỗi lại nó đẹp và logic hơn mình tưởng nhiều. Và có một câu mình treo trên đầu suốt lúc viết — câu nói đùa kinh điển của dân làm nghề:</p>
+
+    <div class="pq">
+      <p>"Trong khoa học máy tính chỉ có hai thứ thật sự khó: vô hiệu hoá cache, và đặt tên biến."</p>
+      <p style="font-style:normal;opacity:.7;font-size:.85em;">— Phil Karlton</p>
+    </div>
+
+    <p>Hồi xưa mình nghe câu này thấy buồn cười. Bây giờ mình thấy nó không đùa chút nào. Gần như mọi thứ rắc rối trong bài này đều quy về đúng một chữ: <strong>invalidation</strong> — biết khi nào dữ liệu trong cache đã cũ, và xử lý nó cho đúng.</p>
+
+    <h2>Trước hết: cache ở khắp mọi nơi</h2>
+
+    <p>Phải nói rõ một điều, vì hồi xưa mình hay quên: cache có ở <em>khắp</em> cái stack của chúng ta, mỗi tầng giải một bài toán khác nhau.</p>
+
+    <div class="diagram"><span class="diagram-label">Cache nằm rải khắp đường đi của một request</span>
+CPU cache → browser → CDN → API gateway → [ APP + REDIS ] → DATABASE
+                                                  ▲
+                              chỗ dân backend đụng nhiều nhất — phần mình kể hôm nay</div>
+
+    <p>Phần mình kể tập trung vào cái mà backend đụng nhiều nhất: <strong>application-level cache</strong>, kiểu đặt một con Redis trước database để gánh traffic đọc. Mọi thứ dưới đây xoay quanh đúng cái lớp đó.</p>
+
+    <h2>Cache-Aside, và chi tiết nhỏ nhiều người làm sai</h2>
+
+    <p>Bắt đầu từ pattern phổ biến nhất: <strong>Cache-Aside</strong>, hay Lazy Loading. Luồng đọc thế này: request tới, ngó vào cache trước; có thì trả về luôn (<em>cache hit</em>); không có thì xuống database lấy, nhét vào cache rồi mới trả về (<em>cache miss</em>). Đơn giản, và nó phổ biến vì một lý do mình thấy rất đáng giá: <strong>nếu Redis chết, app vẫn chạy</strong> — chỉ là chậm hơn, đi thẳng xuống DB. Cache là phụ kiện tăng tốc, không phải đường sống.</p>
+
+    <p>Còn luồng ghi, khi dữ liệu thay đổi, thì có một chi tiết tinh tế mà nhiều người làm sai: nên <strong>XÓA key</strong> trong cache, chứ đừng <strong>UPDATE</strong> lại cache.</p>
+
+    <p>Lý do là chuyện thứ tự. Nếu hai request ghi xảy ra gần như đồng thời, thứ tự ghi-đè-cache có thể bị đảo: request chậm hơn (mang giá trị cũ) lại ghi vào cache <em>sau</em> request nhanh hơn (mang giá trị mới), khiến cache ôm giá trị cũ dù database đã là giá trị mới — và nó nằm đó mãi. Còn nếu chỉ <em>xóa</em>, thì lần đọc kế tiếp luôn dựng lại sự thật từ DB. Xóa là thao tác tự lành: không có kiểu "giá trị sai kẹt trong cache", tệ nhất chỉ là một lần cache miss.</p>
+
+    <p><span class="inline-flag">Cái giá:</span> mỗi lần ghi, bạn trả thêm một cache miss ở lần đọc kế tiếp. Rẻ chán so với việc ôm dữ liệu sai. (Đây cũng đúng là cách Facebook làm trong bài "Scaling Memcache" — họ <em>invalidate</em> chứ không update, vì chính cái lý do đảo thứ tự này.)</p>
+
+    <h2>TTL: cái lưới mình từng nghĩ thừa</h2>
+
+    <p>Một bài học mình từng xem nhẹ: <strong>TTL là bắt buộc</strong>, kể cả khi bạn đã chủ động xóa cache mỗi lần ghi.</p>
+
+    <p>Tại sao? Vì việc "xóa cache khi có thay đổi" dựa vào <em>event</em> — mà event thì có thể miss, có thể bug, có thể bị nuốt mất ở đâu đó. Nếu một lệnh xóa bị lọt, cache của bạn sẽ stale <em>vĩnh viễn</em>. TTL chính là lưới an toàn cuối cùng: dù có sai thì cũng chỉ sai trong vài giây hoặc vài phút rồi tự sửa, chứ không bao giờ sai mãi mãi. Mình hay nghĩ thế này: invalidation là đường nhanh để tươi mới, còn TTL là dây bảo hiểm để không bao giờ sai vĩnh viễn.</p>
+
+    <h2>Bộ ba khiến database gục</h2>
+
+    <p>Rồi tới bộ ba vấn đề kinh điển mà hồi xưa mình không hề biết tên, nhưng thực ra đã từng gặp ngoài production. Cả ba đều có chung một kết cục: cache không đỡ được, traffic dội thẳng xuống DB.</p>
+
+    <div class="finding-block">
+      <div class="finding-num">01</div>
+      <div class="finding-title">Cache Penetration — hỏi thứ KHÔNG tồn tại</div>
+      <p>Ai đó spam query một id không hề có trong DB. Cache miss liên tục (vì có gì đâu mà cache), mỗi lần lại dội xuống database, mà DB cũng chẳng có gì để trả — vòng lặp đó bào chết DB. Cách xử lý: <strong>cache luôn cả kết quả rỗng</strong> với TTL ngắn, hoặc dùng <strong>Bloom filter</strong> chặn từ đầu những id chắc chắn không tồn tại (Bloom filter không bao giờ báo nhầm "không có" thành "có", nên dùng làm cửa chặn rất an toàn).</p>
+    </div>
+
+    <div class="finding-block">
+      <div class="finding-num">02</div>
+      <div class="finding-title">Cache Avalanche — tuyết lở, NHIỀU key hết hạn cùng lúc</div>
+      <p>Tưởng tượng bạn nạp một triệu sản phẩm vào cache cùng một lúc, TTL y hệt nhau là một giờ. Đúng một giờ sau, tất cả hết hạn cùng một khoảnh khắc, toàn bộ traffic đổ ụp xuống database trong một giây, và DB sập. Cách chữa đơn giản mà hiệu quả bất ngờ: <strong>thêm một khoảng random vào TTL</strong>, để các key hết hạn rải đều ra thay vì dồn cục một chỗ.</p>
+    </div>
+
+    <div class="finding-block">
+      <div class="finding-num">03</div>
+      <div class="finding-title">Cache Breakdown — hot key, MỘT key đang nóng thì hết hạn</div>
+      <p>Một sản phẩm đang flash sale, mấy chục nghìn request mỗi giây. Đúng cái giây nó hết hạn, hàng nghìn request cùng miss một lúc, cùng lao xuống DB query đúng một dòng — hiện tượng này gọi là <em>thundering herd</em>. (Khác với avalanche: avalanche là <em>nhiều</em> key, breakdown là <em>một</em> key cực nóng.) Cách xử lý: dùng một cái <strong>lock</strong>, chỉ cho duy nhất một request đi load DB rồi nạp lại cache, đám còn lại chờ một nhịp; hoặc dùng <strong>logical expiration</strong> — không để key hết hạn cứng, mà nhúng "hạn dùng" vào trong giá trị và để một worker nền âm thầm refresh.</p>
+    </div>
+
+    <div class="aside">
+      <p>Bài "Scaling Memcache at Facebook" có một con số mình rất thích về đúng cái thundering herd này. Họ thêm cơ chế <em>lease</em> — khi một key miss, chỉ phát một "vé" cho đúng một client đi dựng lại giá trị, phần còn lại chờ. Kết quả: lúc cao điểm, lượng query dội xuống DB tụt từ <strong>17.000/giây xuống còn 1.300/giây</strong>. Cùng một bài toán hot key, giải đúng thì gấp mười mấy lần.</p>
+    </div>
+
+    <h2>Câu hỏi khó nhất: xóa cache trước hay ghi DB trước?</h2>
+
+    <p>Nhưng phần làm mình tâm đắc nhất, và cũng khó nhất, là chuyện nhất quán giữa cache và database. Câu hỏi nghe thì đơn giản: khi cập nhật dữ liệu, nên <em>ghi DB trước rồi xóa cache</em>, hay <em>xóa cache trước rồi ghi DB</em>?</p>
+
+    <p>Mình từng nghĩ xóa cache trước an toàn hơn — nếu ghi DB lỗi thì cùng lắm tốn một cache miss. Nhưng đó mới chỉ là một nửa câu chuyện. Cái nửa quan trọng hơn là chuyện <strong>hai request chạy đồng thời</strong>.</p>
+
+    <div class="diagram"><span class="diagram-label">Xóa cache TRƯỚC rồi mới ghi DB — cái bẫy</span>
+T1  writer:  xoá cache             ✔
+T2  reader:  miss → đọc DB         →  vớ phải GIÁ TRỊ CŨ (writer chưa ghi xong)
+T3  reader:  nạp giá trị cũ vào cache  ✔
+T4  writer:  ghi DB = giá trị MỚI  ✔
+    →  DB mới, cache cũ — và không còn event nào tới xoá nó nữa.
+       Stale cho tới khi hết TTL.</div>
+
+    <p>Cửa sổ giữa "xóa cache" và "ghi DB xong" khá rộng, và một request đọc chen vào đúng lúc này sẽ đọc giá trị cũ rồi nạp ngược nó vào cache. Ngược lại, nếu <strong>ghi DB trước rồi xóa cache sau</strong>, cửa sổ stale hẹp hơn nhiều — vì thao tác ghi thường chậm hơn thao tác đọc, nên cái khe để một reader chen vào vừa-đọc-vừa-nạp gần như khép lại. Đó là lý do khuyến nghị chuẩn của ngành là <strong>ghi DB trước, xóa cache sau</strong>, dù thoạt nghe có vẻ ngược trực giác.</p>
+
+    <p>Mà kể cả chọn đúng thứ tự thì vẫn còn khe hở nhỏ. Để vá triệt để, người ta xếp nhiều lớp:</p>
+
+    <ul>
+      <li><strong>TTL làm nền</strong> — dây bảo hiểm, đã nói ở trên.</li>
+      <li><strong>Delayed double delete</strong> — xóa cache, ghi DB, <em>chờ một chút</em> rồi xóa cache lần nữa, để dọn sạch giá trị cũ mà một request đọc có thể đã kịp nạp vào trong lúc ghi.</li>
+      <li><strong>Retry queue</strong> — nếu lệnh xóa cache thất bại (Redis chớp một cái), đừng bỏ qua; đẩy nó vào hàng đợi để thử lại cho tới khi xóa được.</li>
+      <li><strong>CDC</strong> — cao cấp nhất: đọc binlog/WAL của database bằng công cụ như <strong>Debezium</strong>, hễ DB thay đổi thật là tự động phát tín hiệu để xóa cache. Không miss, và tách hẳn khỏi business code.</li>
+    </ul>
+
+    <h2>Khoảnh khắc vỡ òa: hoá ra là Dual Write Problem</h2>
+
+    <p>Tới đây thì mình có một khoảnh khắc đứng hình: bài toán "ghi DB rồi xóa cache" thực ra <strong>CHÍNH LÀ</strong> cái Dual Write Problem mà mình từng gặp khi làm với message queue. Lại là chuyện ghi vào <em>hai hệ thống</em> (DB và cache) mà <em>không có transaction chung</em> — y hệt chuyện ghi DB rồi phát event lên broker.</p>
+
+    <div class="callout">
+      <div class="callout-label">Cùng một con quái vật, hai lớp vỏ</div>
+      <p>Mình từng viết cả một bài về việc tách microservices đẻ ra Dual Write Problem, rồi Outbox và idempotency vá nó thế nào. Hôm nay nó hiện về dưới lớp vỏ "cache cũ không đồng bộ với DB". Vì bản chất giống nhau, <strong>lời giải cũng giống nhau</strong>: đừng tự tay ghi vào hai nơi trong code; hãy chọn <em>một nguồn sự thật duy nhất</em> — thường là log của database — làm gốc, rồi đồng bộ cái còn lại từ đó. Đúng là cái Outbox/CDC mình từng dùng cho event, giờ áp cho cache.</p>
+    </div>
+
+    <p>Khi nhận ra cùng một bài toán nấp dưới nhiều lớp vỏ khác nhau, mình thấy mình bắt đầu tư duy giống một architect hơn — bớt nhớ vẹt từng pattern, bắt đầu thấy cái khung chung phía sau.</p>
+
+    <h2>Không phải dữ liệu nào cũng cache như nhau</h2>
+
+    <p>Một bài học nữa, về cách <em>nghĩ</em> chứ không phải về kỹ thuật: không phải dữ liệu nào cũng nên cache như nhau.</p>
+
+    <ul>
+      <li><strong>Tên sản phẩm, mô tả, hình ảnh</strong> — gần như không đổi. Cache TTL dài thoải mái.</li>
+      <li><strong>Giá</strong> — đổi thỉnh thoảng. Cache vừa phải, và xóa khi có thay đổi.</li>
+      <li><strong>Tồn kho</strong> — đổi liên tục và cần chính xác. Đây là chỗ phải cẩn thận nhất.</li>
+    </ul>
+
+    <p>Với tồn kho, mình tách làm hai mức. Con số hiển thị trên màn hình danh sách thì không cần chính xác tuyệt đối — cache TTL vài giây, chấp nhận hơi cũ, không ai chết vì điều đó. Nhưng lúc khách bấm chốt đơn và trừ kho thật thì <strong>TUYỆT ĐỐI không quyết định dựa trên cache</strong>, mà đi thẳng vào nguồn sự thật bằng một thao tác atomic — vì bán quá số lượng (oversell) là lỗi không được phép xảy ra.</p>
+
+    <p><span class="inline-flag">Cái giá:</span> cache là để tăng tốc đọc, không phải để quyết định những nghiệp vụ cần chính xác từng đơn vị. Biết chỗ nào <em>được phép</em> sai một chút, và chỗ nào <em>tuyệt đối không</em>, mới là phần khó.</p>
+
+    <h2>Redis không phải cái kho key-value — nó là data structure server</h2>
+
+    <p>Phần này mình muốn nói riêng, vì nhiều người (có cả mình ngày xưa) chỉ coi Redis là cái kho key-value cho nhanh. Thực ra nó là một <strong>data structure server</strong> — value là cấu trúc dữ liệu có kiểu, không phải cục blob mù.</p>
+
+    <ul>
+      <li><strong>Hash</strong> — lưu object theo từng field, nên update đúng một field tồn kho mà không phải ghi lại cả object.</li>
+      <li><strong>Sorted Set</strong> — làm leaderboard, rate limiter, hàng đợi ưu tiên (member sắp theo score).</li>
+      <li><strong>HyperLogLog</strong> — đếm số lượng <em>unique</em> xấp xỉ, sai số chỉ ~0,81%, mỗi key tốn tối đa ~12&nbsp;KB mà đếm được tới 2⁶⁴ phần tử. Đếm unique visitor hàng tỷ mà tốn mười mấy KB.</li>
+      <li><strong>Bitmap</strong> — cờ nhị phân siêu gọn (active user theo ngày, feature flag).</li>
+      <li><strong>Geo</strong> — tìm theo bán kính, "quán gần tôi nhất".</li>
+      <li><strong>Stream</strong> — append-only log có consumer group, làm hàng đợi có ack đàng hoàng.</li>
+    </ul>
+
+    <p>Biết chọn đúng cấu trúc cho đúng bài toán là một nửa sức mạnh của Redis. Nửa còn lại nằm ở chỗ hiểu nó chạy thế nào bên trong.</p>
+
+    <h2>Vài thứ về Redis nên nắm cho sâu</h2>
+
+    <p><strong>Eviction policy.</strong> Khi RAM đầy, Redis phải quyết định xóa key nào. Bạn nên phân biệt <strong>LRU</strong> (xóa cái lâu rồi không dùng) với <strong>LFU</strong> (xóa cái ít được dùng <em>thường xuyên</em>) tùy access pattern của mình. Một chi tiết hay: Redis không theo dõi LRU/LFU chính xác cho từng key (tốn bộ nhớ quá), mà <em>lấy mẫu ngẫu nhiên</em> một nhúm key rồi chọn nạn nhân — gần đúng, đủ tốt, mà rẻ.</p>
+
+    <p><strong>Single-thread.</strong> Redis xử lý lệnh trên <em>một luồng duy nhất</em> — đó là lý do nó nhanh và cũng là lý do tuyệt đối tránh các lệnh nặng như <code>KEYS</code> trên production (nó quét cả keyspace, khoá cứng server; dùng <code>SCAN</code> để duyệt theo cursor). Nhưng cái tính single-thread đó lại biến thành <em>siêu năng lực</em> khi cần atomic: gói một đoạn logic vào <strong>Lua script</strong>, Redis chạy trọn vẹn đoạn đó mà không cho lệnh nào chen vào. Nhờ vậy rate limiter hay trừ kho mới chống được race condition giữa hàng nghìn server — "kiểm tra còn hàng rồi trừ" gộp thành một bước không thể tách.</p>
+
+    <p><strong>Độ bền.</strong> Redis có <strong>RDB</strong> (chụp snapshot — gọn, restore nhanh, nhưng mất dữ liệu giữa hai lần chụp) và <strong>AOF</strong> (ghi log mọi lệnh — bền hơn, thường fsync mỗi giây nên mất tối đa ~1 giây, nhưng nặng hơn). Production thường bật cả hai.</p>
+
+    <p><strong>Scale.</strong> Khi một con Redis không gánh nổi: <strong>replication</strong> để scale đọc, <strong>Sentinel</strong> để tự động failover khi master chết, và <strong>Cluster</strong> để sharding dữ liệu ra nhiều node (chia 16.384 hash slot, key băm vào slot, slot trải trên các node).</p>
+
+    <hr class="divider">
+
+    <h2>Caching không bao giờ miễn phí</h2>
+
+    <p>Ngồi viết lại hết những thứ này, mình nhận ra điều quan trọng nhất không phải từng kỹ thuật riêng lẻ, mà là cách nhìn. Bộ ba sập DB, thứ tự xóa cache, delayed double delete, CDC — tất cả đều là những dòng nợ đẻ ra từ đúng một quyết định ban đầu: "thêm con Redis cho nhanh".</p>
+
+    <div class="pq">
+      <p>Mỗi lần bạn thêm một lớp cache, bạn đổi <strong>tốc độ</strong> lấy <strong>sự phức tạp về nhất quán</strong>. Việc của người làm hệ thống không phải cache thật nhiều cho nhanh, mà là biết cache cái gì, cache bao lâu, chấp nhận sai lệch tới đâu — và chỗ nào thì tuyệt đối không được tin vào cache.</p>
+    </div>
+
+    <p>Phil Karlton nói đúng: invalidation là một trong hai thứ khó nhất. Nhưng khó không có nghĩa là né. Khó nghĩa là phải <em>nhìn thấy cái giá</em> trước khi ký vào hoá đơn — chứ không phải quăng con Redis vào rồi đợi production gửi hoá đơn về sau, như mình của mấy năm trước.</p>
+
+    <section class="read-more">
+      <h2>Đọc thêm</h2>
+      <ul class="read-more-list">
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="from-monolith-to-idempotency.html">Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard<span class="rm-by">cùng con quái vật Dual Write, lớp vỏ khác</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/caching-patterns.html" target="_blank" rel="noopener noreferrer">Database caching strategies — Cache-Aside &amp; các pattern khác<span class="rm-by">docs.aws.amazon.com</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf" target="_blank" rel="noopener noreferrer">Scaling Memcache at Facebook (NSDI 2013)<span class="rm-by">invalidate thay vì update, cơ chế lease cho hot key</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://redis.io/docs/latest/develop/reference/eviction/" target="_blank" rel="noopener noreferrer">Redis key eviction — LRU vs LFU, lấy mẫu gần đúng<span class="rm-by">redis.io</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://debezium.io/documentation/reference/stable/index.html" target="_blank" rel="noopener noreferrer">Debezium — CDC đọc binlog/WAL để đồng bộ<span class="rm-by">debezium.io</span></a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="from-monolith-to-idempotency.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Từ monolith đến idempotency</div>
+      </a>
+      <div></div>
+    </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

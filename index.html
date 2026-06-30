@@ -62,7 +62,7 @@
       <section class="feed-block">
         <h3 class="feed-block__title">Archive</h3>
         <ul class="archive">
-          <li><a href="#feed">2026 <span class="archive__count">15</span></a></li>
+          <li><a href="#feed">2026 <span class="archive__count">16</span></a></li>
         </ul>
       </section>
 
@@ -109,8 +109,23 @@
     <section class="feed reveal-stagger" id="feed">
       <header class="feed__head">
         <h3 class="feed__title">Recent</h3>
-        <span class="feed__count">15</span>
+        <span class="feed__count">16</span>
       </header>
+
+      <a class="discussion-card reveal" href="caching-is-never-free.html">
+        <span class="discussion-card__num">#17</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Con Redis không cho không cái gì
+            <em>— cái giá ẩn sau mỗi lớp cache</em>
+          </h4>
+          <p class="discussion-card__excerpt">Hồi mới đi làm, với mình caching là "API chậm thì quăng con Redis vào". Ôn phỏng vấn architect mình mới thấy cái "quăng vào" đó kéo theo cả chuỗi bài toán — invalidation, ba kiểu làm DB gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-07-01">01 Jul</time>
+          <span>~12 phút</span>
+        </div>
+      </a>
 
       <a class="discussion-card reveal" href="from-monolith-to-idempotency.html">
         <span class="discussion-card__num">#16</span>
