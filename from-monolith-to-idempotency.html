@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.">
+<link rel="canonical" href="https://duthaho.dev/from-monolith-to-idempotency.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/from-monolith-to-idempotency.html">
+<meta property="og:title" content="Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard">
+<meta property="og:description" content="Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.">
+<meta property="og:image" content="https://duthaho.dev/og/from-monolith-to-idempotency.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-06-30">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard">
+<meta name="twitter:description" content="Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.">
+<meta name="twitter:image" content="https://duthaho.dev/og/from-monolith-to-idempotency.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard","description":"Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.","image":"https://duthaho.dev/og/from-monolith-to-idempotency.jpg","datePublished":"2026-06-30","dateModified":"2026-06-30","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/from-monolith-to-idempotency.html"},"url":"https://duthaho.dev/from-monolith-to-idempotency.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / from-monolith-to-idempotency</div>
+
+  <h1 class="page-title">Từ monolith đến idempotency: <em>một sợi dây, không phải sáu flashcard</em></h1>
+  <p class="page-desc">Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 30/06/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">from-monolith-to-idempotency.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+    <p>Hơn mười năm làm backend, mình khá tự tin với mớ code mình viết ra. Nhưng dạo gần đây ngồi ôn để phỏng vấn vị trí architect, mình ngộ ra một chuyện: lên level không nằm ở chỗ viết code giỏi hơn, mà ở chỗ <strong>tư duy được cả hệ thống</strong>. Và có một mạch kiến thức, khi ghép đủ các mảnh lại, đẹp như một câu chuyện — nên mình muốn kể lại.</p>
+
+    <p>Điều khiến mình tâm đắc không phải từng món riêng lẻ, mà là cách chúng <em>nối vào nhau</em>: mỗi lời giải mình tìm được lại tự tay mở ra một vết nứt mới, buộc phải đi tìm lời giải kế tiếp. Sáu chủ đề mình từng học vẹt như sáu tấm flashcard rời, hoá ra là một sợi dây.</p>
+
+    <div class="diagram"><span class="diagram-label">Sợi dây — mỗi lời giải đẻ ra vấn đề kế tiếp</span>
+tách MICROSERVICES   ──mất──▶   TRANSACTION
+mất TRANSACTION      ──cần──▶   SAGA
+SAGA                 ──kéo theo──▶  EVENTUAL CONSISTENCY  ──phải hiểu──▶  CAP
+SAGA                 ──cần phát event an toàn──▶  OUTBOX
+OUTBOX               ──có thể gửi trùng──▶  IDEMPOTENCY</div>
+
+    <h2>Câu hỏi sai và câu hỏi đúng</h2>
+
+    <p>Mọi chuyện bắt đầu từ câu kinh điển: <em>"có nên tách monolith ra microservices không?"</em> Mình của ngày xưa sẽ trả lời kiểu "tách đi cho hiện đại". Mình của bây giờ hiểu rằng câu hỏi đúng phải là: <strong>"vấn đề thực sự đang là gì?"</strong></p>
+
+    <p>Vì microservices thật ra chỉ giải quyết gọn đúng ba thứ:</p>
+
+    <ul>
+      <li><strong>Scale độc lập</strong> — phần nào nóng thì nhân bản riêng phần đó, không phải bê cả khối lên.</li>
+      <li><strong>Release nhanh hơn</strong> — mỗi đội deploy phần của mình mà không phải xếp hàng chờ cả monolith.</li>
+      <li><strong>Cô lập lỗi</strong> — một service sập không kéo sập phần còn lại.</li>
+    </ul>
+
+    <p>Nếu cái đau của bạn không nằm ở ba chỗ đó, thì nhiều khi một <strong>modular monolith</strong> gọn gàng — vẫn một khối triển khai, nhưng module hoá rạch ròi bên trong — còn rẻ hơn nhiều, mà tránh được cả núi phức tạp phía sau. Architect là người bắt đầu từ <em>problem</em>, không phải bắt đầu từ <em>solution</em>.</p>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> giả sử cái đau của bạn đúng là ba thứ kia và bạn tách thật. Tách xong, bạn mất luôn một thứ mà hồi monolith bạn được dùng miễn phí — cái transaction.</p>
+
+    <h2>Mất cái transaction được cho không</h2>
+
+    <p>Hồi còn monolith, một đơn hàng là chuyện nhỏ: <em>trừ tiền + trừ kho + tạo đơn</em> nằm gọn trong một transaction của database. Lỗi ở bất kỳ bước nào, <code>ROLLBACK</code> một phát là sạch sẽ, như chưa từng có gì xảy ra.</p>
+
+    <p>Tách microservices ra, mỗi service ôm một database riêng (điều này gần như bắt buộc, nếu không thì tách làm gì). Giờ khách đặt hàng mà <em>trừ tiền thành công nhưng trừ kho fail</em> thì sao? Chẳng lẽ để khách mất tiền oan? Biết là phải xử lý, nhưng lúc đầu mình nghĩ mãi không ra cách nào cho đẹp.</p>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> cần một kiểu "transaction" trải trên nhiều service và nhiều database. Cái tên đầu tiên hiện ra trong đầu, đúng như trong sách giáo khoa, là 2PC.</p>
+
+    <h2>2PC — lời hứa hào nhoáng mình phải từ chối</h2>
+
+    <p><strong>Two-Phase Commit</strong> nghe rất hấp dẫn: một coordinator hỏi tất cả các bên "sẵn sàng chưa?" (phase prepare), tất cả gật thì mới "commit đi" (phase commit). Nó hứa <em>nhất quán tức thì</em> — hoặc tất cả cùng thành công, hoặc tất cả cùng không.</p>
+
+    <p>Nhưng đào kỹ mới thấy cái giá. Trong lúc chờ tất cả các bên trả lời, mọi tài nguyên liên quan đều bị <strong>khoá</strong>. Và tệ hơn: chỉ cần ông coordinator chết đúng giữa hai phase, cả đám participant kẹt cứng, ôm lock chờ vô thời hạn, không biết nên commit hay rollback. Nói cách khác, 2PC đánh đổi <strong>tính sẵn sàng và khả năng scale</strong> để lấy nhất quán tức thì — mà đây lại đúng là hai thứ microservices không thể hy sinh. Thế là loại.</p>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> nếu không thể có nhất quán tức thì kiểu khoá-tất-cả, thì phải chấp nhận một mô hình mềm hơn — làm từng bước, lỗi thì lùi lại. Đó là Saga.</p>
+
+    <h2>Saga — chuỗi giao dịch nhỏ và một đường lùi</h2>
+
+    <p>Thay vì một transaction to đùng, <strong>Saga</strong> dùng một <em>chuỗi giao dịch nhỏ</em>, mỗi bước là một local transaction gọn trong một service. Bước nào lỗi thì chạy một <strong>giao dịch bù trừ</strong> (compensating transaction) để hoàn tác những gì đã làm trước đó — không phải rollback của database, mà là "làm điều ngược lại" ở tầng nghiệp vụ.</p>
+
+    <p>Có một mẹo mình thấy cực hay ở khâu thanh toán: <strong>đừng trừ tiền ngay, hãy giữ tiền trước (authorize) rồi mới trừ thật (capture)</strong> khi mọi bước đều ổn. Nhờ vậy khi một bước sau lỗi, giao dịch bù chỉ cần <em>nhả tiền</em> ra, khách không mất một xu. Bù trừ đẹp nhất là bù trừ không để lại dấu vết.</p>
+
+    <p>Saga có hai cách dựng, và đây là phần mình bổ sung được khi đào sâu:</p>
+
+    <div class="finding-block">
+      <div class="finding-num">Cách A</div>
+      <div class="finding-title">Orchestration — có một nhạc trưởng</div>
+      <p>Một orchestrator trung tâm cầm trịch: gọi service 1, xong gọi service 2, lỗi thì tự điều phối các bước bù. Logic nằm một chỗ nên dễ đọc, dễ trace. Cái giá: orchestrator thành một thành phần phải nuôi, và nếu làm ẩu thì thành điểm chết tập trung. Hợp với quy trình nghiệp vụ phức tạp, nhiều nhánh.</p>
+    </div>
+
+    <div class="finding-block">
+      <div class="finding-num">Cách B</div>
+      <div class="finding-title">Choreography — không ai cầm trịch</div>
+      <p>Không có nhạc trưởng. Mỗi service làm xong việc thì phát một event, service sau lắng nghe rồi tự làm tiếp. Rất loosely-coupled, không có điểm chết tập trung. Cái giá: khi số bước tăng lên, không ai nhìn thấy toàn cảnh, debug "ai kích hoạt ai" thành ác mộng. Hợp với luồng tuyến tính, ít bên tham gia.</p>
+    </div>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> Saga không còn nhất quán tức thì — có những khoảnh khắc tiền đã giữ mà đơn chưa tạo xong, hệ thống tạm thời "lệch". Đó là <strong>eventual consistency</strong>. Và để hiểu vì sao buộc phải chấp nhận nó, mình phải quay lại một định lý mình từng hiểu sai suốt bao năm.</p>
+
+    <h2>CAP — chỗ mình hiểu sai suốt bao năm</h2>
+
+    <p>Ai cũng thuộc lòng câu "chọn 2 trong 3" của <strong>CAP</strong> (Consistency, Availability, Partition tolerance). Nhưng sự thật là: <strong>cái P — mạng bị chia cắt — không phải thứ để bạn chọn.</strong> Mạng thì chắc chắn sẽ có lúc đứt. Nên P là thứ bắt buộc phải chấp nhận, và lựa chọn thật sự chỉ còn là: <em>khi mạng đứt, bạn hy sinh nhất quán (C) hay hy sinh tính sẵn sàng (A)?</em></p>
+
+    <p>Và một cú nữa làm mình ngớ người: chữ <strong>C trong CAP</strong> với chữ <strong>C trong ACID</strong> là hai thứ hoàn toàn khác nhau. C của CAP nói về việc mọi node nhìn thấy cùng một dữ liệu tại cùng một thời điểm (linearizability). C của ACID nói về việc một transaction giữ nguyên các ràng buộc nghiệp vụ (constraint). Hồi xưa mình cứ tưởng là một.</p>
+
+    <div class="callout">
+      <div class="callout-label">Mảnh mình đào thêm: PACELC</div>
+      <p>CAP chỉ nói chuyện <em>lúc mạng đứt</em>. Nhưng Daniel Abadi (2012) chỉ ra phần còn thiếu: <strong>kể cả khi mạng hoàn toàn bình thường</strong>, bạn vẫn phải đánh đổi mỗi ngày giữa độ trễ và nhất quán. Đầy đủ là <strong>PACELC</strong>: <em>nếu Partition thì chọn A hay C; Else (bình thường) thì chọn Latency hay Consistency</em>. Muốn mọi node luôn đồng bộ tuyệt đối thì phải chờ nhau — và chờ nhau nghĩa là chậm. Đây mới là phiên bản đầy đủ của câu chuyện đánh đổi.</p>
+    </div>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> ok, đã chấp nhận eventual consistency, Saga sẽ chạy bằng cách phát event giữa các bước. Nhưng "phát event" lại giấu một cái bug mà rất nhiều người dính mà không biết.</p>
+
+    <h2>Dual Write — cái bug ai cũng mắc mà không hay</h2>
+
+    <p>Service làm xong việc thì phải phát event để báo cho bước sau. Nghe đơn giản. Nhưng <em>ghi vào database</em> và <em>phát event lên message broker</em> là hai hệ thống khác nhau, và <strong>không có transaction nào bao trùm được cả hai</strong>. Đây là <strong>Dual Write Problem</strong>.</p>
+
+    <div class="diagram"><span class="diagram-label">Khe hở chết người</span>
+[1] ghi DB        ✔ thành công
+        ⟵⟵⟵  CRASH ngay tại đây
+[2] phát event    ✘ chưa kịp gửi
+    →  DB nói "đơn đã tạo", nhưng cả hệ thống phía sau không hề biết.</div>
+
+    <p>Crash đúng vào cái khe giữa hai bước đó là dữ liệu lệch nhau ngay: hoặc ghi DB rồi mà event bay mất, hoặc event đã gửi mà DB lại rollback. Hai nguồn sự thật, không cách nào buộc chúng đồng ý với nhau bằng một transaction.</p>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> cần một cách để "ghi dữ liệu" và "ghi ý định phát event" rơi vào <em>cùng một transaction</em>. Lời giải đơn giản đến bất ngờ: Outbox.</p>
+
+    <h2>Outbox — nhét event vào chung một transaction</h2>
+
+    <p><strong>Outbox pattern</strong>: thay vì phát event thẳng lên broker, ta <strong>ghi cái event vào một bảng <code>outbox</code> nằm chung database</strong>, trong <em>cùng một transaction</em> với dữ liệu nghiệp vụ. Một là cả hai cùng được ghi, hai là cả hai cùng rollback — cái khe hở chết người biến mất, vì giờ chỉ còn đúng một transaction trên đúng một database.</p>
+
+    <p>Sau đó, một tiến trình riêng đọc bảng outbox ra và phát event đi. Có hai cách làm cái đuôi này, và mình đào ra được sự đánh đổi giữa chúng:</p>
+
+    <ul>
+      <li><strong>Polling publisher</strong> — một job định kỳ quét bảng outbox lấy event chưa gửi rồi đẩy đi. Đơn giản, chạy được với bất kỳ database nào. Cái giá: trễ theo chu kỳ quét, và quét nhiều thì nặng DB. Ổn tới tầm vài nghìn event mỗi giây.</li>
+      <li><strong>Change Data Capture (CDC)</strong> — công cụ như <strong>Debezium</strong> đọc thẳng transaction log của database (WAL của PostgreSQL, binlog của MySQL) và stream thay đổi đi gần như tức thì, gần như không đụng tới bảng nghiệp vụ. Crash thì đọc tiếp từ log, không mất event. Cái giá: phải nuôi thêm một pipeline CDC — một bộ phận chuyển động nữa trong hệ thống.</li>
+    </ul>
+
+    <p><span class="inline-flag">Vết nứt mới:</span> dù polling hay CDC, cái tiến trình gửi event này có thể gửi <em>trùng</em> — nó vừa gửi xong thì crash trước khi kịp đánh dấu "đã gửi", lần sau chạy lại nó gửi lần nữa. Và đây là mảnh ghép cuối.</p>
+
+    <h2>Idempotency — mảnh ghép khoá lại cả sợi dây</h2>
+
+    <p>Trong hệ phân tán, gần như không bao giờ đảm bảo được <strong>exactly-once</strong>. Client retry vì timeout, broker gửi lại để chắc ăn, Saga thử lại bước lỗi, Outbox gửi trùng — đủ kiểu khiến <em>cùng một lệnh chạy nhiều lần</em>. Nếu mỗi lần chạy đều trừ tiền thật thì khách bị trừ hai, ba lần.</p>
+
+    <p>Cách xử lý là <strong>idempotency key</strong>: client gửi kèm một id duy nhất cho mỗi thao tác. Server thấy key lần đầu thì xử lý và <em>lưu lại kết quả</em>; thấy key đó lần nữa thì trả lại kết quả cũ thay vì làm lại từ đầu. Nhờ vậy chạy bao nhiêu lần thì hiệu ứng vẫn đúng một lần — không bao giờ trừ tiền khách hai lần.</p>
+
+    <p>Đây cũng chính là lý do Stripe hay PayPal đều có header <code>Idempotency-Key</code>. Mình đào kỹ cách Stripe làm và thấy vài chi tiết đáng học:</p>
+
+    <ul>
+      <li>Mọi request <code>POST</code> đều nhận idempotency key; lần đầu xử lý xong, kết quả được lưu gắn với key đó.</li>
+      <li>Lần sau cùng key, Stripe trả lại đúng response cũ, kèm dấu <code>Idempotent-Replayed: true</code> — không chạy lại logic.</li>
+      <li>Nó còn <strong>so khớp tham số</strong> của request mới với request gốc; lệch là báo lỗi, để chặn việc vô tình tái dùng key cho thao tác khác.</li>
+      <li>Key chỉ giữ <strong>24 giờ</strong> rồi hết hạn — đủ dài để retry an toàn, đủ ngắn để khỏi phình bộ nhớ.</li>
+    </ul>
+
+    <p>Một chi tiết khép vòng đẹp đẽ: nhớ những <em>giao dịch bù trừ</em> của Saga ở đầu câu chuyện không? Chúng cũng phải idempotent — vì bước bù cũng có thể bị gọi lại nhiều lần. Mảnh ghép cuối quay lại ôm lấy mảnh ghép đầu.</p>
+
+    <hr class="divider">
+
+    <h2>Sợi dây, không phải sáu flashcard</h2>
+
+    <p>Điều làm mình tâm đắc nhất không phải từng món riêng lẻ, mà là khi xâu chuỗi lại: tách microservices nên mất transaction; mất transaction nên cần Saga; Saga dính eventual consistency nên phải hiểu CAP (và PACELC); Saga cần phát event an toàn nên cần Outbox; Outbox gửi trùng nên phải có idempotency. Không phải sáu chủ đề rời rạc để học vẹt, mà là một chuỗi nhân quả nối liền.</p>
+
+    <div class="pq">
+      <p>Lên architect không phải là biết nhiều khái niệm hơn. Là nhìn ra sợi dây nối chúng — và hiểu rằng mỗi lời giải đều mang theo cái giá của nó.</p>
+    </div>
+
+    <p>Và có lẽ đó là khác biệt thật sự giữa "biết các pattern" và "tư duy hệ thống": không phải nhớ được nhiều hộp công cụ hơn, mà thấy được vì sao cái hộp này lại dẫn tới cái hộp kia. Mình viết bài này phần lớn để tự sắp lại sợi dây đó trong đầu trước buổi phỏng vấn — và hoá ra viết ra mới là lúc mình thật sự hiểu.</p>
+
+    <section class="read-more">
+      <h2>Đọc thêm</h2>
+      <ul class="read-more-list">
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://microservices.io/patterns/data/saga.html" target="_blank" rel="noopener noreferrer">Pattern: Saga — chuỗi local transaction &amp; compensating<span class="rm-by">microservices.io — Chris Richardson</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://read.thecoder.cafe/p/pacelc" target="_blank" rel="noopener noreferrer">PACELC: phần CAP còn thiếu — latency vs consistency<span class="rm-by">thecoder.cafe — mở rộng của Daniel Abadi</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/" target="_blank" rel="noopener noreferrer">Outbox pattern với CDC<span class="rm-by">debezium.io — tail outbox bằng transaction log</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://docs.stripe.com/api/idempotent_requests" target="_blank" rel="noopener noreferrer">Idempotent requests<span class="rm-by">docs.stripe.com — Idempotency-Key trong thực tế</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="things-ive-learned.html">Những thứ tôi học được sau 5 năm làm engineer<span class="rm-by">cũng là chuyện lên level, nhìn lại</span></a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="ai-inference-engineering.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Hai người thợ trong cỗ máy AI</div>
+      </a>
+      <div></div>
+    </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

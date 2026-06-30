@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Thu, 18 Jun 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Tue, 30 Jun 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard</title>
+    <link>https://duthaho.dev/from-monolith-to-idempotency.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/from-monolith-to-idempotency.html</guid>
+    <pubDate>Tue, 30 Jun 2026 09:00:00 +0700</pubDate>
+    <description>Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Hai người thợ trong cỗ máy AI</title>
     <link>https://duthaho.dev/ai-inference-engineering.html</link>
