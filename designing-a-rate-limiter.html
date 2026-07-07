@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="favicon.ico" rel="icon">
+<title>Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy</title>
+<!-- SEO:auto-meta -->
+<meta name="description" content="Mình vào phỏng vấn architect, được hỏi &quot;thiết kế một rate limiter&quot;. Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.">
+<link rel="canonical" href="https://duthaho.dev/designing-a-rate-limiter.html">
+<link rel="alternate" type="application/rss+xml" title="Nhật ký dev" href="https://duthaho.dev/feed.xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nhật ký dev">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="https://duthaho.dev/designing-a-rate-limiter.html">
+<meta property="og:title" content="Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy">
+<meta property="og:description" content="Mình vào phỏng vấn architect, được hỏi &quot;thiết kế một rate limiter&quot;. Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.">
+<meta property="og:image" content="https://duthaho.dev/og/designing-a-rate-limiter.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="article:published_time" content="2026-07-05">
+<meta property="article:author" content="duthaho">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy">
+<meta name="twitter:description" content="Mình vào phỏng vấn architect, được hỏi &quot;thiết kế một rate limiter&quot;. Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.">
+<meta name="twitter:image" content="https://duthaho.dev/og/designing-a-rate-limiter.jpg">
+<!-- /SEO:auto-meta -->
+<!-- SEO:auto-jsonld -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy","description":"Mình vào phỏng vấn architect, được hỏi \"thiết kế một rate limiter\". Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.","image":"https://duthaho.dev/og/designing-a-rate-limiter.jpg","datePublished":"2026-07-05","dateModified":"2026-07-05","author":{"@type":"Person","name":"duthaho","url":"https://about.duthaho.dev"},"publisher":{"@type":"Organization","name":"Nhật ký dev","url":"https://duthaho.dev/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://duthaho.dev/designing-a-rate-limiter.html"},"url":"https://duthaho.dev/designing-a-rate-limiter.html","inLanguage":"vi"}</script>
+<!-- /SEO:auto-jsonld -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="article-page">
+
+<div class="reading-progress" id="progress"></div>
+
+<nav class="topbar">
+  <a class="blog-brand" href="/">Nhật ký <em>dev</em></a>
+  <div class="topbar-tag">Suy nghĩ sau giờ làm</div>
+</nav>
+
+<main class="container-wide">
+  <div class="breadcrumb"><a href="/">blog</a> / designing-a-rate-limiter</div>
+
+  <h1 class="page-title">Rate limiter không phải bài toán chọn thuật toán: <em>một buổi phỏng vấn đào mãi không đáy</em></h1>
+  <p class="page-desc">Mình vào phỏng vấn architect, được hỏi "thiết kế một rate limiter". Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.</p>
+
+  <div class="terminal-card meta-card">
+    <div class="terminal-header">
+      <span class="terminal-filename">$ git log --oneline --stat</span>
+    </div>
+    <div class="terminal-body meta-body">
+      <span class="meta-item">✍️ <strong>author:</strong> duthaho</span>
+      <span class="meta-item">📅 <strong>date:</strong> 05/07/2026</span>
+      <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> <span id="reading-time">...</span></span>
+    </div>
+  </div>
+
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="terminal-card content-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">designing-a-rate-limiter.md</span>
+          <span class="terminal-status">readonly</span>
+        </div>
+        <div class="terminal-body content-body">
+          <article class="article">
+
+    <p>"Thiết kế cho mình một rate limiter đi." Câu hỏi mở màn buổi phỏng vấn architect nghe dễ tới mức mình mừng thầm. Mình biết mấy thuật toán này mà — token bucket, sliding window, mình nhớ hết. Thế là mình bắt đầu kể tên, thao thao.</p>
+
+    <p>Được một lúc thì mình nhận ra: người ngồi đối diện chẳng buồn ghi lại tên thuật toán nào. Cứ mỗi lần mình tưởng đã trả lời xong, họ lại hỏi thêm một câu — và câu sau bao giờ cũng sâu hơn câu trước. Buổi phỏng vấn không đi ngang qua danh sách thuật toán; nó đi <em>xuống</em>, mỗi lần một tầng.</p>
+
+    <div class="pq">
+      <p>Người phỏng vấn không hỏi mình chọn thuật toán nào. Họ hỏi mình hiểu tới đâu — và mỗi câu trả lời của mình chỉ là cái cửa mở ra một câu hỏi khó hơn.</p>
+    </div>
+
+    <p>Về nhà mình ngồi xâu chuỗi lại cả cái cầu thang câu hỏi đó, vì hoá ra nó chính là bản đồ để phân biệt "biết thuật toán" với "thiết kế được hệ thống". Mình kể lại theo đúng thứ tự nó đã đào xuống.</p>
+
+    <h2>Tầng 0: rate limiter để làm gì?</h2>
+
+    <p>Trước khi hỏi <em>làm thế nào</em>, câu đầu tiên là <em>để làm gì</em> — và mình suýt bỏ qua nó vì tưởng hiển nhiên. Nhưng trả lời được cái "tại sao" mới lộ ra là có mấy động cơ rất khác nhau nấp chung dưới một cái tên:</p>
+
+    <ul>
+      <li><strong>Chống quá tải</strong> — đừng để một client (hay một bug retry điên loạn) làm ngộp cả hệ thống.</li>
+      <li><strong>Chống lạm dụng</strong> — chặn scraping, brute-force, spam.</li>
+      <li><strong>Công bằng</strong> — một người dùng tham lam không được nuốt hết tài nguyên của phần còn lại.</li>
+      <li><strong>Kiểm soát chi phí</strong> — mỗi request là tiền (compute, gọi API bên thứ ba); có trần thì có hoá đơn dự đoán được.</li>
+    </ul>
+
+    <p>Nghe thì gom làm một, nhưng bốn động cơ này kéo thiết kế về bốn hướng khác nhau — và chính chúng quyết định các câu trả lời ở những tầng dưới. Giữ chúng trong đầu.</p>
+
+    <h2>Tầng 1: "Bạn biết những thuật toán nào?"</h2>
+
+    <p>Đây là tầng mình tự tin nhất, và cũng là tầng người phỏng vấn dành ít thời gian nhất. Có năm cái tên kinh điển, xếp thành một phổ đánh đổi giữa <strong>chính xác</strong> và <strong>tốn tài nguyên</strong>:</p>
+
+    <div class="diagram"><span class="diagram-label">Phổ thuật toán rate limiting — từ rẻ-mà-thô đến chính xác-mà-nặng</span>
+Fixed Window        đếm theo ô thời gian cố định    rẻ nhất, dính "burst biên"
+Sliding Window Log  lưu timestamp của từng request  chính xác tuyệt đối, ngốn RAM
+Sliding Window Ctr  nội suy hai ô kề nhau           gần đúng, đủ tốt — Cloudflare
+Token Bucket        tích token, CHO PHÉP burst      EC2 / API Gateway / Stripe
+Leaky Bucket        rò ra đều, LÀM PHẲNG traffic    nginx limit_req</div>
+
+    <p><strong>Fixed Window</strong> đơn giản nhất: một biến đếm cho mỗi ô thời gian (100 request / phút). Rẻ, nhưng có cái bẫy kinh điển gọi là <em>burst biên</em>. Figma có ví dụ số học sạch nhất: giới hạn 5 request/phút, khách bắn 5 request lúc 11:00:59, rồi 5 request nữa lúc 11:01:00 — ô phút này qua, ô phút kia tính riêng — và bạn vừa cho qua <strong>10 request trong chưa đầy một giây</strong>, gấp đôi giới hạn.</p>
+
+    <div class="diagram"><span class="diagram-label">Burst biên: hai ô cạnh nhau, giới hạn 5/phút</span>
+11:00:59   ▉▉▉▉▉   5 req  →  ô phút 11:00 vừa đủ trần
+11:01:00   ▉▉▉▉▉   5 req  →  ô phút 11:01 là ô MỚI, lại vừa đủ trần
+           ─────────────────────────────────────────────
+           10 req trong &lt;1 giây — gấp ĐÔI giới hạn, mà luật nào cũng "đúng"</div>
+
+    <p><strong>Sliding Window Log</strong> chữa triệt để: lưu timestamp của từng request, đếm đúng những cái nằm trong cửa sổ trượt. Chính xác tuyệt đối — và tốn bộ nhớ tuyệt đối, vì key nào nóng thì log dài theo. <strong>Sliding Window Counter</strong> là đường trung dung, và là chỗ mình học được nhiều nhất: thay vì lưu từng timestamp, nó giữ hai biến đếm của ô hiện tại và ô trước, rồi <em>nội suy</em>.</p>
+
+    <p>Cloudflare tả rất rõ trong bài về cách họ scale rate limiting tới hàng triệu domain. Giả sử giới hạn 50/phút, ô trước có 42 request, ô này có 18, và mình đang ở giây thứ 15 của ô hiện tại. Ước lượng: <code>42 × (45/60) + 18 = 42 × 0,75 + 18 = 49,5</code> — vẫn dưới trần, cho qua. Điểm mình thích là Cloudflare thẳng thắn nói đây chỉ là <em>xấp xỉ</em> (nó giả định request trong ô trước rải đều). Và họ đưa số để chứng minh xấp xỉ đó đủ tốt: trên <strong>400 triệu request từ 270.000 nguồn</strong>, chỉ <strong>0,003%</strong> bị cho qua/chặn sai, sai lệch trung bình so với con số thật khoảng <strong>6%</strong>, không một false positive nào. Rẻ hơn log rất nhiều mà sai số nằm trong mức chấp nhận được.</p>
+
+    <div class="aside">
+      <p>Figma đi đúng con đường sliding-window-counter này và công bố luôn chi phí: họ chẻ cửa sổ thành nhiều ô nhỏ bằng 1/60 kích thước giới hạn, lưu trong một Redis hash. Với 10.000 user, 60 ô, mỗi ô 4 byte — tốn vỏn vẹn khoảng <strong>2,4 MB</strong>. Đáng chú ý: họ <em>chủ động không</em> dùng Lua script "để khỏi rước thêm một ngôn ngữ vào codebase" — một lời nhắc rằng giải pháp gọn nhất không phải lúc nào cũng là giải pháp fancy nhất.</p>
+    </div>
+
+    <p>Còn <strong>Token Bucket</strong> và <strong>Leaky Bucket</strong> là hai mô hình "dòng chảy". Token bucket tích token đều đặn vào một cái xô có sức chứa cố định; có token thì đi, hết thì chặn — nên nó <em>cho phép burst</em> tới bằng sức chứa xô (token dồn lại lúc rảnh). Đây là lựa chọn của rất nhiều hệ thống lớn: Amazon EC2 API, AWS API Gateway (mặc định 10.000 request/giây steady, xô burst 5.000), và Stripe. Leaky bucket thì ngược lại: request xếp hàng, rò ra ở một nhịp <em>cố định</em>, nên output luôn phẳng — nginx <code>limit_req</code> ghi thẳng trong doc là dùng "phương pháp leaky bucket". Chọn cái nào? Nếu muốn nuốt được burst ngắn thì token bucket; nếu muốn bảo vệ downstream bằng một dòng đều tăm tắp thì leaky bucket.</p>
+
+    <p><span class="inline-flag">Hỏi tiếp:</span> mình kể xong năm cái tên, thấy khá ổn. Người phỏng vấn gật gù rồi hỏi: "Ừ. Giờ bạn deploy service này trên hai mươi cái server thì cái biến đếm đó nằm ở đâu?" Và cả buổi phỏng vấn rẽ hướng từ đúng câu đó.</p>
+
+    <h2>Tầng 2: hai mươi server, đếm ở đâu?</h2>
+
+    <p>Đây là ranh giới thật giữa "biết thuật toán" và "thiết kế hệ thống". Mọi thuật toán ở trên đều giả định có <em>một</em> biến đếm. Nhưng production chạy hai mươi instance sau load balancer. Nếu mỗi instance đếm riêng trong RAM của nó, thì giới hạn "100/phút" của bạn thực chất thành 2.000/phút. Biến đếm phải nằm ở một chỗ dùng chung — thường là <strong>Redis</strong>. Và khoảnh khắc nó thành dùng-chung, ba cái bẫy hiện ra.</p>
+
+    <div class="finding-block">
+      <div class="finding-num">01</div>
+      <div class="finding-title">Atomicity — "kiểm tra rồi tăng" không phải một bước</div>
+      <p>Bản năng đầu tiên là: đọc counter, so với trần, nếu còn chỗ thì tăng lên. Nhưng ba thao tác đó tách rời, và hàng nghìn server chạy đồng thời sẽ chen vào giữa.</p>
+    </div>
+
+    <div class="diagram"><span class="diagram-label">Race condition: đọc và tăng tách rời (counter = 99, trần = 100)</span>
+T1  server A:  GET counter → 99
+T2  server B:  GET counter → 99      ← cả hai cùng thấy "vẫn còn chỗ"
+T3  server A:  INCR → 100   ✔ cho qua
+T4  server B:  INCR → 101   ✔ cho qua ← lọt! vì check và incr không dính liền</div>
+
+    <p>Cách chữa gọn nhất tận dụng đúng cái tính chất mình từng viết trong bài về caching: Redis xử lý lệnh trên <em>một luồng duy nhất</em>, và khi chạy một <strong>Lua script</strong> nó chạy trọn vẹn đoạn đó, không cho lệnh nào chen ngang. Gói "đọc counter — so trần — quyết định — tăng" vào một script, cả cụm thành một bước không thể tách. Race condition biến mất, không cần khoá phân tán rườm rà. (Nếu ngại nhúng Lua, các module như <strong>redis-cell</strong> của Brandur Leach gói sẵn cả thuật toán GCRA vào một lệnh <code>CL.THROTTLE</code> nguyên tử — GCRA vốn ra đời từ mạng ATM, chỉ lưu đúng một mốc "thời điểm đến lý thuyết" cho mỗi key thay vì cả một đống counter.)</p>
+
+    <div class="finding-block">
+      <div class="finding-num">02</div>
+      <div class="finding-title">Clock — lấy đồng hồ của ai?</div>
+      <p>Thuật toán nào cũng cần "bây giờ là mấy giờ". Nếu mỗi app server dùng đồng hồ của <em>chính nó</em>, thì hai mươi cái đồng hồ lệch nhau vài trăm mili-giây là đủ để cửa sổ thời gian nhảy loạn, key hết hạn không thống nhất. Câu trả lời: đừng tin đồng hồ local. Lấy thời gian từ <em>một nguồn duy nhất</em> — chính con Redis đang giữ counter, qua lệnh <code>TIME</code>. Một đồng hồ cho tất cả, hết lệch.</p>
+    </div>
+
+    <div class="finding-block">
+      <div class="finding-num">03</div>
+      <div class="finding-title">Failure mode — Redis chết thì cho qua hay chặn?</div>
+      <p>Giờ counter nằm ở Redis, tức là Redis thành đường đi bắt buộc của <em>mọi</em> request. Nó chớp một cái thì sao? Hai lựa chọn, và không có đáp án đúng phổ quát — chỉ có lựa chọn <em>có ý thức</em>: <strong>fail-open</strong> (Redis chết thì cho request đi hết, ưu tiên còn sống, chấp nhận rủi ro quá tải) hay <strong>fail-close</strong> (chặn hết, ưu tiên bảo vệ, chấp nhận tự gây downtime).</p>
+    </div>
+
+    <p>Stripe kể thẳng là họ bọc lỗi để <em>fail open</em>: nếu Redis sập thì request không bị ảnh hưởng, vì với họ rate limiter là lớp bảo vệ, không phải đường sống. Envoy để field <code>failure_mode_deny</code> mặc định là <code>false</code> — cũng là fail-open. Xu hướng chung là fail-open, trừ khi cái bạn đang giới hạn mang tính bảo mật (chống brute-force chẳng hạn) thì mới fail-close. Điểm mấu chốt người phỏng vấn muốn nghe không phải bạn chọn cái nào, mà là bạn <em>biết mình đang chọn</em>.</p>
+
+    <p><span class="inline-flag">Hỏi tiếp:</span> "Ok, giả sử bạn quyết định chặn một request. Bạn trả về cho client cái gì?" Mình định nói "trả lỗi" rồi khựng lại — lỗi gì, kèm thông tin gì?</p>
+
+    <h2>Tầng 3: chặn rồi thì nói với client thế nào?</h2>
+
+    <p>Tầng này tưởng nhỏ mà lộ ra ai từng vận hành API thật. Chặn không phải là đóng sầm cửa, mà là nói cho client biết <em>chuyện gì đang xảy ra và khi nào quay lại</em>:</p>
+
+    <ul>
+      <li><strong>HTTP 429 Too Many Requests</strong> — đúng status cho tình huống này, định nghĩa ở RFC 6585 (2012). Đừng trả 500, cũng đừng trả 403.</li>
+      <li><strong>Header <code>Retry-After</code></strong> — nói thẳng "chờ chừng này giây rồi thử lại". Nó nằm trong RFC 9110 (bản hiện hành, thay cho RFC 7231 cũ). Cái header này quý ở chỗ nó biến client từ kẻ spam mù thành kẻ biết điều — retry đúng lúc thay vì dội liên hồi.</li>
+      <li><strong>Nhóm header <code>RateLimit</code></strong> — cho client biết còn bao nhiêu quota, reset khi nào. Thú vị là chuẩn IETF cho mấy header này (<code>draft-ietf-httpapi-ratelimit-headers</code>) tới giữa 2026 vẫn còn là <em>draft</em>, chưa lên RFC — nên ngoài đời phần lớn vẫn xài bộ <code>X-RateLimit-*</code> de-facto (GitHub là ví dụ quen thuộc), dù tiền tố <code>X-</code> về lý thuyết đã bị khuyến cáo bỏ từ lâu.</li>
+    </ul>
+
+    <p>Chi tiết nhỏ nhưng nói lên nhiều: một rate limiter tử tế không chỉ <em>chặn</em>, nó <em>cộng tác</em> với client để cả hệ thống cùng hạ nhiệt.</p>
+
+    <h2>Khoảnh khắc vỡ òa: rate limiting không phải là tất cả</h2>
+
+    <p>Rồi tới câu làm mình đứng hình — câu mình nghĩ là đích thật của cả buổi: "Rate limiter bảo vệ bạn khỏi <em>một client</em> gửi quá nhiều. Thế còn khi <em>tất cả</em> client đều ngoan, mà tổng tải vẫn làm server sắp gục thì sao?"</p>
+
+    <p>Lúc đó mình mới thấy rate limiting chỉ là <em>một</em> công cụ trong một họ lớn hơn, và mình đã lẫn lộn chúng làm một:</p>
+
+    <div class="callout">
+      <div class="callout-label">Ba thứ hay bị gộp làm một</div>
+      <p><strong>Rate limiting</strong> là <em>chủ động</em>: đặt trần cho từng client/khoá, bất kể server đang khoẻ hay yếu. <strong>Load shedding</strong> là <em>phản ứng</em>: khi chính server thấy mình sắp quá tải, nó chủ động <em>vứt bớt</em> request — thường vứt theo mức ưu tiên, giữ cái quan trọng, bỏ cái có thể bỏ. <strong>Backpressure</strong> là truyền tín hiệu "chậm lại" ngược lên thượng nguồn để cả chuỗi ghìm nhịp. Ba tầng phòng thủ khác nhau, cho ba câu hỏi khác nhau — và một hệ thống nghiêm túc cần cả ba.</p>
+    </div>
+
+    <p>Sách Google SRE (chương "Handling Overload") mô tả rất đẹp cái ranh giới này. Rate limiting per-client không cứu bạn khi tổng tải vượt ngưỡng; lúc đó cần load shedding, thậm chí <em>graceful degradation</em> (giảm chất lượng mỗi response thay vì bỏ hẳn). Họ còn có công thức throttling phía client: khi backend bắt đầu từ chối, client tự giảm tốc theo tỉ lệ đại loại <code>max(0, (requests − 2 × accepts) / (requests + 1))</code> — nghĩa là càng bị từ chối nhiều thì tự nguyện gửi càng ít, để không hùa nhau dí chết một server đang ngoi ngóp.</p>
+
+    <p>Chính lúc này mình nhớ lại bài blog của Stripe. Hoá ra họ không xây "một rate limiter", mà xây <strong>bốn lớp</strong>: một <em>request rate limiter</em> (trần request/giây mỗi user), một <em>concurrent requests limiter</em> (trần số request đang chạy đồng thời), rồi <em>hai</em> load shedder — một để dành phần fleet cho request quan trọng, một để cắt traffic ưu tiên thấp khi worker bắt đầu nghẽn. Hai cái đầu là rate limiting, hai cái sau là load shedding. Cùng một mục tiêu "đừng gục", nhưng đánh vào hai loại nguy hiểm hoàn toàn khác nhau.</p>
+
+    <p>Giống hệt cái cảm giác mình từng có khi nhận ra Dual Write Problem nấp dưới nhiều lớp vỏ: khi thấy được cái khung "chủ động chặn — phản ứng vứt — truyền tín hiệu ngược", mình bớt học vẹt từng công cụ, và bắt đầu nghĩ theo <em>tầng phòng thủ</em>. Đó mới là thứ người phỏng vấn dò tìm.</p>
+
+    <hr class="divider">
+
+    <h2>Thuật toán là câu trả lời mười phút</h2>
+
+    <p>Ngồi ghép lại cả cầu thang câu hỏi, mình mới thấy trò chơi thật của buổi phỏng vấn. Tên thuật toán là phần dễ nhất — search năm phút là có. Cái người ta thật sự đo là bạn có thấy được những gì <em>bên dưới</em> nó không: đếm ở đâu khi có hai mươi server, atomic bằng cách nào, tin đồng hồ của ai, hạ tầng chết thì cho qua hay chặn, nói gì với client, và biết khi nào rate limiting là sai công cụ mà phải chuyển sang load shedding.</p>
+
+    <div class="pq">
+      <p>Người phỏng vấn không hỏi "bạn biết thuật toán nào", họ hỏi "bạn nhìn thấy được bao nhiêu tầng". Thiết kế một rate limiter không phải là chọn giữa token bucket và sliding window — mà là biết mọi câu trả lời đều mở ra một câu hỏi sâu hơn, và không dừng lại ở tầng đầu tiên.</p>
+    </div>
+
+    <p>Mình bước ra khỏi buổi phỏng vấn đó không nhớ nổi mình đã "đúng" được bao nhiêu câu. Nhưng mình nhớ rõ cái cảm giác mỗi lần bị hỏi sâu thêm một tầng — vừa toát mồ hôi, vừa thấy rõ khoảng cách giữa chỗ mình đang đứng và chỗ một architect thật sự đứng. Và lần này, khoảng cách đó mình <em>nhìn thấy</em> được. Thế là đủ để về nhà ngồi viết.</p>
+
+    <section class="read-more">
+      <h2>Đọc thêm</h2>
+      <ul class="read-more-list">
+        <li>
+          <span class="read-more-kind">trên blog</span>
+          <a href="caching-is-never-free.html">Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache<span class="rm-by">cùng con Redis, cùng Lua atomicity — nhìn từ phía cache</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/" target="_blank" rel="noopener noreferrer">How we built rate limiting capable of scaling to millions of domains<span class="rm-by">blog.cloudflare.com — sliding window counter, công thức xấp xỉ &amp; số đo sai lệch</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://stripe.com/blog/rate-limiters" target="_blank" rel="noopener noreferrer">Scaling your API with rate limiters<span class="rm-by">stripe.com — bốn lớp: hai rate limiter, hai load shedder, và vì sao fail open</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://sre.google/sre-book/handling-overload/" target="_blank" rel="noopener noreferrer">Google SRE Book — Handling Overload<span class="rm-by">sre.google — load shedding, graceful degradation, client throttling</span></a>
+        </li>
+        <li>
+          <span class="read-more-kind">nguồn</span>
+          <a href="https://www.figma.com/blog/an-alternative-approach-to-rate-limiting/" target="_blank" rel="noopener noreferrer">An alternative approach to rate limiting<span class="rm-by">figma.com — sliding window counter trên Redis hash, ví dụ burst biên</span></a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="post-nav">
+      <a class="post-nav-item prev" href="caching-is-never-free.html">
+        <div class="post-nav-dir">&larr; Bài trước</div>
+        <div class="post-nav-title">Con Redis không cho không cái gì</div>
+      </a>
+      <div></div>
+    </nav>
+
+          </article>
+        </div>
+      </div>
+<!-- comments:start -->
+<section class="terminal-card comments-card" id="comments">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <span class="terminal-filename">comments.md</span>
+  </div>
+  <div class="terminal-body comments-body">
+    <script src="https://giscus.app/client.js"
+            data-repo="duthaho/duthaho.dev"
+            data-repo-id="R_kgDOR2nYrQ"
+            data-category="Blog"
+            data-category-id="DIC_kwDOR2nYrc4C9gvp"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+            data-lang="vi"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Bình luận cần JavaScript được bật.</noscript>
+  </div>
+</section>
+<!-- comments:end -->
+    </div>
+    <aside class="article-sidebar" id="toc-sidebar"></aside>
+  </div>
+</main>
+
+<footer>
+  <div class="container-wide">Nhật ký dev &middot; Suy nghĩ sau giờ làm</div>
+</footer>
+
+<script src="main.js"></script>
+
+</body>
+</html>

@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Wed, 01 Jul 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Sun, 05 Jul 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy</title>
+    <link>https://duthaho.dev/designing-a-rate-limiter.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/designing-a-rate-limiter.html</guid>
+    <pubDate>Sun, 05 Jul 2026 09:00:00 +0700</pubDate>
+    <description>Mình vào phỏng vấn architect, được hỏi "thiết kế một rate limiter". Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache</title>
     <link>https://duthaho.dev/caching-is-never-free.html</link>
