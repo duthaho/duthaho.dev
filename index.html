@@ -62,7 +62,7 @@
       <section class="feed-block">
         <h3 class="feed-block__title">Archive</h3>
         <ul class="archive">
-          <li><a href="#feed">2026 <span class="archive__count">17</span></a></li>
+          <li><a href="#feed">2026 <span class="archive__count">18</span></a></li>
         </ul>
       </section>
 
@@ -109,8 +109,23 @@
     <section class="feed reveal-stagger" id="feed">
       <header class="feed__head">
         <h3 class="feed__title">Recent</h3>
-        <span class="feed__count">17</span>
+        <span class="feed__count">18</span>
       </header>
+
+      <a class="discussion-card reveal" href="redis-streams-over-kafka.html">
+        <span class="discussion-card__num">#19</span>
+        <div class="discussion-card__body">
+          <h4 class="discussion-card__title">
+            Chúng mình chọn Redis Streams thay vì Kafka
+            <em>— và những gì tài liệu không nói trước</em>
+          </h4>
+          <p class="discussion-card__excerpt">Cần cho hai service nói chuyện, phản xạ đầu tiên của cả team là "chơi Kafka cho chuẩn". Nhưng chúng mình không có sẵn Kafka, không ai từng vận hành nó, và stack thì đã có Redis. Bài này kể lại quyết định chọn Redis Streams theo tinh thần YAGNI — và sòng phẳng về những cái giá tài liệu không nói trước: mọi thứ trong RAM, eviction xoá sạch cả stream, failover mất write, và cái ngày mình biết sẽ phải quay lại Kafka.</p>
+        </div>
+        <div class="discussion-card__meta">
+          <time datetime="2026-07-12">12 Jul</time>
+          <span>~14 phút</span>
+        </div>
+      </a>
 
       <a class="discussion-card reveal" href="designing-a-rate-limiter.html">
         <span class="discussion-card__num">#18</span>

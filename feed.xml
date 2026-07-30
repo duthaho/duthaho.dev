@@ -5,10 +5,18 @@
   <link>https://duthaho.dev/</link>
   <description>Suy nghĩ sau giờ làm về AI, engineering, và nghề dev — viết từ góc nhìn cá nhân.</description>
   <language>vi</language>
-  <lastBuildDate>Sun, 05 Jul 2026 09:00:00 +0700</lastBuildDate>
+  <lastBuildDate>Sun, 12 Jul 2026 09:00:00 +0700</lastBuildDate>
   <managingEditor>noreply@duthaho.dev (duthaho)</managingEditor>
   <webMaster>noreply@duthaho.dev (duthaho)</webMaster>
   <atom:link href="https://duthaho.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+    <title>Chúng mình chọn Redis Streams thay vì Kafka: và những gì tài liệu không nói trước</title>
+    <link>https://duthaho.dev/redis-streams-over-kafka.html</link>
+    <guid isPermaLink="true">https://duthaho.dev/redis-streams-over-kafka.html</guid>
+    <pubDate>Sun, 12 Jul 2026 09:00:00 +0700</pubDate>
+    <description>Cần cho hai service nói chuyện với nhau, phản xạ đầu tiên của cả team là "chơi Kafka cho chuẩn". Nhưng chúng mình không có sẵn Kafka, không ai từng vận hành nó, và stack thì đã có Redis nằm đó. Bài này kể lại quyết định chọn Redis Streams thay vì Kafka theo đúng tinh thần YAGNI — và sòng phẳng về những cái giá mà tài liệu quảng cáo không nói trước: mọi thứ nằm trong RAM, eviction xoá sạch cả stream, failover mất write, và cái ngày chúng mình biết mình sẽ phải quay lại Kafka.</description>
+    <author>noreply@duthaho.dev (duthaho)</author>
+  </item>
   <item>
     <title>Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy</title>
     <link>https://duthaho.dev/designing-a-rate-limiter.html</link>
