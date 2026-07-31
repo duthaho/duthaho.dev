@@ -15,7 +15,6 @@ A tech blog sharing personal reflections on AI, engineering, and the developer c
 - `src/pages/` — `index.astro` (feed), `[slug].astro` (posts), `rss.xml.js`, `og/[...route].ts`
 - `src/styles/global.css` — the site design system
 - `public/` — static assets, `robots.txt`, `_redirects` (old `.html` → clean URLs)
-- `legacy/` — the previous hand-written HTML site, kept for reference
 
 ## Develop
 
