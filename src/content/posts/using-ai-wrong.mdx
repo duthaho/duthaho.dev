@@ -1,0 +1,87 @@
+---
+num: 1
+title: "I'd been using AI wrong"
+titleEm: "for the better part of a year"
+description: "I read a post by an engineer over in the US and felt a jolt of recognition — I was walking straight into the exact trap they described."
+date: 2026-03-10
+pinned: false
+filename: "using-ai-wrong.md"
+readMore:
+  - kind: "on the blog"
+    title: "Ordinary RAG is lying to you"
+    href: "agentic-rag"
+    by: "the previous post — where I stopped trusting the happy-path answer"
+  - kind: "on the blog"
+    title: "AI is not a miracle"
+    href: "ai-hype"
+    by: "the next post — cooling off from the hype the honest way"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+Last week I read a post by an American Staff Engineer — the guy works at Meta, writing about how he uses AI to code. I meant to skim it and move on. But when I got to the part where he describes "tutorial hell 2.0," I had to stop. Not because it was clever. Because he was describing, precisely, what I'd been doing for the better part of a year.
+
+I'm not proud of it.
+
+## The trap I fell into
+
+Late 2023, I started using ChatGPT in earnest at work. At the time I figured I was doing it "the right way" — no blind copying, I read the code back, I tweaked it to fit the codebase. I was proud of that; I even told the juniors on my team that "you have to be selective with AI, don't trust it blindly."
+
+But really I was only doing one thing: **getting code faster.** Nothing more, nothing less.
+
+The symptoms showed up about three or four months in. I noticed I was debugging slower than I used to. Not because the code was more complex. Because I could no longer *feel* the code. That intuition where you read a snippet and instantly know where the problem is — it was fading. I never noticed the moment it slipped away.
+
+<PullQuote>
+That intuition where you read code and instantly know where the problem is — it faded without my noticing.
+</PullQuote>
+
+That American engineer's post calls this "tutorial hell 2.0." The old tutorial hell was watching videos, following along step by step, feeling like you were learning, but actually learning nothing because there was no friction. The new tutorial hell is using AI the way I was — it looks productive, but there's no friction either. And with no friction, there's no learning.
+
+I sat staring at that definition for a good while.
+
+## The difference I'd overlooked
+
+The thing in that post that got under my skin most wasn't his story. It was one small detail: the engineers at Anthropic — the company that makes Claude — also write 90% of their code with AI. Claude Code itself is largely written by Claude.
+
+So why does one side get *better* by using AI, while I use AI and feel like I'm getting... worse?
+
+The engineer's explanation: most people use AI to get **code**. The best people use AI to get **understanding**. The code is just a byproduct.
+
+<Callout label="The crux">
+When you ask "build me X" — you're hiring AI to do the work for you. When you ask "I need to do X, what are the approaches, what are the trade-offs, which one fits this context" — you're using AI to think alongside you.
+</Callout>
+
+It sounds simple. But in practice the two are wildly different.
+
+## Trying it out — and finding it harder than expected
+
+After I finished reading, I tried changing it right there in the task I was on that day. Instead of pasting the requirement into Claude and waiting for code, I opened with a question: *"I need to implement rate limiting for this API. What approaches are there, and for a service running around 50k req/min, which one makes more sense?"*
+
+The answer I got back was longer, more complex, and — crucially — I actually had to read it. Couldn't skim. I found myself asking follow-ups, pushing back, at times even disagreeing with Claude on some of the trade-offs.
+
+That session took twice as long as usual. But at the end of the day, reviewing the code I'd just written, I could explain every decision. That's the feeling I'd lost somewhere along the way without realizing.
+
+<Aside>
+One thing I added that wasn't in the original post: after a session like that, I ask Claude to summarize what we'd just discussed — not the code, the design decisions. Save it. Reread it a few days later. Strangely, it genuinely helps.
+</Aside>
+
+## A few things I don't entirely agree with
+
+The original post has one argument I found a little idealized: that AI is "the best teacher you'll ever have — infinitely patient, always available."
+
+True, but not the whole picture. AI has no skin in the game. A real senior on your team will get annoyed when you ask a dumb question for the third time — and that annoyance, that look, is sometimes the very thing that makes it stick. AI isn't like that. It'll patiently explain a third time, a fourth, a tenth — and that patience is itself sometimes the problem.
+
+I still use AI a great deal. But I've also learned to manufacture artificial friction for myself — asking harder questions, trying to explain things back in my own words before I ask AI, and every so often deliberately working without AI to remind myself what I can actually do.
+
+<hr class="divider" />
+
+That American engineer's post was written from the vantage of someone at Big Tech, a codebase with billions of users. My context is different — small startup, a handful of people, tighter deadlines. But the core insight still holds.
+
+It's not about how much you use AI. It's whether you're using it to *avoid thinking*, or to *think more deeply*.
+
+That answer compounds over time. A year from now you'll be two very different people depending on which one you choose.
+
+<PullQuote closing>
+It's not about how much you use AI. It's whether you're using it to avoid thinking, or to think more deeply.
+</PullQuote>

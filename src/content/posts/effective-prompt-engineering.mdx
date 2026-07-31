@@ -1,0 +1,104 @@
+---
+num: 9
+title: "Prompt engineering isn't as hard as you think"
+titleEm: "and not as easy as people say"
+description: "There are hundreds of articles about prompt engineering. Most of them re-explain the same concepts: zero-shot, few-shot, chain-of-thought. This one doesn't try to explain them differently — it says plainly why most of that advice doesn't survive contact with production, and what actually matters when you're not doing a demo but building the real thing."
+date: 2026-05-01
+pinned: false
+filename: "effective-prompt-engineering.md"
+readMore:
+  - kind: "source"
+    title: "Prompt Engineering Techniques"
+    href: "https://blog.bytebytego.com/p/prompt-engineering-techniques"
+    by: "blog.bytebytego.com — the roundup that prompted this follow-up"
+  - kind: "on the blog"
+    title: "I read Claude Code's leaked source"
+    href: "agentic-patterns"
+    by: "agentic patterns, seen from the other end of the prompt"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+The first time I read a prompt engineering guide, I thought: this is a skill I can learn in an afternoon. Read it through, write a few test prompts, they look fine, and I declared myself fluent. Then I built a real feature — a chatbot that answers product questions — and it took me three weeks to make it not embarrassing. The gap between "understanding prompt engineering" and "writing a good prompt for production" is bigger than any tutorial admits.
+
+ByteByteGo recently put out a roundup of prompt engineering techniques — zero-shot, few-shot, chain-of-thought, role prompting, prompt chaining. Reading it, I found the content technically accurate. But it also leaves out a few things you only learn after you've built something real and failed at it enough times. This post is that missing part.
+
+## Five techniques — and the thing the tutorial doesn't tell you about each
+
+<Finding n="Technique 01" title="Zero-Shot Prompting">
+Give an instruction, give no examples. The model uses its training knowledge to understand and carry out the task. This is where most people start — and also where most people get stuck when the result isn't what they wanted.
+
+What I learned: zero-shot fails not because you're short an example, but because the instruction is vague. The first time I wrote "classify this customer feedback as positive, negative, or neutral," I defined nothing. What does "neutral" mean? What about feedback that's both positive and negative at once? The model has to guess. And it guesses differently every time. Before you reach for few-shot, make sure your instruction is specific enough that *you* could follow it.
+</Finding>
+
+<Finding n="Technique 02" title="Few-Shot Prompting">
+Supply 2–5 examples before giving the real task. The model learns the pattern from the examples and applies it to new input. This shines when the output format is complex or when the behavior you want is hard to describe in words.
+
+This one gets misused a lot: people add an example when the model got something wrong, hoping the example will "correct" the model. It usually doesn't work. If the model got something wrong and you add an example for exactly that wrong thing, the model learns to do that one thing right — but may start getting something else wrong. The root cause is usually an unclear instruction, not a missing example. Fix the instruction first, examples second.
+</Finding>
+
+<Finding n="Technique 03" title="Chain-of-Thought Prompting">
+"Think step by step." Ask the model to show its reasoning before it commits to a conclusion. It improves reasoning tasks, math, and logic markedly, and reduces hallucination because the model has to justify each step.
+
+CoT comes with a trade-off the tutorials tend to underplay: it's noticeably slower and burns more tokens. In production, under strict latency requirements, you can't use CoT on every request. I tend to use it in offline processing — batch analysis, offline generation — and use zero-shot for real-time, user-facing responses. Knowing when you *don't* need CoT matters just as much as knowing when you do.
+</Finding>
+
+<Finding n="Technique 04" title="Role Prompting">
+Assign the model a persona: "act as an experienced data engineer," "you are a patient first-grade teacher." This shapes the tone, vocabulary, level of detail, and point of view of the response.
+
+Role prompting works far better when you're specific about the role instead of generic. "Act as a teacher" gives mediocre results. "Act as an encouraging middle school math teacher who knows this student struggles with fractions and responds in simple language without condescending" gives distinctly better ones. The more context you give about the role, the less room the model has to guess for itself.
+</Finding>
+
+<Finding n="Technique 05" title="Prompt Chaining">
+Break a complex task into several small prompts, where the output of one becomes the input to the next. Each step is simple, easy to debug, easy to monitor. You can even use a different model for each step.
+
+This is the most underrated technique on the list — and the one I recommend most to anyone building real AI features. A single mega-prompt that handles everything sounds great on paper. In practice, when it fails you don't know which step failed. When it works, you don't know why it worked and you can't reproduce it. A chain lets you test each step independently, version-control each step, and swap out the step that isn't working without breaking the whole pipeline.
+</Finding>
+
+## What I actually use day to day
+
+Reading a tutorial about prompt engineering and actually doing prompt engineering in production are two different things. Here's what I actually apply — not what I know in theory.
+
+**Put the important information at the start of the prompt, not the end.** A commenter on the original piece cited a nice observation: the model tends to "lose the thread" if the context is very long and the question sits at the very end. On top of that, the beginning of the prompt caches more effectively — for a workload that makes many requests against the same system prompt, keeping the system prompt at the front and stable saves a meaningful amount. I restructured my prompts this way and saw noticeably better consistency.
+
+**XML tags for structured output are more reliable than "respond in JSON."** I've lost hours debugging because the model returned JSON with a trailing comma, comments inside the JSON, or text before and after the JSON block. XML tags with a clear schema — and programmatic validation behind them — are far more stable. If you need structured output, define the schema precisely, validate it in code, and don't just hope the model gets it right.
+
+<Callout label="The pattern that works best for me in production">
+Split reasoning and structured output into two separate steps. Step one: chain-of-thought so the model can reason, with no specific format required. Step two: use that reasoning as context and ask the model to produce structured output with a strict schema. You get the accuracy of CoT *and* the reliability of structured output — instead of having to pick one. It costs an extra API call, but the failure rate drops significantly.
+</Callout>
+
+**Version-control your prompts like code.** A prompt isn't config. A prompt is the behavior of your system. If you don't version-control your prompts, you won't know why the output changed after some "tiny tweak." I keep prompts in their own files, with comments explaining why each section exists, and use git history to trace changes. A good prompt has a history; it doesn't just materialize out of nowhere.
+
+## What the tutorial tends to skip
+
+The ByteByteGo piece has a fairly good "Common Pitfalls" section, but there's one more pitfall I don't see anyone name plainly enough:
+
+<Callout label="The least-discussed pitfall">
+**Overfitting your prompt to your test cases.** You write a prompt, test it against 10 examples, get good results, deploy. Then in production a user types in something slightly different — and the prompt fails in a way nobody predicted. Prompt engineering isn't just writing a prompt that works against your test set. It's writing a prompt that works against the real distribution of input from real users.
+
+How I fight this: after deploying, I take 50–100 real production requests (anonymized), run them back through the prompt, and review the results. Time and again I find failure patterns the test set never covered. An eval set built from production data matters more than an eval set you made up yourself.
+</Callout>
+
+One more thing: **prompt engineering is not the solution to every accuracy problem.** Sometimes the output is bad not because the prompt is wrong, but because the task exceeds the model's capability, or because the model doesn't have enough information in context. Before you keep tuning the prompt, ask: given the smartest person you know, if they only had the information in this prompt, could they do the task? If not — the problem is context, not prompting technique.
+
+<PullQuote>
+The best prompt is the simplest prompt that still gives you the result you need. Everything you add on top is debt you have to maintain.
+</PullQuote>
+
+## What changed how I think about prompting
+
+There was a shift in how I think about prompt engineering that happened after about six months of working with LLMs: I stopped thinking of it as "writing prompts" and started thinking of it as "designing interfaces."
+
+A prompt is the interface between your intent and the model's behavior. Like any interface design, it needs to be clear, consistent, and fault-tolerant — meaning it doesn't just work under ideal conditions but degrades gracefully when the input isn't what you expected. You can't control everything a user will type. You can only design a prompt robust enough to handle that range of variation.
+
+From that vantage point, all the techniques — few-shot, CoT, chaining — are tools for making the interface more robust along different axes. Few-shot reduces ambiguity about format. CoT reduces ambiguity about the reasoning path. Chaining reduces the cognitive load of a single prompt that's grown too complex. None of the techniques is magic. They're all just different ways of trading off complexity, cost, latency, and reliability.
+
+<Aside>
+Understanding that trade-off — not just knowing the names of the techniques — is what separates someone who knows prompt engineering from someone who can do prompt engineering in production.
+</Aside>
+
+<PullQuote closing>
+A prompt is the interface between your intent and the model's behavior. You can't control everything a user will type. You can only design a prompt robust enough to handle that range of variation.
+</PullQuote>

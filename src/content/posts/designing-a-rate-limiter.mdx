@@ -1,0 +1,156 @@
+---
+num: 18
+title: "A rate limiter isn't an algorithm-picking problem"
+titleEm: "an interview that just kept digging deeper"
+description: "I walked into an architect interview and got asked to \"design a rate limiter.\" I started reciting algorithm names — and realized the interviewer didn't care which one I picked. Every answer only opened a deeper question: with twenty servers, where does the count live; whose clock do you trust; if Redis dies, do you let requests through or block them; and finally — is rate limiting even the whole story. The algorithm is the ten-minute answer; the rest of it was the interview."
+date: 2026-07-05
+filename: "designing-a-rate-limiter.md"
+readMore:
+  - kind: "on the blog"
+    title: "Redis never gives you anything for free: the hidden cost behind every cache layer"
+    href: "caching-is-never-free"
+    by: "same Redis, same Lua atomicity — seen from the caching side"
+  - kind: "source"
+    title: "How we built rate limiting capable of scaling to millions of domains"
+    href: "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+    by: "blog.cloudflare.com — sliding window counter, the approximation formula & the error measurements"
+  - kind: "source"
+    title: "Scaling your API with rate limiters"
+    href: "https://stripe.com/blog/rate-limiters"
+    by: "stripe.com — four layers: two rate limiters, two load shedders, and why fail open"
+  - kind: "source"
+    title: "Google SRE Book — Handling Overload"
+    href: "https://sre.google/sre-book/handling-overload/"
+    by: "sre.google — load shedding, graceful degradation, client throttling"
+  - kind: "source"
+    title: "An alternative approach to rate limiting"
+    href: "https://www.figma.com/blog/an-alternative-approach-to-rate-limiting/"
+    by: "figma.com — sliding window counter on a Redis hash, the boundary-burst example"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+"Design a rate limiter for me." The opening question of an architect interview sounded so easy I quietly cheered. I know these algorithms — token bucket, sliding window, I've got them all memorized. So I started rattling off names, in full flow.
+
+After a while it hit me: the person across the table wasn't writing down a single algorithm name. Every time I thought I'd finished answering, they'd ask one more thing — and the next question was always deeper than the last. The interview didn't move *sideways* across a list of algorithms; it went *down*, one layer at a time.
+
+<PullQuote>
+The interviewer wasn't asking which algorithm I'd pick. They were asking how far down I understood it — and every answer of mine was just a door opening onto a harder question.
+</PullQuote>
+
+Back home I sat down and strung the whole staircase of questions together, because it turned out to be exactly the map that separates "knows the algorithms" from "can design the system." I'll retell it in the same order it dug downward.
+
+## Layer 0: what is a rate limiter *for*?
+
+Before asking *how*, the first question is *what for* — and I almost skipped it because it felt obvious. But answering the "why" is what exposes the several very different motives hiding under one name:
+
+- **Overload protection** — don't let one client (or a berserk retry bug) drown the whole system.
+- **Abuse prevention** — block scraping, brute-force, spam.
+- **Fairness** — one greedy user shouldn't swallow everyone else's resources.
+- **Cost control** — every request is money (compute, third-party API calls); a ceiling means a predictable bill.
+
+They sound like one thing, but these four motives pull the design in four different directions — and they're exactly what decides the answers in the layers below. Keep them in your head.
+
+## Layer 1: "Which algorithms do you know?"
+
+This is the layer I felt most confident about, and also the one the interviewer spent the least time on. There are five classic names, arranged along a spectrum of trade-off between **accuracy** and **resource cost**:
+
+<Diagram label="The rate limiting algorithm spectrum — from cheap-but-crude to accurate-but-heavy" code={`
+Fixed Window        count per fixed time bucket     cheapest, suffers "boundary burst"
+Sliding Window Log  store a timestamp per request   perfectly accurate, RAM-hungry
+Sliding Window Ctr  interpolate two adjacent buckets approximate, good enough — Cloudflare
+Token Bucket        accrue tokens, ALLOWS burst     EC2 / API Gateway / Stripe
+Leaky Bucket        leaks steadily, SMOOTHS traffic nginx limit_req
+`} />
+
+**Fixed Window** is the simplest: one counter per time bucket (100 requests / minute). Cheap, but it has the classic trap called the *boundary burst*. Figma has the cleanest arithmetic example: a limit of 5 requests/minute, a client fires 5 requests at 11:00:59, then 5 more at 11:01:00 — this minute-bucket ends, that minute-bucket counts separately — and you've just let **10 requests through in under a second**, double the limit.
+
+<Diagram label="Boundary burst: two adjacent buckets, limit 5/min" code={`
+11:00:59   ▉▉▉▉▉   5 req  →  bucket 11:00 just hits the ceiling
+11:01:00   ▉▉▉▉▉   5 req  →  bucket 11:01 is a NEW bucket, hits the ceiling again
+           ─────────────────────────────────────────────
+           10 req in <1 second — DOUBLE the limit, yet every rule says "correct"
+`} />
+
+**Sliding Window Log** fixes it completely: store a timestamp for every request, count exactly the ones inside the sliding window. Perfectly accurate — and perfectly memory-hungry, because a hot key grows a long log. **Sliding Window Counter** is the middle path, and the place I learned the most: instead of storing every timestamp, it keeps two counters — the current bucket and the previous one — and *interpolates*.
+
+Cloudflare describes it beautifully in their piece on scaling rate limiting to millions of domains. Say the limit is 50/minute, the previous bucket had 42 requests, this one has 18, and I'm 15 seconds into the current bucket. Estimate: `42 × (45/60) + 18 = 42 × 0.75 + 18 = 49.5` — still under the ceiling, let it through. What I like is that Cloudflare is upfront that this is only an *approximation* (it assumes the previous bucket's requests are evenly spread). And they bring numbers to prove the approximation is good enough: across **400 million requests from 270,000 sources**, only **0.003%** were wrongly allowed/blocked, the average deviation from the true number was about **6%**, with not a single false positive. Far cheaper than the log, with an error that sits inside the acceptable range.
+
+<Aside>
+Figma walked exactly this sliding-window-counter road and published the cost too: they split the window into small buckets each 1/60 the size of the limit, stored in a Redis hash. With 10,000 users, 60 buckets, 4 bytes each — it costs a mere **2.4 MB**. Notably: they *deliberately did not* use a Lua script "to avoid bringing another language into the codebase" — a reminder that the tidiest solution isn't always the fanciest one.
+</Aside>
+
+**Token Bucket** and **Leaky Bucket** are the two "flow" models. Token bucket accrues tokens steadily into a bucket of fixed capacity; if there's a token you go, if it's empty you're blocked — so it *allows a burst* up to the bucket's capacity (tokens pile up during idle time). This is the choice of a lot of big systems: Amazon EC2 API, AWS API Gateway (default 10,000 requests/second steady, burst bucket of 5,000), and Stripe. Leaky bucket is the opposite: requests queue up and leak out at a *fixed* rate, so the output is always flat — nginx `limit_req` says right in its docs that it uses "the leaky bucket method." Which to pick? If you want to absorb short bursts, token bucket; if you want to protect downstream with a perfectly even stream, leaky bucket.
+
+<InlineFlag>Next question:</InlineFlag> I finished naming the five, feeling pretty good. The interviewer nodded along, then asked: "Right. Now if you deploy this service across twenty servers, where does that counter live?" And the whole interview turned on exactly that question.
+
+## Layer 2: twenty servers, where do you count?
+
+This is the real border between "knows the algorithms" and "can design a system." Every algorithm above assumes there's *one* counter. But production runs twenty instances behind a load balancer. If each instance counts separately in its own RAM, then your "100/minute" limit effectively becomes 2,000/minute. The counter has to live in one shared place — usually **Redis**. And the moment it becomes shared, three traps appear.
+
+<Finding n="01" title="Atomicity — 'check then increment' isn't one step">
+The first instinct is: read the counter, compare to the ceiling, and if there's room, increment. But those three operations are separate, and thousands of servers running concurrently will wedge themselves in between.
+</Finding>
+
+<Diagram label="Race condition: read and increment are separate (counter = 99, ceiling = 100)" code={`
+T1  server A:  GET counter → 99
+T2  server B:  GET counter → 99      ← both see "there's still room"
+T3  server A:  INCR → 100   ✔ allow
+T4  server B:  INCR → 101   ✔ allow ← leaked! because check and incr aren't fused
+`} />
+
+The tidiest fix exploits the very property I once wrote about in the caching post: Redis processes commands on a *single thread*, and when it runs a **Lua script** it runs that whole block through to completion, letting no other command cut in. Wrap "read counter — compare to ceiling — decide — increment" into one script, and the whole cluster becomes a single, indivisible step. The race condition vanishes, no clumsy distributed locks needed. (If you'd rather not embed Lua, modules like Brandur Leach's **redis-cell** package the whole GCRA algorithm into one atomic `CL.THROTTLE` command — GCRA comes from ATM networking and stores just one "theoretical arrival time" marker per key instead of a pile of counters.)
+
+<Finding n="02" title="Clock — whose clock do you take?">
+Every algorithm needs to know "what time is it now." If each app server uses *its own* clock, then twenty clocks drifting a few hundred milliseconds apart is enough to make the time windows jump around and keys expire inconsistently. The answer: don't trust the local clock. Take the time from *one single source* — the very Redis holding the counter, via the `TIME` command. One clock for everyone, no more drift.
+</Finding>
+
+<Finding n="03" title="Failure mode — if Redis dies, do you allow or block?">
+Now the counter lives in Redis, which means Redis becomes the mandatory path for *every* request. What if it blinks out? Two choices, and there's no universally right answer — only a *conscious* one: **fail-open** (Redis dies, let every request through, prioritize staying alive, accept the overload risk) or **fail-close** (block everything, prioritize protection, accept that you're causing your own downtime).
+</Finding>
+
+Stripe says outright that they wrap their errors to *fail open*: if Redis goes down, requests aren't affected, because to them the rate limiter is a protective layer, not a lifeline. Envoy leaves the `failure_mode_deny` field defaulting to `false` — also fail-open. The general trend is fail-open, unless what you're limiting is security-related (brute-force protection, say), in which case you go fail-close. The key point the interviewer wants to hear isn't which one you pick, it's that you *know you're making a choice*.
+
+<InlineFlag>Next question:</InlineFlag> "OK, say you decide to block a request. What do you return to the client?" I was about to say "return an error" and stopped short — what error, carrying what information?
+
+## Layer 3: once you've blocked, how do you tell the client?
+
+This layer looks small but reveals who has actually operated a real API. Blocking isn't slamming the door in someone's face; it's telling the client *what's happening and when to come back*:
+
+- **HTTP 429 Too Many Requests** — the correct status for this situation, defined in RFC 6585 (2012). Don't return 500, and don't return 403.
+- **The `Retry-After` header** — say it plainly: "wait this many seconds, then try again." It lives in RFC 9110 (the current edition, replacing the old RFC 7231). This header is precious because it turns the client from a blind spammer into a well-behaved one — retrying at the right moment instead of hammering nonstop.
+- **The `RateLimit` header group** — tell the client how much quota is left and when it resets. Interestingly, the IETF standard for these headers (`draft-ietf-httpapi-ratelimit-headers`) is, as of mid-2026, still a *draft*, not yet an RFC — so in the wild most people still use the de-facto `X-RateLimit-*` set (GitHub being the familiar example), even though the `X-` prefix has technically been discouraged for ages.
+
+A small detail that says a lot: a decent rate limiter doesn't just *block*, it *cooperates* with the client so the whole system can cool down together.
+
+## The epiphany: rate limiting isn't the whole story
+
+Then came the question that froze me — the one I think was the real target of the whole interview: "A rate limiter protects you from *one client* sending too much. But what about when *all* the clients are well-behaved, and the total load is still about to bring the server to its knees?"
+
+That's when I finally saw that rate limiting is only *one* tool in a bigger family, and I'd been conflating them into one:
+
+<Callout label="Three things that often get lumped together">
+**Rate limiting** is *proactive*: set a ceiling per client/key, regardless of whether the server is healthy or struggling. **Load shedding** is *reactive*: when the server itself senses it's about to overload, it deliberately *throws away* requests — usually by priority, keeping the important ones and dropping the droppable. **Backpressure** is signaling "slow down" back up to the upstream so the whole chain reins in its pace. Three different layers of defense, for three different questions — and a serious system needs all three.
+</Callout>
+
+The Google SRE book (the "Handling Overload" chapter) describes this border beautifully. Per-client rate limiting won't save you when the total load blows past the threshold; at that point you need load shedding, even *graceful degradation* (lowering the quality of each response instead of dropping it entirely). They even have a client-side throttling formula: when the backend starts refusing, the client slows itself down by roughly `max(0, (requests − 2 × accepts) / (requests + 1))` — meaning the more it gets refused, the fewer it voluntarily sends, so they don't all gang up and finish off a server that's already gasping.
+
+This is exactly when I remembered Stripe's blog post. It turns out they didn't build "a rate limiter," they built **four layers**: a *request rate limiter* (a per-user requests/second ceiling), a *concurrent requests limiter* (a ceiling on simultaneously in-flight requests), then *two* load shedders — one reserving part of the fleet for important requests, one cutting low-priority traffic when workers start to clog. The first two are rate limiting, the last two are load shedding. Same goal of "don't collapse," but aimed at two completely different kinds of danger.
+
+It's the exact feeling I once had when I realized the Dual Write Problem hides under many disguises: once you can see the frame "proactively block — reactively drop — signal backward," you stop rote-learning each tool one by one and start thinking in terms of *layers of defense*. That's the thing the interviewer was probing for.
+
+<hr class="divider" />
+
+## The algorithm is the ten-minute answer
+
+Piecing the whole staircase of questions back together, I finally saw the real game of the interview. The algorithm names are the easiest part — a five-minute search gets you those. What they were actually measuring was whether I could see what lies *beneath* them: where to count across twenty servers, how to make it atomic, whose clock to trust, whether to allow or block when the infra dies, what to say to the client, and knowing when rate limiting is the wrong tool and you have to switch to load shedding.
+
+<PullQuote>
+The interviewer wasn't asking "which algorithms do you know," they were asking "how many layers can you see." Designing a rate limiter isn't choosing between token bucket and sliding window — it's knowing that every answer opens a deeper question, and not stopping at the first layer.
+</PullQuote>
+
+I walked out of that interview unable to recall how many questions I'd gotten "right." But I clearly remember the feeling each time I got dug one layer deeper — half breaking a sweat, half seeing plainly the gap between where I stand and where a real architect stands. And this time, that gap was one I could *see*. Which was enough to go home and start writing.

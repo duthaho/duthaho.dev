@@ -1,0 +1,110 @@
+---
+num: 6
+title: "Claude doesn't count messages —"
+titleEm: "it counts tokens. And I'd been getting it wrong from the start."
+description: "A thread on X from @0x_kaize about 10 habits that stop you from hitting the limit mid-session. Reading it, I realized I'd been wasting tokens in at least three different ways — every single day, without ever noticing."
+date: 2026-04-15
+pinned: false
+filename: "claude-token-habits.md"
+readMore:
+  - kind: "source"
+    title: "10 habits to stop hitting the Claude limit mid-session"
+    href: "https://x.com/0x_kaize"
+    by: "x.com — @0x_kaize, the thread that kicked all this off"
+  - kind: "on the blog"
+    title: "Two hidden lines of code that make Claude Code burn tokens"
+    href: "claude-code-token-drain"
+    by: "another way the token bill sneaks up on you — from the Claude Code side"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+I used to think I was hitting the limit because I used Claude a lot. Then I actually counted: nope. My message count for the day wasn't any higher than before. But the limit was arriving sooner. Clearly I was burning tokens in some way I couldn't see.
+
+After reading @0x_kaize's thread, I understood why. And more importantly, I understood the mechanism that makes everything get worse exponentially — not linearly, the way I'd always assumed.
+
+## What most Claude users get wrong
+
+Claude doesn't cap the number of messages. It caps tokens. And here's the important part: **every time you send a message, Claude re-reads the entire conversation history from the top.** Not just your latest message. All of it.
+
+That means the token cost doesn't add up linearly — it adds up like a triangle. A 10-message conversation at `~500 tokens/exchange` doesn't cost 5,000 tokens. It costs nearly 27,500. A 30-message conversation costs over 232,000. And the 30th message alone is 31 times more expensive than the first — not because you typed more, but because the history keeps piling up.
+
+<Diagram label="Cumulative cost — the formula S × N(N+1) / 2" code={`
+10 messages  →  ~27,500 tokens
+20 messages  →  ~105,000 tokens
+30 messages  →  ~232,000 tokens   ← just to keep the conversation open
+`} />
+
+One developer measured their own real usage and found: **98.5% of tokens went to re-reading old history. Only 1.5% actually produced output.** I read that number and sat still for a moment. Then I looked back at my own long conversations and found myself believing it completely.
+
+<PullQuote>
+You're not hitting the limit because you use Claude a lot. You're hitting the limit because your conversation is turning into a machine that re-reads itself.
+</PullQuote>
+
+## 10 things to change — and the real reason behind each one
+
+<Finding n="Habit 01" title="Edit a message instead of sending a correction">
+When Claude answers wrong, the natural reflex is to send another message: "That's not what I meant, I was saying..." Don't. Every correction message is one more layer added to the history — and Claude re-reads all of it on the next turn, including the failed exchanges that helped nobody. Instead: click edit on the original message, rewrite it, regenerate. The failed exchange gets erased instead of stacked on top.
+</Finding>
+
+<Finding n="Habit 02" title="Start new conversations more often than you think">
+I had a habit of keeping one conversation open all day because I thought I was "preserving context." Really I was building a slow-fuse token bomb. The practical rule: after 15–20 messages, ask Claude to summarize what you've discussed, copy that summary, open a new conversation, paste it at the top. You get all the context without the overhead of 200 old messages.
+</Finding>
+
+<Finding n="Habit 03" title="Bundle multiple questions into one message">
+Lots of people believe that splitting questions across several messages gives better results. In practice it's usually the opposite — and a lot more expensive. Three separate messages = three full context loads. One message with three questions = one. And it's not just about saving tokens: Claude often answers better when it sees the whole picture at once.
+</Finding>
+
+<Finding n="Habit 04" title="Match the model to the task — you don't always need Sonnet">
+The usage limit isn't a raw token count — it's cost-based. Each model has a different cost. Use Haiku for simple tasks: quick brainstorming, formatting text, factual questions. Move up to Sonnet when you need complex reasoning or coding. Opus when the task genuinely demands deep multi-step reasoning. Start from the smaller model and step up when you feel the ceiling — don't default to Sonnet for everything.
+</Finding>
+
+<Finding n="Habit 05" title="Don't upload files you don't need — or the same file repeatedly">
+Every file you upload has its entire contents counted toward your tokens. If you upload the same PDF across three different conversations, Claude counts those tokens three times. Same with screenshots — if the question can be answered with a text description, don't attach an image. Image tokens are usually significantly more expensive than the equivalent text.
+</Finding>
+
+<Finding n="Habit 06" title="Turn off extended thinking when you don't need it">
+Extended thinking adds tokens to the response even when you don't see them. Claude "thinks" in a hidden space before answering — and those tokens still get counted. Leave it off by default. Turn it on when you need Claude to work through a genuinely hard problem. Don't let it run by default for every question.
+</Finding>
+
+<Finding n="Habit 07" title="Specify the response length when you want it short">
+Claude defaults to complete answers — and "complete" by its standards is sometimes longer than you need. If you only want a short answer, say so: "keep it brief," "one sentence," "code only, no explanation." Output tokens count toward the limit too. A 500-word response when you needed 50 words is real waste.
+</Finding>
+
+<Finding n="Habit 08" title="Prompt clearly up front — don't get stuck in a clarification loop">
+Every round of clarification — Claude asks, you answer, Claude asks again — adds more exchanges to the history, and all of them get re-read on later turns. Spending an extra 30 seconds making your first prompt clearer usually saves more tokens than any other tip. Full context up front &gt; a clarification loop afterward.
+</Finding>
+
+<Finding n="Habit 09" title="Spread out your usage — don't front-load the morning">
+Claude's limit runs on a rolling 5-hour window, not a daily reset. If you go heavy from 9–11am, those tokens stop counting against the limit around 2–4pm. Which means: if you spread out instead of piling everything into one long session, you get more room across the day. I used to burn through my limit by 11am — not anymore.
+</Finding>
+
+<Finding n="Habit 10" title="Paste text instead of attaching a file when you can">
+Attaching a PDF costs more tokens than pasting the relevant content as text. If you only need Claude to read one specific passage in a long document, copy that passage out and paste it — don't upload the whole file. Claude doesn't need to read 80 pages to answer a question about page 12.
+</Finding>
+
+## What I actually changed after reading this
+
+Out of those 10 things, I was breaking at least three of them consistently: not editing but sending corrections, keeping conversations open too long, and never specifying response length. All of them were habits with no real reason behind them — I did them out of muscle memory, not because I thought they were the right way.
+
+The tip I think had the biggest impact on me personally: **edit instead of sending a correction.** I have a really bad habit of firing off "hmm no, I meant X," then Claude fixes it, then I still don't like it, so I send another one. That whole chain of failed exchanges sits in the history and gets re-read forever. A little discipline — click edit, rewrite — cuts that loop right off.
+
+<Callout label="One more thing from recent context">
+Anthropic just tightened the limits during peak morning hours (Pacific time) — affecting roughly 7% of users. Combine that with the Claude Code caching bug I wrote about earlier, and "running out of limit faster than usual" now has several causes stacking up at once.
+
+The good news: most of those causes can be mitigated through usage habits — no plan upgrade needed, no waiting on Anthropic to fix anything. You just have to use it differently.
+</Callout>
+
+<Aside>
+@0x_kaize's original thread got 10 million views in a few days. I'm not sure whether that's because the content is that good or because that many people are frustrated at getting rate-limited. Probably both. Either way, the tips are all technically correct and worth adopting.
+</Aside>
+
+I don't think I'll never hit the limit again. But at least now I know where I'm spending tokens — and I can be more deliberate instead of sitting there wondering why the limit came sooner than it did yesterday.
+
+<PullQuote closing>
+You're not hitting the limit because you use Claude a lot. You're hitting the limit because your conversation is turning into a machine that re-reads itself.
+</PullQuote>

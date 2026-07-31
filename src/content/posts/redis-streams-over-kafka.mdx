@@ -1,0 +1,148 @@
+---
+num: 19
+title: "We picked Redis Streams over Kafka"
+titleEm: "and what the docs don't tell you upfront"
+description: "Two services needed to talk to each other, and the team's first reflex was \"just stand up Kafka, do it properly.\" But we had no Kafka, nobody had ever run it, and Redis was already in the stack. This is the story of choosing Redis Streams in the spirit of YAGNI — and an honest accounting of the costs the marketing docs never mention: everything lives in RAM, eviction wipes whole streams, failover can eat acked writes, and the day I knew we'd have to go back to Kafka."
+date: 2026-07-12
+filename: "redis-streams-over-kafka.md"
+readMore:
+  - kind: "source"
+    title: "Beyond the hype: why we chose Redis Streams over Kafka"
+    href: "https://dev.to/mtk3d/beyond-the-hype-why-we-chose-redis-streams-over-kafka-for-our-microservices-dmc"
+    by: "dev.to — Mateusz Cholewka, the original piece that started it"
+  - kind: "source"
+    title: "Redis Streams — consumer groups, PEL, XAUTOCLAIM, MAXLEN"
+    href: "https://redis.io/docs/latest/develop/data-types/streams/"
+    by: "redis.io — the primary docs for the stream data type"
+  - kind: "source"
+    title: "Redis persistence — RDB vs AOF, appendfsync everysec"
+    href: "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+    by: "redis.io — why Redis \"durability\" differs from a commit log's"
+  - kind: "source"
+    title: "Kafka performance & retention"
+    href: "https://developer.confluent.io/learn/kafka-performance/"
+    by: "developer.confluent.io — throughput, batching, consumer-independent retention"
+  - kind: "on the blog"
+    title: "Redis never gives you anything for free"
+    href: "caching-is-never-free"
+    by: "same Redis, same hidden costs — seen from the caching side"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+The problem sounded gentle: two services needed to talk to each other — one emits events, the other processes them — and it had to be *simple, fast, reliable*. The team's first reflex, almost unargued, was "well then, stand up Kafka, do it the industrial way." We very nearly did.
+
+Then we listed it out on paper and stopped short. We did *not* have Kafka in our infrastructure. *Nobody* on the team had ever run it in production. The codebase was PHP, and the Kafka client extensions were flaky at the time. Meanwhile Redis was already sitting in the stack, humming along quietly for years. The real question turned out not to be "which one is more powerful," but **"how much power do we actually need?"**
+
+<PullQuote>
+Choosing infrastructure isn't picking the flashiest thing on the conference slide. It's being honest with yourself about how much power you'll actually use — and about the cost of the power you'll never touch.
+</PullQuote>
+
+After a few months of running Redis Streams for real in production, I sat down to write up the whole journey — both the "why we chose it" and the "wounds the docs never warned us about." Because the biggest lesson wasn't "Redis beats Kafka," it was *deliberately choosing the humble tool, and knowing exactly where its sharp edges are.*
+
+## The temptation named Kafka
+
+Let me be fair: Kafka is a genuinely excellent beast. It's not marketing fluff. Its real strength is that it's a **commit log written to disk**, split into partitions, read by consumers via offsets:
+
+- **Long-term storage & replay** — messages sit on disk per the retention config (`log.retention.ms` or `log.retention.bytes`), *independent of whether anyone has read them*. A new consumer can rewind from the beginning. This is something Kafka does that most traditional message queues cannot.
+- **Enormous throughput** — Confluent's own benchmarks hit roughly **2 million writes/second on three machines**. This is Kafka's home turf.
+- **Durable through replication** — multiple replicas per partition, tolerant of broker death.
+
+But that power comes with an operational cost the conference slides love to omit. You have to stand up and nurse a whole cluster of brokers/controllers. (Good news: Kafka has shed ZooKeeper — KRaft is considered production-ready since **3.3** and ZooKeeper was removed entirely in **4.0**. Realistic news: you still have to understand partitions, offsets, consumer rebalancing, retention, and replication well enough to tune them.) For a team that has never touched Kafka, this isn't "adding a dependency" — it's **adopting a new distributed system**.
+
+<Callout label="The YAGNI question">
+Here I'll borrow the original author's framing directly: *"if you're just getting started with a messaging system, chances are you don't need all those fancy features yet."* Infinite replay, millions of messages/second, weeks of retention — did we *actually* need any of that for "two services talking"? Honestly: no. Not yet. And paying the operational bill for what you don't need yet is a form of debt.
+</Callout>
+
+## What we actually needed
+
+Set the temptation aside, and our real needs were tiny: low latency, moderate throughput, and *near-zero operational burden* because Redis was already there. Put the two columns side by side and the scale tips clearly:
+
+<Diagram label="Same problem, two frames of reference" code={`
+                       Kafka                      Redis Streams
+storage / replay       disk, replay for free      RAM, long replay is EXPENSIVE
+operational complexity high (own cluster to run)   low (if Redis already exists)
+performance            highest throughput,         lower throughput ceiling,
+                       higher latency (batching)   LOW latency
+learning curve         steep                       gentle, familiar API
+`} />
+
+Redis Streams (available since Redis 5.0) is not a toy pub/sub. It's an append-only log data structure with time-ordered IDs and — most important to us — **consumer groups** that closely mirror Kafka's model. Publishing a message is just:
+
+<Diagram label="A message's lifecycle through a consumer group" code={`
+XADD   mystream * payload "..."        ← producer writes to the stream (created if absent)
+XGROUP CREATE mystream g1 0            ← create the consumer group once
+XREADGROUP GROUP g1 worker-7 ...       ← a worker reads what NO ONE in the group has taken
+     └─ the message lands in the group's PEL (Pending Entries List)
+XACK   mystream g1 <id>                ← done processing → ack → leaves the PEL
+     └─ worker died before ack? XAUTOCLAIM lets another worker reclaim it
+`} />
+
+The `consumer` id in `XREADGROUP` is exactly each instance of the service — a perfect fit for Kubernetes, where every pod has a name and you know which pod died. A message handed to a consumer stays in the group's **PEL** (Pending Entries List) until it's `XACK`ed. If a worker dies mid-flight before acking, `XPENDING` surfaces it, and `XAUTOCLAIM` lets another worker reclaim messages that have been "orphaned" too long. Thanks to this PEL mechanism, Redis Streams gives **at-least-once** delivery: no message lost when a worker dies, at the cost that a message may be re-delivered — so your processing still has to be idempotent (the eternal story of distributed systems).
+
+On the "good enough" axis, it wins outright. Familiar API, no new cluster, low latency. We settled on Redis Streams. And then production started teaching us the lessons the glossy docs never mention.
+
+## What the docs don't tell you upfront
+
+This is the part I most wanted to write, because when we were choosing, nobody warned us. Redis Streams *also* gives you nothing for free — its cost just sits somewhere different from Kafka's, and it hides well until you run it for real.
+
+<InlineFlag>What the docs don't say:</InlineFlag> everything lives in RAM, and `MAXLEN` doesn't save you the way you think.
+
+Redis keeps the entire stream in memory. You can trim with `XADD mystream MAXLEN ~ 1000 * ...` — the tilde `~` means "approximate trim," clearing lazily in the background so it doesn't block writes. But look closely: `MAXLEN` caps the **number of entries, not the number of bytes**. Let payloads balloon and your RAM balloons with them while the entry ceiling still reads "correct." Two ways we handled it, both tips from the original piece:
+
+- **Compress the payload** — gzip those JSON blobs before `XADD`. In production we saw roughly **3× compression**. (Redis Insight has decompression on so you're not staring at gibberish.)
+- **Hybrid architecture** — for big payloads, put only *metadata* in the stream and dump the real data to S3. The stream stays light, RAM stays predictable, and you keep the streaming semantics.
+
+<Finding n="01" title="Eviction can wipe an entire stream, not just trim old entries">
+This was the one that made my blood run cold. Redis treats a stream as *just another key*. So when you hit the `maxmemory` ceiling and an eviction policy (allkeys-lru, allkeys-random...) kicks in, it deletes **the whole stream key** rather than trimming a few oldest entries — because eviction works at the key level, and Redis has no concept of "evict an entry inside a stream." At some point when memory is tight, your entire stream can just vanish. `MAXLEN` trimming entries is one thing; eviction deleting the key is a completely different thing — don't conflate them.
+</Finding>
+
+<InlineFlag>What the docs don't say:</InlineFlag> Redis "durability" is not a commit log's "durability."
+
+Redis has two ways to persist to disk: **RDB** (point-in-time snapshots — crash and you lose every write since the last snapshot) and **AOF** (logs each command, more durable). AOF's default is `appendfsync everysec` — fsync every second, meaning a crash loses *at most about one second of the most recent writes*. For many workloads, losing one second is acceptable. But call it by its right name: Redis persistence exists so you can *restart without total loss*, not to be a replayable ledger like Kafka. If you need to replay further back than the stream window you're keeping, Redis is not the thing to lean on.
+
+<Finding n="02" title="High availability: failover can swallow a write you just acked">
+Run a single Redis and its death means lost messages — so you need HA via Sentinel or Cluster. But both use **asynchronous replication**. That means the primary can ack a write to the client and *then* die *before* propagating it to a replica — and the replica promoted to new primary won't have that write. The Redis Cluster docs say it plainly: *"Redis Cluster is not able to guarantee strong consistency... under certain conditions it is possible to lose writes that were acknowledged by the system to the client."* The `WAIT` command reduces the risk but doesn't erase it. This is not a durable quorum log like Kafka — and you have to design with that assumption in your head.
+</Finding>
+
+<InlineFlag>What the docs don't say:</InlineFlag> resilience to Redis blips depends on the client library, and not all clients are equal.
+
+Redis wobbling for a few seconds is routine. On Node.js, `ioredis` has an *offline queue*: lose the Redis connection and it queues commands in memory, then flushes them on reconnect — smooth. But on PHP, neither `Predis` nor the `PhpRedis` extension has this; to get the equivalent you roll your own with APCu, or lean entirely on HA. A small lesson that stuck: the operational characteristics of "the same Redis Streams" change with the language and client you use — don't read the docs and assume the experience is identical everywhere.
+
+<Aside>
+A fun detail about evolution: Redis 8.2 (2025) added `XACKDEL` — combining ack-and-delete into one command, and with the `ACKED` option it only deletes an entry once *every* consumer group has acked, i.e. garbage collection that still preserves delivery guarantees. Before that there was only `XDEL` (delete regardless of ack). That this primitive only arrived in 2025 tells you something: Streams is still growing, and today's sharp edges may be filed down tomorrow — so read the changelog per version, and don't nail your understanding to some old blog post.
+</Aside>
+
+## When we'll go back to Kafka
+
+Choosing Redis Streams doesn't mean trashing Kafka. It means we know our *exit conditions* — the threshold past which today's decision has to be revisited. Very clearly, exactly three situations:
+
+- **We need millions of messages/second of throughput** — at that threshold Redis's all-in-RAM model runs out of breath, and the stage belongs to Kafka.
+- **We need long-term storage & unbounded replay** — if we want to rewind weeks or months of history for new consumers, or for audit, then Kafka's commit-log-on-disk nature is the right fit. Cramming that into RAM is burning money.
+- **We have a dedicated team that understands Kafka** — when the operational cost is no longer a burden because someone is there to carry it, the biggest reason to avoid Kafka disappears too.
+
+And if neither Redis Streams nor Kafka fits, the spectrum of options is wide — each with its own strength, so don't default to just the two poles:
+
+<Diagram label="It's not only Redis vs Kafka" code={`
+RabbitMQ          traditional broker, strong at flexible routing & per-message delivery
+NATS JetStream    ultra-light messaging, plus a storage/stream layer, configurable retention
+Redpanda          Kafka-API compatible (C++, no JVM, no ZooKeeper) — drop-in
+AWS Kinesis       managed streaming on AWS, shard model similar to Kafka
+AWS SQS           managed work queue — holds minutes to 14 days, NOT a replayable log
+`} />
+
+<hr class="divider" />
+
+## Getting past the rush
+
+What I took away isn't "Redis Streams beats Kafka." It's this: we almost chose the flashiest tool instead of the most correct one, purely because it was in fashion — and the brake that saved us was a very unglamorous question: *"how much do we actually need?"* Redis Streams was good enough for the real problem, cheap to start, and already in hand.
+
+<PullQuote closing>
+Mature architecture isn't being able to use the most powerful thing. It's daring to pick the deliberately humble thing — knowing every one of its sharp edges, and knowing in advance the day you'll have to leave it behind.
+</PullQuote>
+
+It's the exact feeling from when I realized the Redis I used as a cache "gives you nothing for free": every infrastructure choice is a disguised trade-off, and maturity means dragging that hidden cost into the light *before* production drags it out for you. This time we dragged out a fair amount — the rest, production taught us. Fair enough.

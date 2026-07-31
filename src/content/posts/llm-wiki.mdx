@@ -1,0 +1,112 @@
+---
+num: 7
+title: "Karpathy just described the exact thing I failed to build"
+titleEm: "and why I'm going to try again"
+description: "Andrej Karpathy just posted a gist about a pattern for building a personal knowledge base with an LLM. After reading it I sat still for a while — not because the idea was new, but because he put the right name on a problem I'd been fumbling with without knowing what to call it."
+date: 2026-04-16
+pinned: false
+filename: "llm-wiki.md"
+readMore:
+  - kind: "on the blog"
+    title: "Claude doesn't count messages — it counts tokens"
+    href: "claude-token-habits"
+    by: "the previous post, on how context actually gets spent"
+  - kind: "on the blog"
+    title: "I read the leaked source code of Claude Code"
+    href: "agentic-patterns"
+    by: "the next post, on the patterns hiding inside an agent"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import Aside from '../../components/Aside.astro';
+
+Two years ago I tried to build something like this. I didn't call it an "LLM Wiki" — the term didn't exist yet — but the idea was identical: use AI to maintain a knowledge base of the things I read and learned. After three weeks, it died. Not because the AI did a poor job. Because I had no structure to keep it alive over the long run. Karpathy's gist is, in a sense, the post-mortem for that project of mine — and at the same time the design doc for a second attempt.
+
+## The problem with RAG that few people say out loud
+
+Karpathy opens with an observation I think is right but that, even now, few people state clearly: RAG doesn't accumulate. Every time you ask, the system searches from scratch, stitches together relevant chunks, and generates an answer. Then it all vanishes. Ask a similar question next time and it does the exact same work again. Nothing gets built up.
+
+<Diagram label="Ordinary RAG vs LLM Wiki" code={`
+RAG:       Query  ──▶  find chunks  ──▶  generate  ──▶  done
+                                              │
+                                   (knowledge doesn't accumulate,
+                                    every question redoes the work)
+
+LLM Wiki:  New source  ──▶  LLM reads  ──▶  update wiki  ──▶  flag conflicts
+                                              │
+                                   (compile once, lives forever —
+                                    every new source enriches the wiki)
+`} />
+
+The difference isn't technical — both use an LLM, both have documents. The difference is about *when synthesis happens*. RAG synthesizes at query time, once per query. The LLM Wiki synthesizes at ingest, once, and the result persists forever. Karpathy calls this "compilation over retrieval" — and I think it's the most correct framing of the problem I've ever heard.
+
+## A three-layer architecture — simpler than it sounds
+
+The architecture section of Karpathy's piece sounds abstract at first, but it's actually very concrete once you read it carefully. Three layers:
+
+**Raw sources** — immutable. You never modify them. This is truth. The article you read, the podcast transcript you listened to, the PDF you downloaded. The LLM only reads from here, never writes.
+
+**Wiki** — owned entirely by the LLM. The whole body of markdown files belongs to the LLM. It creates, updates, cross-references, and maintains them. You only read. Karpathy describes his own setup: the LLM on one side, Obsidian open on the other. The LLM edits files, and you watch the results in real time in the graph view.
+
+**Schema** — the `CLAUDE.md` or `AGENTS.md` file that describes the wiki's structure, conventions, and workflows. This is the thing that turns the LLM from a chatbot into a wiki maintainer. Karpathy stresses that this is something you and the LLM co-evolve over time — not a rigid config but a living contract.
+
+<Callout label="The point I found most important">
+The schema is not a prompt. It's a document describing how the system works — and it's read by the LLM every time a new session begins. This solves the problem I ran into two years ago: every session the LLM "forgot" how the wiki was being organized. With a schema file, it doesn't forget — because the context is reloaded each time.
+</Callout>
+
+## Three operations — and the best one is the one nobody thinks of
+
+Karpathy describes three main operations: ingest, query, and lint. The first two are obvious. The third — lint — is the one I rarely see anyone mention.
+
+Lint is when you periodically ask the LLM to health-check the wiki: find contradictions between pages, find orphan pages nobody links to, find concepts that get mentioned but don't have their own page yet, find claims that have been superseded by a newer source. This is what keeps the wiki from rotting over time — and it's the thing nobody on a team wants to do by hand.
+
+But the observation I found best in the piece isn't about lint. It's about query:
+
+<PullQuote>
+A good answer should be filed back into the wiki as a new page. Not just reading from the wiki — but writing down what you discover through the act of asking.
+</PullQuote>
+
+This completely changes how you think about "using" a knowledge base. Instead of the wiki being a static source and a query being an act of reading, every good exploration makes the wiki richer. A comparison you asked for, an analysis you requested, a connection you noticed — these deserve to be saved, not vanish into chat history.
+
+## Why I failed last time — and what's different now
+
+Looking back at the project two years ago, I failed for three specific reasons that Karpathy's piece addresses head-on.
+
+First: I had no schema. Every session I had to remind the LLM about the wiki's structure, its conventions, what had already been done. After a few weeks, that overhead was larger than the value. With a schema file, the LLM reloads context automatically.
+
+Second: I merged raw sources and wiki. The original documents and the summaries sat mixed together. There was no clear boundary between "truth" and "synthesis." When the wiki needed updating, I didn't know where to make the edit. Separating immutable sources from the LLM-owned wiki solves this completely.
+
+Third — and this was the most expensive — I tried to maintain the wiki by hand. Fixing cross-references. Updating summaries when a new source came in. This is work a human shouldn't be doing. Karpathy puts it bluntly: "Humans abandon wikis because the maintenance burden grows faster than the value." Right. I abandoned my wiki precisely when it got big enough to be useful — because by then the maintenance had become too heavy.
+
+<Aside>
+The comparison to Vannevar Bush's Memex (1945) in Karpathy's piece made me stop for quite a while. Bush described a personal storage device with "associative trails" — where the links between documents matter no less than the documents themselves. He came closer to this vision than the web ever did. The part he couldn't solve was: who maintains those links? The LLM is the answer he didn't have.
+</Aside>
+
+## Where I want to push back
+
+Karpathy's piece is intentionally abstract — he says so outright at the end. No concrete implementation. No directory structure. No schema example. That's a deliberate choice, but it papers over some real-world problems.
+
+<Callout label="Where I'm not convinced">
+The biggest problem with the LLM Wiki isn't the architecture — it's **quality accumulating over time**. Every time the LLM updates a wiki page, it can introduce subtle errors, lose nuance from the original source, or flatten the places where the original source was intentionally ambiguous. After 50 ingest cycles, the wiki can look beautiful but have drifted far from the truth in a way that's not easy to detect.
+
+The lint operation helps somewhat, but the LLM lints with the LLM itself — there's a circular dependency here that I haven't seen the piece resolve satisfactorily. And citation traceability — one commenter on the gist pointed this out correctly — is a genuine problem if you need to know which claim came from which specific source.
+</Callout>
+
+This doesn't negate the value of the pattern. But it means the LLM Wiki fits best for *understanding* and *exploring* — not for *citing* and *verifying*. Those are two very different use cases, and Karpathy's piece sometimes implies they're more alike than they really are.
+
+## How I'd start over
+
+I have no intention of waiting for someone to build a complete tool before using this. The setup Karpathy describes — Claude Code + Obsidian + a folder of markdown — is enough to start today. The hard part isn't the tooling, it's discipline: ingest regularly, write a good schema, trust the LLM to do the maintenance.
+
+What I'll do differently from last time: start much smaller. A single topic, not "everything I read." Write the schema before ingesting the first source, not after the wiki has already turned into a mess. And most importantly — don't try to maintain anything by hand. If something needs updating, ask the LLM to do it, don't do it manually.
+
+Karpathy closes the piece with a line I want to hold on to: "Your LLM can figure out the rest." It sounds too optimistic. But read again in the context of the whole piece — he's not saying the LLM will do everything itself. He's saying: if you communicate the pattern the right way, you don't need a perfect specification. The LLM is smart enough to instantiate it in a way that fits your domain.
+
+That's the level of trust I'm still trying to build with AI tools. Not there yet. But this is the first time I've read a piece about AI knowledge management without thinking "sounds nice but it won't work in practice." I think this one might work — if it's done right.
+
+I'll try again. This time with a schema from the start.
+
+<PullQuote closing>
+RAG synthesizes at query time, once per query. The LLM Wiki synthesizes at ingest, once, and the result persists forever. Compilation over retrieval.
+</PullQuote>

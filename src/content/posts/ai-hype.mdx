@@ -1,0 +1,117 @@
+---
+num: 4
+title: "AI isn't magic —"
+titleEm: "but someone is working hard to make you forget that"
+description: "I read a fairly heavy-handed piece about AI hype — agreed with parts, disagreed with others. Here's my take, written from the seat of someone building real products with real AI."
+date: 2026-04-01
+pinned: false
+filename: "ai-hype.md"
+readMore:
+  - kind: "source"
+    title: "I hate to say it, but you're being lied to about AI"
+    href: "https://substack.com/"
+    by: "Substack — David William Silva, the piece that set me off"
+  - kind: "on the blog"
+    title: "I used AI wrong for almost a year"
+    href: "using-ai-wrong"
+    by: "same author, the flip side — where I owned up to my own mistakes"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+This past weekend I read a piece on David William Silva's Substack — the title was something along the lines of "I hate to say it, but you're being lied to about AI." The writing was blunt to the point of being almost combative. But most of what he wrote were things I'd thought myself and never quite had the nerve to say out loud.
+
+The thing is: that piece is right in some places. And wrong — or at least incomplete — in places that matter just as much. I didn't want to simply agree, or simply push back. I wanted to think it through from scratch, from the seat of someone who is actually building things with AI every single day.
+
+## How the hype machine actually runs
+
+The original piece breaks down three main characters in the public AI discourse, and I found the taxonomy pretty sharp:
+
+<Finding n="The sober voice" title="Yann LeCun">
+Meta's former Chief AI Scientist, the man who has said over and over that LLMs are a dead end on the road to real intelligence. LLMs are great at predicting text, but they have no causal reasoning, no world model, no way of understanding the world in any physical sense. He argues that no amount of scaling — more data, more compute — can get past that ceiling. And Meta answered by putting his research lab under someone he publicly called "inexperienced." LeCun left Meta in November 2025 to start his own company.
+</Finding>
+
+<Finding n="The fundraising expert" title="Sam Altman">
+The original author doesn't pull the punch: Sam Altman is a fundraiser, not a scientist. When he tweets "I've been using our own product and it's so good it makes me feel useless" — that's marketing, not a technical assessment. OpenAI still doesn't have a genuinely profitable business model, yet the valuation keeps breaking records. That doesn't happen on the strength of facts. It happens on the strength of narrative.
+
+</Finding>
+
+<Finding n="The serious researcher" title="Dario Amodei">
+The author places Dario among the people who know what they're doing — a physicist, a researcher, someone who chose to build structure and protocol rather than chase some vague AGI. But he also sees it clearly: when your competitor is announcing imminent superintelligence every week, you're pressured to match the energy or be written off as behind the times. That's not a technical problem. It's a communications problem the whole industry is stuck with.
+</Finding>
+
+And then there's Geoffrey Hinton — Nobel Prize, "Godfather of AI," a man who understands the architecture better than almost anyone still living, yet who is issuing existential warnings in a way the original author flatly calls "helpful to the hype." When the person who laid the foundations of deep learning says AI might be conscious, the whole investor crowd cheers. It's a perfect pitch-deck slide. Scientifically right or wrong.
+
+<PullQuote>
+The person selling you the apocalypse and the person selling you the AI paradise are usually the same person — and they're selling the same thing: your attention.
+</PullQuote>
+
+## The part I agree with most — and why it matters to devs
+
+The original piece has a short passage on the technical structure of AI that I think everyone working with AI needs to read:
+
+At the bottom is basic math: addition, multiplication, averages, probability. On top of that sits statistics, linear algebra, and matrices of numbers. Then come algorithms that nudge those numbers in tiny increments every time the model guesses wrong. That's all "learning" means. You feed in a colossal amount of data, the computer iterates billions of times over, gradually adjusting itself. Add hardware that runs blazingly fast, and you have a model that recognizes patterns and produces predictions.
+
+An AI agent? Even simpler than people think: a model plus a to-do list plus a set of tools. It reads the goal, breaks it into steps, decides what to do next, uses a tool (search, email, code), checks the result. There's no "inner mind." No mystery. Just conditional logic and a structured loop.
+
+<Callout label="Why this matters to people building products">
+When you understand what AI is technically, you start to have the right expectations. You don't expect it to "understand" your complicated business logic. You're not surprised when it's confidently wrong. You know when to reach for it and when not to. That's the difference between the person who builds an AI product that actually works and the person who's forever stuck debugging "why isn't my AI as smart as I thought it'd be."
+</Callout>
+
+## The part I want to push back on
+
+The original piece has a section on AI and brainstorming that I found meaningfully incomplete. The author writes that every time he had a genuinely out-of-the-box idea, the AI discouraged him. And from there he concludes: AI is fundamentally just "averaging what already exists" — statistics about the past dressed up as a window onto the future.
+
+I agree with the technical part. LLMs genuinely can't "create" in the sense of producing something entirely outside the distribution they've seen.
+
+But the practical conclusion is wrong.
+
+<Callout label="A different angle">
+I've used AI to brainstorm hundreds of times over the past year. And I've come to realize: the problem isn't that AI isn't creative. The problem is how I frame the question. When I ask "is my idea any good?" — the AI pattern-matches against similar things that already exist and judges by that distribution. Of course an out-of-the-box idea gets scored low.
+
+But when I ask "assuming this idea is right, what are the biggest problems I need to solve?" — the answer is completely different. The AI isn't being asked to judge anymore. It's being asked to help me think more deeply about something I've already decided to pursue. That's a huge difference.
+</Callout>
+
+## What the original piece skips entirely
+
+David William Silva's piece focuses on the people who talk about AI — LeCun, Altman, Amodei, Hinton. These are people at the C-suite, academic, or investor level. The piece says nothing about the people who are actually building with AI every day.
+
+And I think that's a meaningful omission.
+
+Because from the seat of someone building a product, AI — while not magic — really is changing how I work. Not in the "AI will replace programmers" sense. In a more concrete sense: I'm getting things done that two years ago would have taken three times as long. Not because AI is smarter than me. Because it's good at chewing through boilerplate, searching a large codebase, and explaining someone else's code — all the things that eat time but demand no real judgment.
+
+<Aside>
+I have a name for this distinction: AI replaces the work that's time-consuming but low-value. It doesn't replace judgment, doesn't replace domain understanding, doesn't replace the ability to see a user's real problem. Those things still belong to the human. And those are exactly the things you should be pouring your time into getting better at.
+</Aside>
+
+## So who do you trust?
+
+The original author offers a simple heuristic that I found pretty useful: ask whether the person talking has a financial incentive in you believing them.
+
+Sam Altman says AI is about to change everything? He's raising money for OpenAI. A VC says AI is the opportunity of the century? They need LPs to believe it so the money flows in. An AI influencer says this tool changed their life? Check whether there's an affiliate link.
+
+That doesn't mean they're wrong. Maybe they're right. But their incentives and your incentives aren't aligned. And when incentives aren't aligned, you need to read what they say at a certain discount.
+
+Conversely: the people who have nothing to sell, the people who will even say things that hurt their own career — like LeCun rejecting the direction the whole industry is chasing — those are the voices worth listening to more, even if they're far quieter.
+
+<PullQuote>
+AI is an impressive technical achievement. Not magic. Not a mind. And that difference matters — not to make it less exciting, but so you use it the right way.
+</PullQuote>
+
+## What I'm still not sure about
+
+There's a question the original piece raises but doesn't answer, and I don't have a clear answer either: how right is LeCun when he calls LLMs a "dead end"?
+
+Technically, his argument is convincing. LLMs have no world model. They don't learn from physical interaction. No amount of scaling gives you something you didn't train on. All of that is true.
+
+But I also remember that plenty of things were called "dead ends" before they stopped being dead ends. Deep learning itself was written off as a dead end for years. And I don't know enough to say whether the LLM bottleneck can be bypassed with a new architecture, a different training objective, or multimodal data in ways we haven't tried yet — or whether this really is a fundamental limit that can't be crossed.
+
+I lean toward LeCun being right about the long-term direction. But "long-term" in AI could mean 5 years or 50 years, and I don't know which.
+
+That's the most honest level of uncertainty I can offer. And I think admitting that matters more than picking a side and digging in.
+
+<PullQuote closing>
+AI is an impressive technical achievement. Not magic. Not a mind. And that difference matters — so you use it the right way.
+</PullQuote>

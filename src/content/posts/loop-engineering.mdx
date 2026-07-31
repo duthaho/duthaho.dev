@@ -1,0 +1,109 @@
+---
+num: 12
+title: "Stop prompting the agent"
+titleEm: "design the loop that prompts it"
+description: "One sentence from Peter Steinberger hit 2.2 million views and had the whole dev crowd arguing for a week. After I read it, I realized I was still stuck in the \"chat\" era — and the real cost isn't measured in tokens."
+date: 2026-06-14
+pinned: false
+filename: "loop-engineering.md"
+readMore:
+  - kind: "source"
+    title: "Loop Engineering: Should You Stop Prompting Agents and Start Designing Loops"
+    href: "https://www.firecrawl.dev/blog/loop-engineering"
+    by: "firecrawl.dev — the analysis I leaned on most"
+  - kind: "source"
+    title: "What Hacker News Gets Right About AI Coding Agents in 2026"
+    href: "https://www.developersdigest.tech/blog/what-hacker-news-gets-right-about-ai-coding-agents-2026"
+    by: "developersdigest.tech — workflow & verification are the bottleneck"
+  - kind: "on the blog"
+    title: "I read the leaked source code of Claude Code"
+    href: "agentic-patterns"
+    by: "12 patterns: memory · workflow · tools · automation"
+  - kind: "on the blog"
+    title: "Ordinary RAG is lying to you"
+    href: "agentic-rag"
+    by: "when one controlled loop rewrites the whole architecture"
+  - kind: "on the blog"
+    title: "I used AI wrong for almost a year"
+    href: "using-ai-wrong"
+    by: "on the intuition that fades — the root of comprehension debt"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+This week my timeline was taken over by exactly one sentence. Peter Steinberger wrote it on June 7: *"You shouldn't be prompting coding agents anymore. You should be designing loops that prompt the agents for you."* It crossed 2.2 million views, and the replies turned into a full-blown brawl — half the crowd nodding like they'd just been enlightened, the other half insisting it was a fancy name for a `while` loop.
+
+What made me stop wasn't the view count. It was that two days earlier, Boris Cherny — the person who built Claude Code — had said almost exactly the same thing on stage: *"I don't prompt Claude anymore. I have loops running. They're the ones prompting Claude and deciding what to do next."*
+
+When both the tool builder and the top tool user say the same thing in the same week, I tend not to shrug it off. People are calling it **loop engineering**. And sitting there, I realized: I'm still in the "chat" era.
+
+## What I mistook for "being good at AI"
+
+For over a year, my working definition of "good at AI" was: prompt more skillfully. Clearer context, better examples, knowing when to split up a task, knowing when to ask a question back instead of issuing an order. I even wrote a whole post about this.
+
+But loop engineering says something more uncomfortable: no matter how skillful your prompting is, you're still the human sitting inside the loop. You type, you wait, you read, you type again. Every one of those rounds requires you to be present. Your productivity ceiling is exactly the number of hours you're willing to sit in front of the screen.
+
+<PullQuote>
+No matter how skillful your prompting is, you're still the human sitting inside the loop — and your productivity ceiling is exactly the number of hours you're willing to sit there.
+</PullQuote>
+
+The shift loop engineering points at isn't "prompt better." It's this: **stop being the person who prompts the agent, and become the person who designs the system that prompts the agent.** You write a small program — and *that's* the thing talking to the model. The model drops from "collaborator" down to a *function* called inside a loop that runs on a schedule, until a stopping condition is met.
+
+It sounds like a technical matter. But read it closely and it's really a matter of *where I stand* in the work.
+
+## A chain is not a loop
+
+This is where I've watched a lot of people — including myself at first — get confused. I thought I'd been "doing loops" for ages, because I had a few scripts stringing AI steps together. But that's a **chain**, not a loop.
+
+A chain runs its steps in a fixed sequence: A → B → C. You lay out the path in advance, and the model just fills in the blanks. A loop is dynamic: the agent *acts* (does something), *observes* (reads the result), *reasons* (compares against the goal and decides), and *repeats* — going back a step, changing its approach, or stopping. It doesn't run in a straight line. It finds its own way.
+
+<Callout label="The crux">
+A chain suits work whose shape you already know — a clear pipeline, predictable inputs and outputs. A loop suits open-ended, repetitive work where you can't know up front how many rounds you'll need: fix until the tests go green, refactor until there are no warnings left, chase a vague bug until you can reproduce it.
+</Callout>
+
+And the thing that surprised me most when reading: by mid-2026, this is no longer something you have to build from scratch. The pieces are already sitting in the products — scheduled triggers, isolating agents with git worktrees so they don't overwrite each other, skills (folders with a `SKILL.md`) to hold knowledge between runs, separating the writing agent from the grading agent, connectors via MCP to reach out to an issue tracker or Slack, and memory written down to markdown/JSON to survive each restart.
+
+Reading that stretch, it felt familiar. Back when I dissected the leaked Claude Code source, I pulled out exactly those same pieces — memory, workflow, tools, automation. Turns out loop engineering is just a tidy name for *gluing them all together and letting the machine spin the loop itself.*
+
+## The hard part isn't writing the loop — it's making it stop
+
+This is my favorite part, because it demolishes the hype. Everyone thinks the hard part of loop engineering is the architecture. It isn't. The hard part is **making it stop.**
+
+A loop with no brakes is an open-ended invoice. It'll spin, and spin some more, burning tokens while you sleep. The piece I read says it flat out: you need at least three hard brakes, not optional ones —
+
+One, a **loop-count ceiling**, so it can't spin forever. Two, a **diff check**, so it stops when the changes between rounds have flattened out — if the agent is spinning its wheels, let it rest. Three, a **token/money cap**, a hard number that cuts the moment it's hit.
+
+<Aside>
+A number that gave me chills: Uber had to lock its AI spend cap at $1,500/month per tool, after a few teams burned through an entire year's budget in four months. Loops don't make you spend more. They just make your burn rate many times faster — in both directions.
+</Aside>
+
+But the brake I've thought about most isn't the money. The piece calls it **comprehension debt**. Code comes out faster than you can keep up with understanding it. That gap accumulates into a debt, and the loop is the machine that magnifies that debt at machine speed.
+
+I've already written about exactly this feeling, back when I realized I was using AI wrong: the intuition of reading code and immediately seeing where the problem is — it fades without you noticing. Back then I was sitting in the loop, a few minutes per round, so at least I still caught things. A loop that runs itself overnight takes even those minutes away.
+
+## The loop multiplies your taste
+
+There's a line in the piece that made me sit still for a while: *"A loop multiplies whatever judgment you put into the rubric."*
+
+Think it through and it's a little frightening. When you chat by hand, your poor taste only ruins one answer. When you let a loop run with a rubric that reflects that poor taste, you're multiplying the poor taste at machine speed. A loop can't fix bad judgment. It just executes that judgment, faster, more often.
+
+This is also why people distinguish **open loops** from **closed loops**. An open loop lets the agent pick its own path — maximum flexibility, but unpredictable cost and very hard to see what it's actually doing. A closed loop lays out the whole route in advance with clear evaluation steps — less adventurous, but predictable cost and a stable rubric. Most of what actually runs in production is a closed loop. Not because it's smarter. Because it's *controllable.*
+
+<hr class="divider" />
+
+## A few points I don't fully agree with
+
+The original line — "stop prompting" — sells because it's absolute. But absolute is usually where I start to feel the friction.
+
+For most of my day-to-day work, chat is still right. A new task whose shape is still fuzzy, where I don't yet know what I want — that's the moment I need the friction of sitting and thinking alongside the model, not a pre-spun loop. Loops shine at work that's *repetitive, clearly bounded, known in shape.* Point a loop at a problem I don't even understand yet and all I've done is automate my own confusion.
+
+And I think this slogan is dangerous for beginners. It sounds like: skip learning to prompt, jump straight to designing loops. But the rubric the loop runs on — the stopping conditions, the "good enough" criteria, when to retry — all of it is crystallized taste. And taste only comes from the hours spent sitting in the loop, hands working, eyes watching what breaks. You can't automate a taste you never had.
+
+Loop engineering isn't a way to skip the chatting phase. It's what you get to do *after* you've sat there long enough to know what it is you're grading.
+
+I don't say this to knock it down. I genuinely think this is the right direction, and next week I'm going to try standing up a small closed loop for the most tedious job in my week — cleaning up and labeling issues. With all three brakes in place. I just want to remind myself: what I'm automating isn't the thinking. It's the typing.
+
+<PullQuote closing>
+The question isn't whether you prompt or you loop. It's whether you have enough taste yet to write the rubric the loop will run on.
+</PullQuote>

@@ -1,0 +1,125 @@
+---
+num: 5
+title: "Two hidden lines of code made Claude Code burn 4x the tokens"
+titleEm: "— and the ending nobody saw coming"
+description: "A Reddit user reverse-engineered Claude Code's minified source, found a caching bug that drained tokens overnight, and patched it in exactly two lines."
+date: 2026-04-02
+pinned: false
+filename: "claude-code-token-drain.md"
+readMore:
+  - kind: "source"
+    title: "The Claude Code caching bug thread"
+    href: "https://www.reddit.com/r/ClaudeAI/"
+    by: "r/ClaudeAI — where OP posted the reverse-engineering and the numbers"
+  - kind: "source"
+    title: "Prompt caching — cache_read vs cache_creation tokens"
+    href: "https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching"
+    by: "docs.anthropic.com — how the cache prefix and pricing actually work"
+  - kind: "on the blog"
+    title: "Claude doesn't count messages — it counts tokens"
+    href: "claude-token-habits"
+    by: "the follow-up: where your usage limit really goes"
+---
+import Callout from '../../components/Callout.astro';
+import Diagram from '../../components/Diagram.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+I use Claude Code every day. And for the last few weeks I've had the nagging sense that my usage limit was getting eaten faster than usual — especially during long sessions, when I resume an old conversation. I assumed I was just using it more. Turns out I wasn't. There was a genuine bug in Claude Code that quietly broke the caching mechanism every time you resumed a session, forcing the whole conversation to be rebuilt from scratch as cache creation tokens instead of cache reads. And a Reddit user just found it — with the help of Codex, not Claude, because he'd already burned through his quota before he could use Claude to debug it.
+
+Ironic in a way that feels very on-brand for this line of work.
+
+## How the caching mechanism works — and why it matters
+
+To understand this bug, you need a quick tour of Anthropic's prompt caching. When you send a request to Claude, the entire conversation history has to go into context — the system prompt, message history, tool definitions. Those are input tokens, and you pay for them.
+
+Prompt caching solves this by storing a "cache prefix" — the front of the conversation, the part that changes least. Next time you send a request, instead of reprocessing everything, Claude just reads from cache for the stored part (`cache_read_input_tokens`) and only processes what's new (`cache_creation_input_tokens`). A cache read costs roughly ten times less than a cache creation.
+
+In a healthy session, after the first few turns, cache reads should make up the bulk of it. Here's what OP measured on stock Claude Code:
+
+<Diagram label="Cache ratio — BEFORE the patch (stock Claude Code)" code={`
+Turn  1:  cache_read: 15,451   cache_creation:  7,473   ratio: 67%
+Turn  5:  cache_read: 15,451   cache_creation: 16,881   ratio: 48%
+Turn 10:  cache_read: 15,451   cache_creation: 35,006   ratio: 31%
+Turn 15:  cache_read: 15,451   cache_creation: 42,970   ratio: 26%
+
+cache_read stuck dead at 15,451 — only the system prompt is cached.
+Everything else: full-price token processing.
+`} />
+
+<Diagram label="Cache ratio — AFTER the patch" code={`
+Turn 1 (resume):  cache_read:  7,208   cache_creation: 49,748   ratio: 13%  ← structural reset
+Turn 2:           cache_read: 56,956   cache_creation:    728   ratio: 99%
+Turn 3:           cache_read: 57,684   cache_creation:    611   ratio: 99%
+`} />
+
+26% up to 99%. That's the gap between a normal session and a bugged one.
+
+## Where the bug lives — and why it's so quiet
+
+Claude Code saves conversation history into JSONL files under `~/.claude/projects/`. There's a function in the minified source — obfuscated down to the name `db8` — responsible for filtering what gets written to those files. And that function has a small but fatal flaw.
+
+For any user who isn't an Anthropic internal, `db8` strips out every message whose type is `attachment`. That sounds harmless — attachments are usually attached files that don't need to live in session history. But sharing that same `attachment` type are the `deferred_tools_delta` records — the entries that track which tools have already been announced to the model.
+
+<Diagram label="The original db8 function — minified" code={`
+function db8(A){
+  if(A.type==="attachment"&&ss1()!=="ant"){
+    if(A.attachment.type==="hook_additional_context"
+      &&a6(process.env.CLAUDE_CODE_SAVE_HOOK_ADDITIONAL_CONTEXT))
+      return!0;
+    return!1  // ← drops EVERYTHING else, including deferred_tools_delta
+  }
+  if(A.type==="progress"&&Ns6(A.data?.type))return!1;
+  return!0
+}
+`} />
+
+When you resume a session, Claude Code reads that JSONL file back to answer "which tools have I already announced to the model?" But because `db8` has deleted every `deferred_tools_delta` from the file, it finds nothing. The result: it re-announces every tool from scratch, on every single resume.
+
+This breaks the cache prefix in three ways at once. The system reminder that used to sit at the front of the conversation in a fresh session now lands in the middle. The billing hash changes because the content of the first message is different. The cache breakpoint shifts because the message array is a different length. Add those three together and the entire conversation has to be rebuilt from scratch, every time you resume.
+
+<Callout label="The fix — exactly two lines">
+The patch just adds two types to the `db8` allowlist, right before the `return!1` line:
+
+`if(A.attachment.type==="deferred_tools_delta")return!0;`
+
+`if(A.attachment.type==="mcp_instructions_delta")return!0;`
+
+Now the deferred tool announcements survive in the session file. On the next resume, the delta computation sees "I've already announced these" and doesn't re-emit them. The cache prefix stays intact.
+</Callout>
+
+There's a second, related bug in Claude Code's standalone binary — it uses a custom Bun fork and rewrites a sentinel value `cch=00000` into every outgoing API request. If your conversation happens to contain that string, it breaks the cache prefix. Running through `node cli.js` instead of the binary makes this problem disappear entirely.
+
+## The part where the Reddit crowd started to riot
+
+This is where the story took a turn I didn't see coming.
+
+Boris Cherny — the Anthropic developer who created Claude Code — showed up in the thread and confirmed the bug was real and would be patched in the next release. Good news. But he also added: this is a "&lt;1% win" on token usage, not a silver bullet for your usage limit.
+
+<Aside>
+"So Anthropic intentionally leaked their source code to crowdsource QA and bug fixes from their user base for free. All our software engineers aren't writing code anymore — they're getting users to do it for them." — Top comment, r/ClaudeAI
+</Aside>
+
+I laughed, but I also get why people said it. That wasn't the most interesting part, though.
+
+The most interesting part: the GitHub repo OP linked to *didn't only* contain the fix for the caching bug. It also included a separate patch to **bypass Anthropic's billing controls** by forcing a 1-hour cache TTL. This was not mentioned anywhere in the original post.
+
+<Callout label="A warning from the community">
+Plenty of people in the thread pointed out that applying that repo as-is violates Anthropic's ToS — reverse engineering *and* bypassing billing controls. Anthropic has banned accounts for similar behavior in the past.
+
+The caching bug is real and deserves to be fixed. But OP's repo bundles in more than you need to fix that bug. If you want to apply the patch, you need to read every change carefully before running anything.
+</Callout>
+
+## What I actually took away from this
+
+There are a few layers worth talking about here, and not all of them are about the bug.
+
+First: a user hand-reverse-engineering a company's minified CLI code, finding a genuine bug, and posting concrete evidence with measured numbers — that's good engineering. I respect it, regardless of the fact that he used Codex instead of Claude to do it. The way he presented the data — comparing cache ratios turn by turn, before and after the patch — was clearer than a lot of the internal bug reports I've seen inside a company.
+
+Second: Boris Cherny confirmed the bug but called it a "&lt;1% win" — and I think that number is misleading in an important way. *In terms of total token usage*, maybe it's accurate. But if you're someone who resumes long sessions a lot — especially sessions working on a big codebase with lots of tools — this bug is not &lt;1%. It's the reason your usage limit evaporates inexplicably fast. OP's data shows a 26% vs 99% cache ratio, not a &lt;1% difference.
+
+Third — and this is the part I thought about the most: OP bundling the billing-bypass patch into the same repo as the bug fix, and then not mentioning it in the post, whether by accident or on purpose, ruined a good technical story. Now, instead of "community finds a bug and Anthropic confirms it," the narrative is "user tries to bypass billing and gets caught by the community." The real bug deserves more attention than it's getting, because it's been shadowed by this drama.
+
+<PullQuote closing>
+The safest workaround, until Anthropic ships an official patch: don't resume sessions. Start a fresh session and carry your context over by hand. It's not pretty — but there's zero risk of a ToS violation.
+</PullQuote>

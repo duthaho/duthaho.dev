@@ -1,0 +1,100 @@
+---
+num: 2
+title: "Ordinary RAG is lying to you"
+titleEm: "and you haven't noticed yet"
+description: "After a stretch of building an internal chatbot with RAG, I realized I'd misunderstood the core problem from the very start."
+date: 2026-03-18
+pinned: false
+filename: "agentic-rag.md"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import Aside from '../../components/Aside.astro';
+
+About six months ago, my team built an internal chatbot on top of RAG — the goal was to let employees ask about company policy without having to tear Google Drive apart. Technically, it worked. Embeddings, a vector database, an LLM, done. The demo was smooth. But two weeks after we put it into real use, the feedback started rolling in: "it answers wrong," "it answers a question nobody asked," and the most common one of all: "I asked X and it very confidently answered Y."
+
+I spent another month debugging before I realized the problem wasn't in the implementation. The problem was in the *architecture*. And the reason is that ordinary RAG has a design flaw you won't see until the system meets real questions, from real users.
+
+## The problem with ordinary RAG that nobody tells you about
+
+On paper, RAG looks perfectly reasonable. A user asks something, the system turns the question into an embedding, searches the vector database for the chunks of text closest in meaning, stuffs them into the LLM's context, and the LLM answers. Clean, simple, explainable.
+
+And for clear-cut questions, it really is good. "What's the company's leave policy?" — answers nicely. "What's the onboarding process for new hires?" — also fine. But once the question gets even a little more complicated, the machinery starts to wobble.
+
+<Diagram label="Standard RAG — a one-way flow" code={`
+Question  ──▶  Embedding  ──▶  Vector Search  ──▶  Top-K Chunks  ──▶  LLM  ──▶  Answer
+                                                       │
+                                            (fetched just once,
+                                             never checked again)
+`} />
+
+The core problem is this: **nothing sits in the middle to decide whether what was retrieved is actually good enough.** The system retrieves and then generates straight away, never pausing, never asking itself "does the thing I just found actually answer the question?"
+
+More concretely, there are three failure modes I've watched happen with my own eyes:
+
+Ambiguous questions are the most common kind. When someone asks "what's the process for handling contracts?" — are they asking about contracts with customers, with suppliers, or employment contracts? RAG has no idea it needs to ask back. It grabs whatever has the highest similarity score and answers as if that were the only possible intent. Sometimes it gets lucky and lands right. Sometimes it's dead wrong.
+
+Answers scattered across multiple documents are the second kind. "How does the remote-work policy for contractors differ from full-time employees?" — this needs information from at least two different documents. Ordinary RAG retrieves from a single pool and has no notion of "go look somewhere else if this place isn't enough."
+
+<Aside>
+The third kind is the most dangerous, and also the one that cost my team the most time: false confidence. The system finds something with a high similarity score — but it's actually from an old version of a document, or from a document about a nearby topic rather than the right one. The LLM doesn't know this. It receives the context, it generates, and it answers with great confidence. There's no sign anywhere that it's mistaken.
+</Aside>
+
+<PullQuote>
+A successful retrieval doesn't mean a correct retrieval. And ordinary RAG has no mechanism to tell the two apart.
+</PullQuote>
+
+## Agentic RAG — when the system knows to stop and think
+
+Reading ByteByteGo's piece last week, I found they framed it very tidily: the problem with ordinary RAG is that nothing "sits in the middle" to decide whether retrieval is good enough before generation happens. Agentic RAG puts an agent in exactly that spot.
+
+The idea isn't complicated: instead of a one-way pipeline, you have a loop. After retrieval, the agent evaluates the results. If they're good, it generates. If they're not enough, the agent decides what to do next — fetch more, rewrite the question, or look in a different source.
+
+<Diagram label="Agentic RAG — a controlled loop" code={`
+Question ──▶ Agent ──▶ Rewrite / analyze the question
+               │
+               ▼
+          Pick source  ──▶  Retrieve  ──▶  Evaluate results
+               ▲                                  │
+               │              ┌───────────────────┘
+               │         Good enough?
+               │           │
+               │          No ──▶  Retry with a different query / source
+               │           │
+               └──────  Yes ──▶  Generate ──▶  Answer
+`} />
+
+This lets the system do three things ordinary RAG can't. The first is routing — the agent knows a finance question should query the SQL database, a policy question should go to the document store, and a complex question might need both. The second is query refinement — before searching, the agent can rewrite an ambiguous question into a more specific one. After searching, if the results are weak, it rewrites and tries again. The third is self-evaluation — after retrieving, the agent asks itself "does this actually answer the question?" before handing it to the LLM.
+
+## But just bolting on an agent isn't the whole story
+
+This is the part I think the original piece said a little too little about, and it's what I learned after trying to implement it: Agentic RAG isn't an on/off switch. It's a spectrum.
+
+The simplest form is a router — the agent only decides which of two or three knowledge bases to query. That's already a meaningful improvement over ordinary RAG, and the complexity barely goes up.
+
+More complex is the ReAct style — the agent alternates between reasoning and acting, running multiple retrieval steps with evaluation in between each one. I tried this approach and it gave noticeably better results on complex questions. But it's also slower, burns more tokens, and is much harder to debug when something goes wrong.
+
+<Callout label="What I learned after trying it">
+The main trade-off of Agentic RAG isn't about accuracy — it's almost always better. The trade-off is about latency and cost. Every extra loop is extra time, extra tokens. For my internal chatbot, users accept waiting 3–4 seconds for a more correct answer over getting a wrong one in 1 second. But not every use case is like that.
+</Callout>
+
+More extreme still are multi-agent systems, where several specialized agents collaborate, coordinated by an orchestrator. I haven't deployed this to production, but I've read a few case studies, and the price you pay in complexity is very high. It's not something you should pick as your starting point.
+
+## What I'd do differently if I started over
+
+Looking back, my team's first chatbot failed not because the engineering was weak. It failed because I'd used the right tool for the wrong problem. Ordinary RAG suits clear questions, a homogeneous knowledge base, and users who know exactly what they want to ask. That is not a description of real users in an enterprise environment.
+
+If I did it again, I'd start with a simple router — just an agent deciding which knowledge base to query — and evaluate whether that's enough before escalating to ReAct or multi-agent. In most cases, a simple router already solved 70–80% of the problem, at a negligible increase in cost.
+
+The thing I agree with most in ByteByteGo's original piece: the core problem with ordinary RAG isn't retrieval or generation — it's that nothing in the middle knows *to ask whether it's doing the right thing*. Agentic RAG bakes that question into the architecture. And that's a more important change than any embedding or reranking improvement.
+
+<hr class="divider" />
+
+One thing I still don't have a clear answer to: when should you move from ordinary RAG to Agentic RAG? I have a rough heuristic — if users' questions frequently need information from more than one source, or if you notice the system being "confidently wrong" more often than "uncertain but right," that's the moment to think about an agentic approach. But I'm not sure whether this is a general rule or just fits my specific context.
+
+Have you run into something similar? I'm curious how other teams have dealt with this "false confidence" problem.
+
+<PullQuote closing>
+The core problem with RAG isn't retrieval or generation — it's that nothing in the middle knows to ask whether it's doing the right thing.
+</PullQuote>

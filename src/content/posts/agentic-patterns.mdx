@@ -1,0 +1,138 @@
+---
+num: 8
+title: "I read Claude Code's leaked source"
+titleEm: "and realized I'd been building agents wrong from the start"
+description: "When Claude Code leaked, everyone paid attention to the drama around the leak. I paid attention to the harness. Reading it closely, I realized I was looking at a real production agentic system run at serious scale — and almost everything I'd built up to that point was missing important pieces."
+date: 2026-04-25
+pinned: false
+filename: "agentic-patterns.md"
+readMore:
+  - kind: "on the blog"
+    title: "Karpathy just described exactly the thing I failed to build"
+    href: "llm-wiki"
+    by: "the previous post — where I ran into the same problems from another angle"
+  - kind: "on the blog"
+    title: "Prompt engineering isn't as hard as you think"
+    href: "effective-prompt-engineering"
+    by: "the next post — more on shaping agent behavior through the prompt"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+Over the past year I've built a handful of agents — internal tools, automation workflows, chatbots that call APIs. Nothing at serious scale, but enough to run into the familiar problems: the agent forgets context between sessions, takes dangerous actions without asking, runs things sequentially that could perfectly well go in parallel, and behaves inconsistently depending on how long the conversation got. Every time one of these came up, I fixed it ad-hoc. I never thought about them as a structured system.
+
+When the Claude Code source leaked, I spent an evening reading the harness. And what I found there wasn't magic code or some clever algorithm — it was a set of very deliberate architectural decisions, solving exactly the problems I'd hit, in ways I'd never thought of. I sat down and formulated them into 12 patterns so they'd be easy to remember and easy to apply.
+
+## Why source code says things documentation doesn't
+
+Anthropic has documentation for Claude Code. There are blog posts, there are guides. But documentation talks about how to use it — not how it's built on the inside. This is the gap every production system has between the public narrative and the private reality.
+
+Claude Code is used by millions of developers. The architectural decisions in its harness have been battle-tested at a scale most agent frameworks never reach. When you look at the real source, you're looking at what actually works — not what someone thought would work while writing a blog post.
+
+<Callout label="How I read this code">
+I didn't read it as "what does Claude Code do." I read it as "what problem is this solving here, and why did they pick this solution over another one?" A pattern isn't an implementation — a pattern is a name for a proven solution to a recurring problem. Once you have the name, you recognize the problem faster the next time it shows up.
+</Callout>
+
+I split the 12 patterns into 4 groups by the kind of problem they solve: memory & context, workflow & orchestration, tools & permissions, and automation. Together they aren't a framework — they're a set of thinking tools for spotting and handling the recurring problems of agentic systems.
+
+## Group 1 — Memory & Context
+
+<Finding n="Pattern 01" title="Persistent Instruction File">
+A project-level config file (`CLAUDE.md`) loaded automatically every session. It holds build commands, naming conventions, architecture rules. It travels with the repo. Without it, every session starts from scratch — and the agent repeats the same mistakes it made last session. Trade-off: a stale file can be worse than no file — the agent learns the old rules and applies them wrong.
+</Finding>
+
+<Finding n="Pattern 02" title="Scoped Context Assembly">
+Instructions are loaded from multiple files across nested scopes: organization → user → project root → parent dirs → current dir. The agent sees different rules depending on where it's working in the codebase. A good fit for a monorepo or a multi-language codebase. Trade-off: rules from different scopes can conflict, producing behavior that's hard to predict and debug.
+</Finding>
+
+<Finding n="Pattern 03" title="Tiered Memory">
+Memory is split into three tiers with different loading rules: a compact index (capped at 200 lines) that's always in context; topic-specific files loaded on demand when the task is relevant; and full session transcripts that are only searched when needed. It's not about remembering more — it's about remembering the right thing at the right time. Trade-off: you need logic to decide which information belongs in which tier, and when to promote or demote it.
+</Finding>
+
+<Finding n="Pattern 04" title="Dream Consolidation">
+A background process that runs while the agent is idle: it merges duplicates, prunes contradictions, reorganizes the memory index. The code calls it `autoDream` — 8 phases of memory management, 5 types of context compaction. Garbage collection for agent state, not for data. Trade-off: consolidation spends tokens and can prune something the user still needs if it's too aggressive.
+</Finding>
+
+<Finding n="Pattern 05" title="Progressive Context Compaction">
+When the context window gets close to full, apply multiple tiers of compression by age: recent turns stay untouched, older turns get lightly summarized, very old ones get collapsed aggressively. The harness uses four tiers: `HISTORY_SNIP` → `Microcompact` → `CONTEXT_COLLAPSE` → `Autocompact`. Trade-off: it's lossy — the agent can hallucinate when it needs something that got collapsed, instead of admitting it forgot.
+</Finding>
+
+## Group 2 — Workflow & Orchestration
+
+<Finding n="Pattern 06" title="Explore-Plan-Act Loop">
+Three phases with progressively increasing write permissions. Explore: read, search, map the codebase only — no editing allowed. Plan: discuss the approach with the user. Act: full tool access. The system prompt actively stops the agent from editing files before it understands enough context. Trade-off: it adds turns before you get any output — it feels slow on small tasks, but it's necessary on big ones.
+</Finding>
+
+<Finding n="Pattern 07" title="Context-Isolated Subagents">
+Separate agents, each with their own context window, system prompt, and tool access. The research agent can't edit code. The planning agent can't execute commands. Each subagent sees only what it needs — its context isn't polluted by output from another phase. Trade-off: coordination overhead, and nuance from an earlier phase can get lost in the handoff.
+</Finding>
+
+<Finding n="Pattern 08" title="Fork-Join Parallelism">
+Spawn several subagents in parallel, each in its own git worktree. The parent's cached context is reused by each fork — so parallel branching is nearly free in token cost. Merge when all branches are done. A task touching 20 independent files doesn't need to run as 20 sequential steps. Trade-off: when parallel branches touch the same files, the merge conflicts are a lot messier than sequential work.
+</Finding>
+
+## Group 3 — Tools & Permissions
+
+<Finding n="Pattern 09" title="Progressive Tool Expansion">
+The default tool set is fewer than 20 tools — Read, Edit, Write, Bash, Grep, Glob, and a few more. MCP tools, remote tools, custom skills only activate when needed. Fewer tools means the model picks more accurately and is less overwhelmed by the tool-selection problem. Trade-off: the expansion logic is complex — activate too late and the agent wastes turns without the right tool in hand.
+</Finding>
+
+<Finding n="Pattern 10" title="Command Risk Classification">
+Deterministic pre-parsing before a shell command executes: analyze the verb, flags, and target to assess risk. Low-risk actions auto-approve. Dangerous actions go through a safety classifier. Per-tool permission rules with allow/ask/deny pattern matching — not approval fatigue, not blind trust. Trade-off: the classifier is rigid and can't anticipate every edge case — it needs constant tuning.
+</Finding>
+
+<Finding n="Pattern 11" title="Single-Purpose Tool Design">
+Instead of using a general shell for every file operation, build dedicated purpose-built tools: `FileReadTool`, `FileEditTool`, `GrepTool`, `GlobTool`. Each tool has typed inputs, a constrained scope, its own permission rules. Easier to review, easier to permission, the model uses it more correctly, and it's easier to restrict when you need to. Trade-off: they don't cover every edge case — you still need a general shell as a fallback for things that don't fit any tool.
+</Finding>
+
+## Group 4 — Automation
+
+<Finding n="Pattern 12" title="Deterministic Lifecycle Hooks">
+Shell commands that run automatically at defined points in the agent lifecycle — completely outside the prompt. The harness has 25+ hook points: `PreToolUse`, `PostToolUse`, `SessionStart`, `CwdChanged`, and many more. Anything that *has* to happen every time without exception — put it in a hook, not in an instruction. Trade-off: hooks are harder to debug than prompt instructions because they run outside the conversation flow.
+</Finding>
+
+## The three that made me stop reading and rethink
+
+Not all 12 patterns hit me the same way. Some I read and thought "yeah, makes sense, I do roughly the same thing." But three of them made me genuinely stop.
+
+**Dream Consolidation** was one I'd never thought of, even though I'd hit the problem it solves. An agent's memory accumulates with no cleanup mechanism — duplicate entries, old facts contradicting new facts, an index that swells until it isn't compact anymore. I fixed it by manually resetting memory. `autoDream` solves that automatically, during idle time, with its 8 phases and 5 compaction types. The name is pretty good too — the metaphor about how the human brain consolidates memory during sleep is more accurate than I'd have guessed.
+
+**Explore-Plan-Act Loop** is the one I agree with most strongly from real experience. The most common failure I see in the agents I build is the agent jumping in to edit a file before reading enough context — fixing the right problem but in the wrong file, or the right file but the wrong pattern because it didn't know what the current codebase actually does. Separating the explore phase from the act phase, and enforcing that through the system prompt and tool permissions rather than through a reminder — that's something I've needed to do for a long time and hadn't.
+
+<PullQuote>
+The model doesn't "forget" procedural steps. It's inconsistent under load. Hooks remove that inconsistency — because they're not in the prompt, they aren't affected by context pressure.
+</PullQuote>
+
+**Lifecycle Hooks** is the one with the biggest real-world impact for me, and also the one I misunderstood the longest. I used to write the instruction "after every file edit, run the formatter." The model listens — sometimes. Under context pressure, in a long session, it skips it. Not because it "forgot" — but because when a probabilistic system is juggling many things at once, it can drop something it would remember under normal conditions. A hook is a deterministic mechanism sitting outside the probabilistic model. The formatter runs after every edit not because the model remembers to run it — but because there's code invoked at the `PostToolUse` hook, and that code doesn't care about the context window.
+
+## Where I still don't have a clear answer
+
+<Callout label="Two questions I haven't solved">
+**On Dream Consolidation:** How do you know consolidation is working correctly? If it prunes something important, would I even notice? Without a clear metric it's hard to judge the quality of that process. I haven't found a way to evaluate this systematically.
+
+**On Fork-Join Parallelism:** It's a beautiful pattern in theory — but the decision "can this task be split in parallel?" is the hardest part, and that's the part a human has to do, not the agent. What percentage of real coding tasks are truly, fully independent? In my experience, that number is a lot lower than it looks.
+</Callout>
+
+## What I'll do differently from now on
+
+Having read all 12 patterns, I don't think "I need to implement all of them right now." Most of them have far higher implementation complexity than the value I'd get from them at my current scale. But there are three specific things I'll do differently starting today:
+
+**Persistent Instruction File** — there's no reason not to. The cost is near zero, the benefit is obvious. Every project from now on gets a `CLAUDE.md` that travels with the repo.
+
+**Lifecycle Hooks for the formatter and linter** — this is the most important invariant behavior for my users. The formatter has to run after every edit, no exceptions. Put it in a hook, take it out of the instruction.
+
+**Explore before Act** — not a complex architecture, just a change in how I prompt the agent in the early phase of a task. Before the agent is allowed to edit anything, it has to report back the codebase map and the approach. This is something I can do today without building anything extra.
+
+The rest — Tiered Memory, Dream Consolidation, Fork-Join — will come when I have a concrete problem they solve. A pattern is a menu, not a mandatory checklist. What matters is knowing they exist, knowing their names, so that when the problem shows up I'm not fumbling for a solution from scratch.
+
+<Aside>
+The Claude Code source won't stay leaked forever. Anthropic will re-obfuscate it, or change the architecture, or do something. But these 12 patterns aren't the product of one specific implementation — they're solutions to the fundamental problems of agentic systems. Those problems won't disappear when Anthropic patches its source.
+</Aside>
+
+<PullQuote closing>
+A pattern isn't an implementation. A pattern is a name for a proven solution to a recurring problem. Once you have the name, you recognize the problem faster the next time it shows up.
+</PullQuote>

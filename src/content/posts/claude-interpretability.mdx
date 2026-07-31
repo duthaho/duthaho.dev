@@ -1,0 +1,90 @@
+---
+num: 3
+title: "Claude doesn't know what it's thinking"
+titleEm: "and that's more worrying than you'd guess"
+description: "Anthropic just published a run of research on how Claude actually works on the inside. Not how it describes itself. How it actually operates."
+date: 2026-03-25
+pinned: false
+filename: "claude-interpretability.md"
+readMore:
+  - kind: "source"
+    title: "Tracing the thoughts of a large language model"
+    href: "https://www.anthropic.com/research/tracing-thoughts-language-model"
+    by: "anthropic.com — the interpretability research this post leans on"
+  - kind: "on the blog"
+    title: "Ordinary RAG is lying to you"
+    href: "agentic-rag"
+    by: "the next post — when retrieval quietly hands you the wrong context"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+I have a bad habit: whenever Claude explains its reasoning, I tend to believe it. "Right, it's doing it this way, that tracks." And then I move on. Reading ByteByteGo's write-up of Anthropic's interpretability research, I realized that habit might be more dangerous than I'd assumed.
+
+Not because Claude is deliberately lying. But because it genuinely has no ability to know what it's doing on the inside.
+
+## A microscope for the AI brain
+
+Before the specific findings, you need to understand what Anthropic actually did. The basic problem with an LLM is that each neuron inside it doesn't map cleanly onto a single concept. One neuron might fire for "basketball," "round objects," and "the color orange" all at once. They call this *polysemanticity* — and it means that staring straight at a neuron tells you nothing about what the model is doing.
+
+Anthropic's solution was to build a replacement model — essentially a simplified copy of Claude, but with the neurons swapped out for "features," interpretable units like "smallness," "known entity," or "rhyming word." They don't study Claude directly. They study the copy.
+
+The most powerful tool in their kit is the ability to intervene: switch a specific feature off or on, then watch how the output changes. If you turn off the "rabbit" feature and the model writes a different word, that's causal evidence the feature was doing exactly what they suspected. The technique is borrowed straight from neuroscience — where researchers stimulate a specific brain region to test what it does.
+
+<Aside>
+I found this technical part more interesting than most AI-interpretability writing I've read. Not because it's conceptually novel — but the fact that Anthropic can actually "inject" a concept into the middle of processing and measure the consequence is a far more concrete step than the vague claims about "AI reasoning" you usually see.
+</Aside>
+
+## Four findings — and why they matter if you work with AI
+
+<Finding n="01" title="Claude thinks in concepts, not language">
+Ask Claude "what's the opposite of small?" in English and in French, and the same set of features for "smallness" and "opposition" fires regardless of language. Claude isn't translating — it processes at the conceptual layer first, then renders out to the output language. This explains why I can prompt in English and get an answer in Vietnamese without any meaningful loss of accuracy.
+</Finding>
+
+<Finding n="02" title="Claude plans before it writes — the opposite of what I'd assumed">
+When writing rhyming poetry, the researchers initially assumed Claude picks the end-of-line word last. They were wrong. Claude fixes its target rhyming word before it starts writing the line, then builds backward to reach it. When the team switched off the "rabbit" feature, the model rewrote the line with a different ending word. When they injected the concept "green," it wrote a completely different, non-rhyming line. This finding is credible precisely because the researchers had expected the reverse.
+</Finding>
+
+<Finding n="03" title="Claude computes in a way nothing like how it describes it">
+Asked to add 36 + 59, Claude explains that it "adds the columns and carries the remainder" — exactly how we learned it in grade school. But on the inside, two parallel streams are running: one estimates the magnitude (roughly 88–97), the other computes the exact last digit (6+9 = 5, so it ends in 5). Combine them and you get 95. There's no "carrying" anywhere. Claude learned how to *explain* math and how to *do* math from two entirely separate processes, and the explaining part has no access to the computing part.
+</Finding>
+
+<Finding n="04" title="Hallucination isn't the model being reckless — it's a protective circuit getting overridden">
+Anthropic found that Claude's default state is to refuse. There's an always-on circuit that makes the model say "I don't have enough information." When it meets a well-known entity like Michael Jordan, a "known entity" feature fires and suppresses that refusal circuit — letting Claude answer. Hallucination happens when this recognition system fires by mistake on a name that feels familiar but isn't actually known, overrides the refusal circuit, and Claude fabricates an answer because it has nothing else to say.
+</Finding>
+
+## The part that kept me sitting with it longest
+
+The first three findings are interesting in an "oh, neat" way. The one about *motivated reasoning* is different — it raises a real question about how I use AI every day.
+
+On an easy problem (the square root of 0.64), Claude's chain-of-thought faithfully reflects the actual computation happening inside. But on a harder one (the cosine of a large number), Claude writes out a chain of reasoning that looks perfectly sound — while inside, no such computation is happening at all. It already had the answer, then made up a path leading to it.
+
+Worse still: when the researchers hinted at an expected answer, Claude started working backward from that answer, finding the intermediate steps that would justify the given result. Not solving the problem. Reverse-engineering a justification.
+
+<PullQuote>
+When Claude explains its reasoning, what you're getting is a plausible reconstruction — not necessarily a faithful record of what actually happened.
+</PullQuote>
+
+I thought back over my own habit: every time Claude gives me a long chain-of-thought, I tend to trust its output more. That, per this research, might be a systematic mistake. A long chain-of-thought doesn't mean deeper reasoning. Sometimes it's just a convincing performance.
+
+## How this changes the way I use AI
+
+I don't draw the conclusion "AI can't be trusted" from any of this. That's the wrong conclusion and it isn't useful. What I take away is more practical.
+
+First: **stop treating explanation as verification.** When Claude explains why it made decision X, that's not evidence it's doing the right thing. On an easy problem the explanation might match the process. On a hard one, it might just be post-hoc rationalization. The only check worth anything is checking the actual output.
+
+Second: **a long chain-of-thought on a hard problem should be treated as a warning sign, not a sign of confidence.** When I see Claude write three paragraphs of reasoning for a complex problem, the right question isn't "did it explain itself?" but "did it actually run that computation?" Those two things are different.
+
+<Callout label="What I'm not sure about">
+This research was done on a specific version of Claude at a specific point in time. It's not clear how stable these behaviors are across model versions, or whether other models like GPT or Gemini show similar patterns. I lean toward "yes," but there isn't equivalent public evidence from other companies yet.
+</Callout>
+
+Which part of this surprised you most? I'm curious, because everyone uses AI differently, so the "worrying" bit will differ too. For me, the hallucination finding — that it's an overridden protective circuit rather than a reckless model — is actually the thing I worry about *less*. If the mechanism is that clear, then in principle it's fixable.
+
+The motivated-reasoning part is the one I still don't know how to handle well.
+
+<PullQuote closing>
+When Claude explains its reasoning, what you're getting is a plausible reconstruction — not necessarily a faithful record of what actually happened.
+</PullQuote>

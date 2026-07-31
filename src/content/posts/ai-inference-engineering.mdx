@@ -1,0 +1,158 @@
+---
+num: 15
+title: "Two workers"
+titleEm: "inside the AI machine"
+description: "Every time an AI answers, two workers with opposite temperaments take turns at the bench — and nearly every trick for speeding up inference is born from the tension between them. A trip inside the reasoning machine: prefill, decode, KV cache, batching, quantization, and why the day eventually comes to run your own servers."
+date: 2026-06-18
+pinned: false
+filename: "ai-inference-engineering.md"
+readMore:
+  - kind: "source"
+    title: "A Guide to AI Inference Engineering"
+    href: "https://blog.bytebytego.com/p/a-guide-to-ai-inference-engineering"
+    by: "bytebytego.com — the original piece"
+  - kind: "source"
+    title: "vLLM & PagedAttention: managing the KV cache like paged memory"
+    href: "https://blog.vllm.ai/2023/06/20/vllm.html"
+    by: "blog.vllm.ai — the machinery behind continuous batching"
+  - kind: "source"
+    title: "From prompt to prediction: prefill, decode and the KV cache"
+    href: "https://machinelearningmastery.com/from-prompt-to-prediction-understanding-prefill-decode-and-the-kv-cache-in-llms/"
+    by: "machinelearningmastery.com — a careful walk through the fundamentals"
+  - kind: "on the blog"
+    title: "Two hidden lines that made Claude Code burn four times the tokens"
+    href: "claude-code-token-drain"
+    by: "when caching breaks, the bill shows up instantly"
+  - kind: "on the blog"
+    title: "Claude doesn't count messages — it counts tokens"
+    href: "claude-token-habits"
+    by: "why prompt design lands straight on the invoice"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import Aside from '../../components/Aside.astro';
+
+You type a question and hit Enter. About a second passes. Then the words start to appear — not the whole block at once, but a slow drip, one character at a time, as if someone were typing behind a pane of glass. That one-second silence, and the drip-feed rhythm that follows, are not a single process. They are *two* — two entirely different workers, each hitting a different wall. Understanding why they differ is understanding almost the whole discipline of inference engineering.
+
+**Inference engineering** is the craft of getting models that are *already trained* to run efficiently in production. It stretches from low-level GPU code, through model-serving frameworks, up to the cloud infrastructure that ties it all together; and the person doing the job is forever juggling four things pulling against one another: **latency, throughput, cost, quality**. Three years ago this was almost the exclusive delicacy of a few frontier labs. Now any company running AI seriously has to invest in it.
+
+Let's step into the workshop.
+
+## The warehouse no one can move
+
+At the center of the workshop sits an enormous warehouse: the **model weights** — tens, sometimes hundreds of gigabytes, parked immovably in GPU memory. Nobody can haul it elsewhere mid-job. Everything that happens in the workshop is, in the end, a story about *trips to this warehouse*: who has to touch it, how many times, and how much they drag out on each trip. Hold that image in your head, because the two workers about to appear treat the warehouse in exactly opposite ways.
+
+## The first worker: the ravenous reader
+
+The moment your question arrives, the first worker grabs it. He reads the *entire* problem at once — every token in the prompt, pushed through every layer of the model in one dense burst of computation. This is the **prefill** phase.
+
+<Aside>
+A **token** is the smallest unit the model works with — roughly a word or a fragment of one. "inference" might fit in a single token, while "engineering" could split into two. Every "tokens per second" figure counts in these units.
+</Aside>
+
+He finishes two jobs. One: he emits the **first token** of the answer. Two — and this is the part few people notice — he leaves behind a thick stack of notes called the **KV cache**: the intermediate attention values he computed for every input token, written down so whoever comes next doesn't have to recompute them from scratch.
+
+Where does this worker get stuck? On his own hands. He has to do a mountain of parallel computation, so what limits him is the *compute power* of the GPU — the math cores running flat out. People in the trade call this **compute-bound**: bottlenecked on computation. And his metric is **TTFT** (Time To First Token) — that one-second silence you wait through before the first character shows up is him at work.
+
+## The second worker: the writer and his warehouse runs
+
+Once the first token is out, the second worker clocks in. His job is to write the rest of the answer — but only one character at a time. Write a token, feed that token back in as input to guess the next one, and repeat. This is the **decode** phase, and it's *sequential*: each character has to wait for the one before it.
+
+Sounds easy. But here's the machine's cruelest irony: **to write a single character, he has to drag nearly the entire warehouse of weights across his bench, one full pass.** The math to produce one token is tiny; the expense is the haul. Once he's written a character, he runs back to the warehouse again for the next one. Another trip. Another character.
+
+So the second worker almost never uses up his compute power — his hands sit idle most of the time while he wears out his legs running to the warehouse. He's stuck on *memory bandwidth*: the speed of reading weights out of memory. This is **memory-bandwidth-bound**. His metric is **TPS** (Tokens Per Second) — the drip-feed rhythm of characters you see on screen. Mercifully, the stack of KV-cache notes the first worker left behind spares him from re-reading the whole conversation on every pass — without it, every character would be a nightmare.
+
+<Diagram label="Two workers — two opposite walls" code={`
+PREFILL  · "the reader"  reads the whole prompt once   wall: COMPUTE POWER      metric: TTFT
+DECODE   · "the writer"  writes char by char, repeat    wall: WAREHOUSE BANDWIDTH metric: TPS
+`} />
+
+<PullQuote>
+The two workers hit different walls. So a trick that speeds one of them up usually does nothing at all for the other.
+</PullQuote>
+
+This is the line to carve into the workshop wall. Nearly every inference optimization has to declare itself up front: does it rescue *the reader*, or *the writer*? Aim at the wrong one and your money and effort pour into the sea.
+
+Put briefly, every technique falls into exactly *three baskets*: those that *speed up the reader* (prefill), those that *speed up the writer* (decode), and those that *rebalance the scale* between the two. That's also why every benchmark reports TTFT and TPS as two separate numbers — each worker measured on his own, because improving one doesn't automatically improve the other.
+
+## The foreman's six tricks
+
+The person minding this workshop — call him the foreman — carries a ring of six keys. Each trick strikes at one of the two walls, and each one has a price.
+
+## 1 · Batch the customers — livelier, but you have to queue
+
+Instead of serving people one at a time, the foreman **batches multiple requests** together so each of the writer's warehouse runs serves a dozen customers at once. The weights are already hauled out, so let many people ride along. Total **throughput** jumps because the GPU's compute power gets fully used instead of sitting idle between requests. The price: each individual customer waits a little longer for being queued together. This is the root trade-off, and it repeats in every trick that follows — *fast for the whole crowd* usually means *slower for one person*.
+
+Each kind of product picks a different point on that scale: an end-user chatbot leans toward low latency, while a batch-processing pipeline leans hard toward maximum throughput.
+
+## 2 · Remember the opening — don't re-read what you've already read
+
+If two letters open identically, why read from the top twice? **Prefix caching** keeps the KV cache of the shared opening and reuses it right up to the first token that differs. The practical upshot for prompt writers: **put the fixed part first, the variable part last.** A long system prompt that's the same on every request is the cache's friend; jamming the variable bits (user name, timestamp) at the front sabotages the cache with your own hands, paying to re-read from zero every time. This is also exactly why API providers charge *noticeably less* for input that's already sitting in the cache.
+
+## 3 · Shrink the weights — but don't touch the bone
+
+**Quantization** compresses the weights from 16-bit down to 8-bit, even 4-bit. One arrow hits both workers: the reader computes faster because lower-precision math is cheaper, and the writer's warehouse runs get lighter because there are fewer bytes to carry. Typical gains land around **30–50%**.
+
+But not everything can be squeezed equally. In order of sensitivity, from most fragile to most punishment-tolerant: **attention layers → KV cache → activations → linear weights**. Most production systems keep attention at full precision, because errors there *accumulate* across every token — squeeze the wrong spot and the whole answer drifts off course. Trim the fat; don't touch the bone.
+
+## 4 · The apprentice guesses ahead — the master only grades
+
+This is the trick I find most elegant. Let a small, fast **draft model** run first and guess the next few tokens. Then the main model — instead of grinding out each token from scratch — just needs to *check* that whole batch of guesses in a single pass. The trick exploits an asymmetry: **generating a token from zero is expensive, but confirming whether a token matches what the main model would have chosen is much cheaper.** Like a teacher: making them write the essay themselves takes ages, but handing them a student's finished work to mark right-or-wrong is fast. (Or like Sudoku: solving one makes you sweat, but checking a filled-in grid is a glance.) The main model accepts the tokens that match its own predictions and discards the rest — the result is **several tokens popping out after one pass** where there should have been exactly one.
+
+The name: **speculative decoding**. It pulls TPS up without touching TTFT — that is, it rescues the writer and ignores the reader. Note: it only pays off while the GPU still has spare hands. Once the shop is packed (large batches, saturated GPU), people switch it off — because by then the compute hands are busy and there's no free room to grade papers on the side.
+
+## 5 · One workshop can't hold it — split into rooms
+
+Some models are so big a single GPU can't hold them — or it fits, but running on one GPU makes latency too high. Then you have to **split the model across multiple GPUs** (parallelism), and two styles dominate the open-model world:
+
+- **Tensor parallelism** — slice *each layer* of the model across multiple GPUs, each holding a shard and jointly carrying that layer's work. After each layer the results have to be stitched back together, so it demands an extremely fast interconnect between GPUs — NVIDIA's **NVLink** kind. This split "hurts" on communication, but it's the default choice for serving very large *dense* models, and it fits when the GPUs sit close together in the same node.
+- **Expert parallelism** — for *mixture-of-experts* models, where each token wakes only a handful of "experts" rather than the whole thing. Spread the different experts across different GPUs, and because each token calls only a few experts, there's less chatter between GPUs — a fit for multi-node setups where the interconnect between machines is limited.
+
+In practice people combine both: tensor parallelism *within* a node (where there's NVLink), expert parallelism *between* nodes.
+
+## 6 · Split the two workers into two rooms entirely
+
+The last trick is the most radical, and it flows straight from the opening insight. If the reader is stuck on *compute* while the writer is stuck on *bandwidth* — why force both to use the same kind of bench? **Disaggregation** separates prefill and decode onto two distinct GPU clusters, each picking the hardware optimal for its own wall, and shuttles the KV cache back and forth over a high-speed link.
+
+<Diagram label="Disaggregation — each worker gets his own room" code={`
+[READING ROOM]  prefill  ──(send the KV notes)──▶  [WRITING ROOM]  decode
+GPU strong on compute                              GPU strong on bandwidth
+   ▲
+   └── short / already-cached request  ──(skip ahead, straight to the writing room)──┘
+`} />
+
+A three-step flow: the prefill cluster produces the first token + KV cache → pushes the cache over to the decode cluster to write the rest → and one clever move: short requests, or ones that already have a cache, *skip* the handoff and run straight on the decode hardware. The two clusters also **scale independently**: lots of long prompts today, add machines to the reading room without touching the writing room.
+
+This is the most "architectural" of the six — it treats reading and writing as two separate *services*, operated separately, each with its own lever to scale. For systems running inference at large scale, once you understand the shape of your own traffic, this step is all but mandatory.
+
+## So should you build your own workshop?
+
+Here the practical question surfaces: do you need to know all of this, or can you just rent someone else's workshop (call an API) and be done? The honest answer from the original piece: **early on, just rent.** Optimization only means something when there's a real constraint to optimize against, and a young product is still fuzzy about its traffic, its latency requirements, its unit-economics math. Building your own workshop then is optimizing for a future you haven't even met yet.
+
+Three signals that the time has come to run your own servers:
+
+<Callout label="The three build-vs-buy lines">
+**Cost** — API spend climbs into a meaningful line on the ledger. **Latency** — the latency you need has outgrown what a closed API can deliver. **Reliability** — the reliability you demand is higher than the SLA your provider commits to. Cross any one of the three and the calculus starts tilting toward building.
+</Callout>
+
+A classic example: Cursor, with Composer 2.0, needs autocomplete latency **under one second** — something a general-purpose API (which has to optimize the average across a thousand customers) essentially can't grant. Only by self-hosting and doing your own inference engineering does that mark become reachable.
+
+And the self-hosting playing field is far easier to breathe in than it used to be. Hugging Face now holds **over two million open models** — roughly 25 times more than five years ago. Models like DeepSeek V3 have narrowed the capability gap with closed models, giving enterprises a real choice. In exchange for the engineering effort: cost typically **drops around 80%** once you're at sufficient scale, and availability can reach *four nines* with a dedicated cluster, versus the *two nines* you commonly see on public APIs. That's also why all kinds of companies are now building serious inference stacks — from AI-native startups, to existing products bolting on AI, to even famously cautious industries like healthcare.
+
+## The whole thing in one frame
+
+LLM inference is two operations with opposite physical constraints: **prefill** is compute-bound and runs once per request; **decode** is bandwidth-bound and runs once per token. Grasp that split, and the remaining six tricks fall into place on their own:
+
+- **Batch the customers** — trade individual latency for total throughput.
+- **Remember the opening** — cut the reader's work when prompts share an opening.
+- **Shrink the weights** — compress the weights, a win for both workers.
+- **Guess ahead** — wring extra tokens from the writer by exploiting idle compute.
+- **Split the GPUs** — spread an oversized model across multiple machines.
+- **Split the rooms** — let the reader and writer run on separate hardware, each with its own wall.
+
+Above all of it sits the rent-or-build question: keep renting the API while you're young, and only build your own when cost, latency, or reliability crosses the line.
+
+<hr class="divider" />
+
+Next time you type a sentence and watch the words drip out behind the pane of glass, remember: that isn't a machine "thinking." It's the reader who just set down his pen after a second of hard computation, and the writer running back and forth to the warehouse, each lap traded for exactly one character. Every figure on the bill, every millisecond of latency, every rent-or-build decision, all reduce to one beautiful, simple question: *right now, which wall am I hitting?*

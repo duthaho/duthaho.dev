@@ -1,0 +1,176 @@
+---
+num: 17
+title: "Redis never gives you anything for free"
+titleEm: "the hidden price behind every layer of cache"
+description: "When I started out, caching meant one thing to me: \"API slow? Throw Redis at it.\" Cramming for an architect interview, I finally saw what that \"throw it in\" really dragged along — invalidation, three distinct ways to crush a database, cache–DB consistency — and that it was really the Dual Write Problem wearing a disguise. Caching is never free; every layer of cache is a line of debt against consistency."
+date: 2026-07-01
+pinned: false
+filename: "caching-is-never-free.md"
+readMore:
+  - kind: "on the blog"
+    title: "From monolith to idempotency: one thread, not six flashcards"
+    href: "from-monolith-to-idempotency"
+    by: "the same Dual Write monster, a different disguise"
+  - kind: "source"
+    title: "Database caching strategies — Cache-Aside & other patterns"
+    href: "https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/caching-patterns.html"
+    by: "docs.aws.amazon.com"
+  - kind: "source"
+    title: "Scaling Memcache at Facebook (NSDI 2013)"
+    href: "https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf"
+    by: "invalidate instead of update, the lease mechanism for hot keys"
+  - kind: "source"
+    title: "Redis key eviction — LRU vs LFU, approximate sampling"
+    href: "https://redis.io/docs/latest/develop/reference/eviction/"
+    by: "redis.io"
+  - kind: "source"
+    title: "Debezium — CDC reading the binlog/WAL to sync"
+    href: "https://debezium.io/documentation/reference/stable/index.html"
+    by: "debezium.io"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+When I started out, caching was simple to me: API slow? Throw Redis at it, cache the thing, done. It really was fast, so I figured I understood caching. But lately, cramming in earnest for an architect interview, it finally dawned on me: that "throw Redis at it" move drags along a whole chain of problems, and if you don't understand them, you patch one spot only to spring a leak somewhere else.
+
+I want to retell the whole journey, because when you string it together it's more elegant and more logical than I ever expected. And there was one line I kept hanging over my head the entire time I wrote — the classic joke of the trade:
+
+<PullQuote>
+"There are only two hard things in computer science: cache invalidation and naming things."
+— Phil Karlton
+</PullQuote>
+
+I used to find that line funny. Now I don't think it's joking at all. Nearly everything thorny in this post boils down to one word: **invalidation** — knowing when the data in the cache has gone stale, and handling it correctly.
+
+## First: cache is everywhere
+
+Let me be explicit about something, because I used to forget it: cache lives *all over* our stack, each layer solving a different problem.
+
+<Diagram label="Cache is scattered along a request's whole path" code={`
+CPU cache → browser → CDN → API gateway → [ APP + REDIS ] → DATABASE
+                                                  ▲
+                              where backend devs hit it most — the part I'm telling today
+`} />
+
+The part I'm covering focuses on what backend touches most: the **application-level cache**, the kind where you put a Redis in front of the database to soak up read traffic. Everything below revolves around exactly that layer.
+
+## Cache-Aside, and the small detail lots of people get wrong
+
+Let's start with the most common pattern: **Cache-Aside**, aka Lazy Loading. The read flow goes like this: a request comes in, look in the cache first; if it's there, return it right away (*cache hit*); if not, go down to the database, fetch it, stuff it into the cache, then return it (*cache miss*). Simple, and it's popular for a reason I find genuinely valuable: **if Redis dies, the app still runs** — just slower, going straight to the DB. The cache is a speed accessory, not a lifeline.
+
+The write flow, when data changes, has a subtle detail lots of people get wrong: you should **DELETE the key** in the cache, not **UPDATE** the cache.
+
+The reason is ordering. If two write requests happen almost simultaneously, the order in which they overwrite the cache can flip: the slower request (carrying the old value) writes to the cache *after* the faster request (carrying the new value), leaving the cache holding the old value even though the database already has the new one — and it sits there forever. But if you only *delete*, the next read always rebuilds the truth from the DB. Deletion is a self-healing operation: no "wrong value stuck in cache," the worst case is just one cache miss.
+
+<InlineFlag>The price:</InlineFlag> every write costs you an extra cache miss on the next read. Dirt cheap compared to holding wrong data. (This is also exactly how Facebook did it in the "Scaling Memcache" paper — they *invalidate* rather than update, for this very order-flipping reason.)
+
+## TTL: the net I once thought was redundant
+
+A lesson I used to underrate: **TTL is mandatory**, even when you actively delete the cache on every write.
+
+Why? Because "delete the cache on change" relies on an *event* — and events can be missed, can be buggy, can get swallowed somewhere. If one delete slips through, your cache goes stale *forever*. TTL is the last safety net: even when things go wrong, they're only wrong for a few seconds or minutes before self-correcting, never wrong forever. I like to think of it this way: invalidation is the fast lane to freshness, and TTL is the harness that keeps you from ever being permanently wrong.
+
+## The trio that crushes a database
+
+Then come the three classic problems I never knew the names of back then, but had in fact run into out in production. All three share the same ending: the cache can't absorb it, and traffic slams straight into the DB.
+
+<Finding n="01" title="Cache Penetration — asking for something that DOESN'T exist">
+Someone spams a query for an id that isn't in the DB at all. Cache miss after cache miss (there's nothing to cache), each one crashing down to the database, which also has nothing to return — that loop grinds the DB to death. The fix: **cache the empty result too**, with a short TTL, or use a **Bloom filter** to block, up front, ids that definitely don't exist (a Bloom filter never falsely reports "absent" as "present," so it's very safe as a gatekeeper).
+</Finding>
+
+<Finding n="02" title="Cache Avalanche — an avalanche, MANY keys expiring at once">
+Picture loading a million products into the cache all at once, with an identical TTL of one hour. Exactly one hour later, they all expire in the same instant, the entire traffic dumps onto the database within one second, and the DB goes down. The fix is simple and surprisingly effective: **add a random jitter to the TTL**, so the keys expire spread out instead of piling up in one place.
+</Finding>
+
+<Finding n="03" title="Cache Breakdown — hot key, ONE key that's hot expires">
+A product is on flash sale, tens of thousands of requests per second. The very second it expires, thousands of requests miss at once, all diving into the DB to query the exact same row — this phenomenon is called *thundering herd*. (Different from avalanche: avalanche is *many* keys, breakdown is *one* extremely hot key.) The fix: use a **lock**, letting only a single request go load the DB and repopulate the cache while the rest wait a beat; or use **logical expiration** — don't let the key hard-expire, instead embed the "use-by date" inside the value and let a background worker quietly refresh it.
+</Finding>
+
+<Aside>
+The "Scaling Memcache at Facebook" paper has a number I really love about this exact thundering herd. They added a *lease* mechanism — when a key misses, they issue a "ticket" to just one client to go rebuild the value, and the rest wait. The result: at peak, the query load hitting the DB dropped from **17,000/second down to 1,300/second**. Same hot-key problem, solved right, over ten times fewer queries.
+</Aside>
+
+## The hardest question: delete cache first or write DB first?
+
+But the part I'm proudest of, and also the hardest, is the consistency between cache and database. The question sounds simple: when updating data, should you *write the DB then delete the cache*, or *delete the cache then write the DB*?
+
+I used to think deleting the cache first was safer — if the DB write fails, at worst you've cost yourself one cache miss. But that's only half the story. The more important half is what happens with **two concurrent requests**.
+
+<Diagram label="Delete cache FIRST then write the DB — the trap" code={`
+T1  writer:  delete cache            ✔
+T2  reader:  miss → read DB          →  grabs the OLD VALUE (writer hasn't written yet)
+T3  reader:  loads old value into cache  ✔
+T4  writer:  write DB = NEW value     ✔
+    →  DB new, cache old — and no more event is coming to delete it.
+       Stale until the TTL runs out.
+`} />
+
+The window between "delete cache" and "finish writing the DB" is fairly wide, and a read request slipping in right then will read the old value and reload it back into the cache. Conversely, if you **write the DB first then delete the cache**, the stale window is much narrower — because a write is usually slower than a read, so the gap for a reader to squeeze in and read-then-reload nearly closes. That's why the industry's standard recommendation is **write the DB first, delete the cache after**, even though at first it sounds counterintuitive.
+
+And even with the right order, a small gap remains. To patch it thoroughly, people stack multiple layers:
+
+- **TTL as the baseline** — the safety harness, mentioned above.
+- **Delayed double delete** — delete the cache, write the DB, *wait a moment*, then delete the cache again, to sweep out the old value a read request may have managed to reload during the write.
+- **Retry queue** — if the cache delete fails (Redis blinks for a second), don't ignore it; push it onto a queue to retry until it succeeds.
+- **CDC** — the most advanced: read the database's binlog/WAL with a tool like **Debezium**, so whenever the DB actually changes it automatically emits a signal to delete the cache. No misses, and fully decoupled from the business code.
+
+## The lightbulb moment: it's the Dual Write Problem
+
+Here I had a moment where I froze: the "write DB then delete cache" problem is **actually** the very Dual Write Problem I once ran into working with message queues. Again it's writing to *two systems* (the DB and the cache) with *no shared transaction* — identical to writing the DB then publishing an event to a broker.
+
+<Callout label="The same monster, two shells">
+I once wrote a whole post about how splitting into microservices births the Dual Write Problem, and how Outbox and idempotency patch it. Today it reappears wearing the "stale cache out of sync with the DB" shell. Because the essence is the same, **the solution is the same too**: don't hand-write to two places in your code; pick *a single source of truth* — usually the database's log — as the root, then sync the other from it. It's exactly the Outbox/CDC I once used for events, now applied to the cache.
+</Callout>
+
+When you recognize the same problem hiding under many different shells, I felt myself starting to think more like an architect — less rote-memorizing each pattern, and starting to see the common frame behind them.
+
+## Not all data should be cached the same way
+
+Another lesson, about how to *think* rather than about technique: not all data should be cached the same way.
+
+- **Product name, description, images** — practically never change. Cache with a long TTL, no worries.
+- **Price** — changes now and then. Cache moderately, and delete on change.
+- **Inventory** — changes constantly and needs to be accurate. This is where you have to be most careful.
+
+For inventory, I split it into two levels. The number shown on a listing screen doesn't need to be perfectly accurate — cache it with a few-second TTL, accept a little staleness, nobody dies over it. But when the customer clicks to place the order and actually decrements stock, you **ABSOLUTELY do not decide based on the cache** — you go straight to the source of truth with an atomic operation, because overselling is an error that isn't allowed to happen.
+
+<InlineFlag>The price:</InlineFlag> the cache is for speeding up reads, not for deciding business logic that has to be exact to the unit. Knowing where you're *allowed* to be a little wrong, and where you *absolutely aren't*, is the hard part.
+
+## Redis isn't a key-value store — it's a data structure server
+
+I want to give this its own section, because a lot of people (me, back in the day, included) treat Redis as just a fast key-value store. It's really a **data structure server** — the value is a typed data structure, not a blind blob.
+
+- **Hash** — store an object field by field, so you can update exactly one inventory field without rewriting the whole object.
+- **Sorted Set** — build leaderboards, rate limiters, priority queues (members ordered by score).
+- **HyperLogLog** — approximate *unique* counting, error of only ~0.81%, each key costing at most ~12&nbsp;KB while counting up to 2⁶⁴ elements. Count billions of unique visitors for a dozen-odd KB.
+- **Bitmap** — ultra-compact binary flags (active users per day, feature flags).
+- **Geo** — search by radius, "the place nearest me."
+- **Stream** — an append-only log with consumer groups, for a proper queue with acks.
+
+Knowing how to pick the right structure for the right problem is half of Redis's power. The other half lies in understanding how it works inside.
+
+## A few things about Redis worth grasping deeply
+
+**Eviction policy.** When RAM fills up, Redis has to decide which key to delete. You should distinguish **LRU** (evict what hasn't been used in the longest) from **LFU** (evict what's used *least frequently*) depending on your access pattern. A nice detail: Redis doesn't track LRU/LFU exactly per key (too much memory), it *randomly samples* a handful of keys and picks a victim — approximate, good enough, and cheap.
+
+**Single-thread.** Redis processes commands on *a single thread* — that's why it's fast, and also why you absolutely avoid heavy commands like `KEYS` in production (it scans the whole keyspace, hard-locks the server; use `SCAN` to walk by cursor). But that single-threaded nature turns into a *superpower* when you need atomicity: wrap a chunk of logic in a **Lua script**, and Redis runs the whole thing without letting any command wedge in between. That's how a rate limiter or stock decrement can fend off race conditions across thousands of servers — "check stock then decrement" fused into one indivisible step.
+
+**Durability.** Redis has **RDB** (snapshotting — compact, fast to restore, but you lose the data between two snapshots) and **AOF** (logs every command — more durable, usually fsync every second so you lose at most ~1 second, but heavier). Production usually enables both.
+
+**Scale.** When a single Redis can't carry the load: **replication** to scale reads, **Sentinel** to auto-failover when the master dies, and **Cluster** to shard data across many nodes (split into 16,384 hash slots, keys hash into a slot, slots spread across the nodes).
+
+<hr class="divider" />
+
+## Caching is never free
+
+Sitting down to write all this out, I realized the most important thing isn't any individual technique, but the way of seeing. The DB-crushing trio, the cache-delete ordering, delayed double delete, CDC — all of them are lines of debt born from one initial decision: "add a Redis to make it fast."
+
+<PullQuote>
+Every time you add a layer of cache, you trade **speed** for **consistency complexity**. The system builder's job isn't to cache as much as possible for speed, but to know what to cache, how long to cache it, how much drift to tolerate — and where you must never, ever trust the cache.
+</PullQuote>
+
+Phil Karlton was right: invalidation is one of the two hardest things. But hard doesn't mean dodge it. Hard means you have to *see the price* before you sign the invoice — not throw Redis in and wait for production to mail you the bill later, like the me of a few years ago.

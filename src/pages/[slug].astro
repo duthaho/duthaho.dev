@@ -1,0 +1,35 @@
+---
+import { render } from 'astro:content';
+import PostLayout from '../layouts/PostLayout.astro';
+import { getSortedPosts, readingMinutes } from '../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  // Chronological order (oldest -> newest) for prev/next navigation.
+  const chrono = [...posts].sort((a, b) => a.data.num - b.data.num);
+
+  return chrono.map((post, i) => {
+    const prevEntry = chrono[i - 1];
+    const nextEntry = chrono[i + 1];
+    return {
+      params: { slug: post.id },
+      props: {
+        post,
+        prev: prevEntry
+          ? { slug: prevEntry.id, title: prevEntry.data.title }
+          : undefined,
+        next: nextEntry
+          ? { slug: nextEntry.id, title: nextEntry.data.title }
+          : undefined,
+      },
+    };
+  });
+}
+
+const { post, prev, next } = Astro.props;
+const { Content } = await render(post);
+const minutes = readingMinutes(post.body);
+---
+<PostLayout post={post} readingMinutes={minutes} prev={prev} next={next}>
+  <Content />
+</PostLayout>
