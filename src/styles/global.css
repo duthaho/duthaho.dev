@@ -1226,22 +1226,26 @@ body.feed-page .discussion-pinned__link:hover .discussion-pinned__title {
 
 /* ── Feed section ───────────────────────────────────────── */
 .feed {
-  background: var(--idx-bg-elevated);
-  border: 1px solid var(--idx-border);
-  border-radius: 8px;
-  overflow: hidden;
-  display: block;
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
   padding: 0;
   position: static;
 }
 .feed::before { content: none; display: none; }
 .feed__head {
+  grid-column: 1 / -1;
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 12px 20px;
-  background: var(--idx-bg-panel);
+  padding: 0 4px 4px;
+  background: none;
   border-bottom: 1px solid var(--idx-border);
+  margin-bottom: 4px;
 }
 .feed__title {
   font-family: var(--idx-font-ui);
@@ -1260,29 +1264,30 @@ body.feed-page .discussion-pinned__link:hover .discussion-pinned__title {
   border: 1px solid var(--idx-border-soft);
 }
 
-/* ── Discussion card (compact row) ──────────────────────── */
+/* ── Discussion card (tile) ─────────────────────────────── */
 .discussion-card {
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  gap: 16px;
-  align-items: start;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--idx-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  background: var(--idx-bg-elevated);
+  border: 1px solid var(--idx-border);
+  border-radius: 8px;
   color: var(--idx-text);
-  transition: background 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
-.discussion-card:last-child { border-bottom: none; }
 body.feed-page .discussion-card:hover {
-  background: var(--idx-bg-subtle);
+  border-color: var(--idx-border-firm);
+  box-shadow: 0 6px 20px rgba(27, 24, 20, 0.06);
+  transform: translateY(-2px);
   text-decoration: none;
 }
 .discussion-card__num {
+  order: -1;
   font-family: var(--idx-font-mono);
-  font-size: 13px;
-  color: var(--idx-text-muted);
-  padding-top: 2px;
+  font-size: 12px;
+  color: var(--idx-text-fade);
   letter-spacing: 0.02em;
-  align-self: start;
 }
 .discussion-card__body { min-width: 0; }
 .discussion-card__title {
@@ -1309,42 +1314,29 @@ body.feed-page .discussion-card:hover .discussion-card__title { color: var(--idx
   line-height: 1.5;
   color: var(--idx-text-muted);
   margin: 0;
-  max-width: 70ch;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .discussion-card__meta {
+  order: 1;
+  margin-top: auto;
+  padding-top: 10px;
   font-family: var(--idx-font-mono);
   font-size: 12px;
   color: var(--idx-text-muted);
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  padding-top: 4px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
 .discussion-card__meta time { font-weight: 500; color: var(--idx-text); }
 
 @media (max-width: 720px) {
-  .discussion-card {
-    grid-template-columns: auto 1fr;
-    gap: 6px 12px;
-    padding: 14px 16px;
-  }
-  .discussion-card__num { grid-column: 1; grid-row: 1; padding-top: 0; }
-  .discussion-card__body { grid-column: 2; grid-row: 1 / span 2; }
-  .discussion-card__meta {
-    grid-column: 2;
-    grid-row: 3;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 8px;
-    padding-top: 4px;
-  }
+  .discussion-card { padding: 16px; }
 }
 
 /* ── Page foot ──────────────────────────────────────────── */
