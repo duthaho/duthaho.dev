@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // IMPORTANT: "name" must match your existing Worker's name exactly, or the
+  // deploy will target the wrong Worker (and miss your duthaho.dev domain).
+  // Check it at the top of the Cloudflare dashboard / in the project URL.
+  "name": "duthaho-blog",
+  "compatibility_date": "2025-07-01",
+  // Serve the built static site. No Worker script (`main`) is needed — this is
+  // an assets-only Worker. `dist/_redirects` is honored automatically.
+  "assets": {
+    "directory": "./dist"
+  }
+}
