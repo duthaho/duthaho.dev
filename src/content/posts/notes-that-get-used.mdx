@@ -1,0 +1,125 @@
+---
+num: 11
+title: "Most of my notes died in a folder"
+titleEm: "and I spent two years fixing the wrong problem"
+description: "I read a guide on building an Obsidian system designed from the opposite end: optimized not for the moment you save, but for the moment you use. By the time I finished it, I understood why my vault of several hundred notes had never given anything back."
+date: 2026-05-29
+pinned: false
+filename: "notes-that-get-used.md"
+readMore:
+  - kind: "on the blog"
+    title: "Karpathy's gist about an LLM-powered personal knowledge base"
+    href: "llm-wiki"
+    by: "the same idea I flailed at two years ago — this time from the tooling angle"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+I used to believe that saving lots of notes was a form of being smart. Every good article I read, every good idea I overheard, I clipped a fragment and dropped it into the vault. Two years later I had several hundred notes. And I almost never opened a single one again.
+
+The feeling is familiar in a way that hurts: you search for something vaguely related, you stumble onto an old note, you reread it, you think "oh, I used to know this," and then you close it and move on. That note never became anything. It just sat there, taking up space, giving me a false sense of calm that I "had knowledge."
+
+Then I read a guide for building an Obsidian system designed from the opposite end. Its opening line made me sit still: **saving and using are two completely different activities, and nearly every note system optimizes for the first while ignoring the second entirely.** By the time I finished, I understood — for two years I hadn't been short on notes. I'd optimized the wrong end.
+
+## The gap between saving and using
+
+Before you build anything, you have to understand why that gap exists. And the reason is annoyingly simple: **saving is easy because it costs nothing.**
+
+You highlight a passage, jot a quick note, save it. The act *feels* productive. You didn't lose the information. It's safe. Using, on the other hand, demands something much harder: actively pulling out the right fragment of information at the exact moment you need it, fitting it against what you already know, and turning it into something — a decision, a piece of writing, an action, a framework.
+
+The gap between saving and using is exactly the gap between *passive collection* and *active synthesis*. Most note systems are designed for collection: files, folders, tags, search — all optimized for the moment of saving and for retrieving something you already knew existed. This guide is built around a completely different question: *what should I create out of what I know, and how does the system surface the right information at the right time to make that creation possible?*
+
+## When does a note actually count as "used"?
+
+This is the part I found most valuable, because it sets a standard I'd never dared apply to my own vault. A note counts as **used** when it contributes to one of four things:
+
+**Supporting a decision.** The note surfaces right as you're making a decision and provides context, evidence, or a perspective that makes the decision better. **Fuel for writing.** The note contributes content, a citation, structure, or an insight to something you're writing. **Material for a conversation.** The note gives you something concrete to say in a meeting or a presentation that you wouldn't have had otherwise. **A trigger for action.** The note pushes an idea to the surface at the exact moment you can act on it, instead of at the random moment you happened to save it.
+
+Every note in the vault should be capable of contributing to at least one of those four. A note that can't contribute to any of them shouldn't be in the vault. It sounds obvious, but when I held that ruler up to my actual vault, about 70% of the notes failed on the spot.
+
+<PullQuote>
+A vault of 500 notes where each one has, at some point, contributed to a decision, a piece of writing, an action — is worth far more than a vault of 5,000 notes saved and never touched again.
+</PullQuote>
+
+## The architecture: three zones
+
+The system splits into three zones. Each zone holds a kind of note at a different stage of processing, and notes move between zones *when they become more useful* — not when they get tidied up.
+
+**Zone 1 — Capture:** raw material, the inbox of your thinking. Notes here aren't useful yet; they're only *candidates* for usefulness. **Zone 2 — Active:** processed notes, useful right now. Permanent notes written in your own words, project notes tied to what you're working on, reference notes arranged for fast retrieval. **Zone 3 — Deep Archive:** finished projects, settled decisions, history. No longer immediately useful but worth keeping to look up later.
+
+<Diagram label="Vault structure — notes flow downward as they become more useful" code={`
+VAULT/
+  00 - CAPTURE/        ← raw, unprocessed notes
+  01 - ACTIVE/
+       permanent/      ← atomic notes, written in my own words
+       projects/       ← projects in flight
+       decisions/      ← decisions under consideration
+       references/     ← things I look up often
+  02 - ARCHIVE/
+  03 - OUTPUT/         ← finished work: articles, reports, decisions
+  04 - SYSTEM/         ← CLAUDE.md, skills, templates
+`} />
+
+The folder that almost no note system ever has is `03 - OUTPUT`. This is where the *finished work* lives — the articles, reports, and frameworks your notes helped create. Keeping it right inside the vault creates a visible thread between the notes you save and the things you actually produce. After a few months, it shows you which notes gave birth to something and which ones were never used — and that teaches you, in reverse, how you should be saving in the future.
+
+## CLAUDE.md — the thing that teaches Claude what "useful" means to me specifically
+
+This is where Claude walks in. The entire system revolves around one file: `CLAUDE.md` — a document that declares *what useful means to you personally*. What I use notes for. Which projects are in flight. Which decisions are open. What topics I write about. What makes a note useful to me, and what doesn't. The bar a note must clear to be promoted to Zone 2.
+
+It sounds simple, but this is the piece that changes the whole game: it turns "useful" from a vague concept in your head into something Claude can read and *enforce*. Once the definition of useful is on paper, every downstream workflow can start making decisions on your behalf.
+
+## Five workflows that turn notes into output
+
+This is the production layer of the system — five workflows, each converting passive notes into active output. I'm writing them the way I understood them, not verbatim:
+
+<Finding n="Workflow 01" title="The end-of-day processing pass">
+Every evening, Claude scans all the raw notes gathered that day in the Capture zone. For each note it asks exactly one question: can this contribute to any project / decision / writing topic currently active in CLAUDE.md? If yes, it rewrites the note in my voice — not a summary of the source, but *the way I understood the idea* — and links it into the older notes. If no, it archives it straight away. The goal isn't to tidy up. The goal is to filter out what's worth keeping and lay down the links so it can surface itself later.
+</Finding>
+
+<Finding n="Workflow 02" title="Feeding an open decision">
+Whenever I'm mulling over a decision, Claude scans all of Zone 2 for every related note — not just tagged notes, but any note holding information, a perspective, or evidence that a careful person would weigh when making that decision. For each note: it spells out what the note contains that's relevant, and whether the note supports, contradicts, or adds nuance to the decision. Then it synthesizes all of it into a brief. This is the workflow that captures the whole spirit of the system: the answer to today's question may already be sitting in what I saved yesterday.
+</Finding>
+
+<Finding n="Workflow 03" title="Kicking off a piece of writing">
+Before writing anything, I ask the vault first. Claude returns a brief: the strongest argument my notes can hold up, the concrete evidence with note names attached, the counterarguments that complicate that argument, the specific figures / examples / quotes worth pulling in, and *the gaps* that need more research. Writing from this brief is nothing like writing from zero — I'm re-expressing what I already know rather than wringing ideas out of thin air on the spot. And yes, the article you're reading was born this way too.
+</Finding>
+
+<Finding n="Workflow 04" title="Surfacing links">
+Once a week, Claude reads the new notes and hunts for links to older ones — the same principle applied across two different fields, two contradictory claims worth setting side by side, one note serving as evidence for or against another, a pattern that repeats itself without any single note naming it. It only surfaces links that are genuinely non-obvious, skipping anything already connected. This is the workflow that makes the vault "compound": the connections you never deliberately made become visible when Claude reads across the entire store.
+</Finding>
+
+<Finding n="Workflow 05" title="The output machine">
+When an article, a decision write-up, or a project report is finally due to ship, Claude reads all the notes on the topic plus the links that Surfacing links has connected, then builds a complete draft: using only information in the vault, written in my voice as described in CLAUDE.md, synthesizing across notes rather than summarizing each one, and — most important of all — producing an insight that *no single note contains* but their combination does. This is the moment the whole system proves itself worth it: months of notes synthesized into finished work in a few minutes instead of a few hours.
+</Finding>
+
+## What makes it "compound" — and what I used to get wrong
+
+There's a quieter sixth workflow: **the weekly audit.** Each week Claude reads the Zone 2 notes that have sat untouched for more than two weeks. Any note that can't be connected to anything currently active gets tagged `REVIEW`. It gets one more week of grace. If after two consecutive audits it still connects to nothing — archive. This audit enforces the core principle exactly: a note that connects to nothing alive isn't useful right now, and it belongs in the archive until something makes it relevant again.
+
+Reading this far, I realized I'd once tried to build something almost identical — and failed. I wrote before about [Karpathy's gist on a personal knowledge base powered by an LLM](/llm-wiki/), and I flailed at that exact idea two years ago. That time I failed because I built the saving half meticulously — a beautiful folder structure, tidy tags — but never built the *using* half. I had no end-of-day processing pass, no output machine, no audit that dared to archive dead notes. I thought I was building a second brain. I was actually building a very tidy graveyard.
+
+<Callout label="The timeline in the guide I believe most">
+Week one: you have a structured vault and a few workflows, but not enough notes for any surprising links to appear. Month two: Surfacing links starts connecting the notes you wrote about this topic with notes about another, in ways you never intended. Month three: Feeding a decision becomes the most valuable workflow — you make a decision and Claude pulls out eight notes scattered across three months, from three different contexts, none of which you'd have remembered to go looking for.
+
+Month six: the Output folder holds enough finished work that you can see which notes reproduced and which were never used — and you adjust how you save. The system isn't just accumulating knowledge anymore. It's learning which kind of knowledge is useful to *you specifically*.
+</Callout>
+
+## The only metric that matters
+
+Most people measure their note system by the number of notes. This guide says it flat out: the only metric worth measuring is **the number of times a note has contributed to something.** Every workflow in the system is designed to raise that contribution rate. Every convention at save-time is designed to preserve the context that lets a note contribute later.
+
+I love this framing because it flips the fake sense of productivity I've been hooked on for two years. Saving a note is no longer a small win. It's an unpaid promise. A note only "wins" on the day it helps make something — and if that day never comes, then saving it was already a waste from the start, I just couldn't see it.
+
+<Aside>
+I still haven't rebuilt the vault — finishing this article is only the first step. But this time I'll start from `04 - SYSTEM/CLAUDE.md`, not from the folder structure. Define "useful" first, architecture second. The exact reverse order from last time.
+</Aside>
+
+If you also have a vault of several hundred notes that you almost never reopen, I think your problem isn't a shortage of notes either — and it isn't a shortage of discipline in saving. It's that you never built the other half: the *using* half. The good news is that half can be built in a single weekend, and the contribution rate starts compounding from the very first note you process.
+
+<PullQuote closing>
+I thought I was building a second brain. I was actually building a very tidy graveyard.
+</PullQuote>

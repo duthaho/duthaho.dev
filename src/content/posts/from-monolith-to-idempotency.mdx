@@ -1,0 +1,161 @@
+---
+num: 16
+title: "From monolith to idempotency:"
+titleEm: "one thread, not six flashcards"
+description: "Prepping for an architect interview, I realized leveling up isn't about writing better code — it's about seeing the whole system. Six topics I'd once memorized by rote — microservices, 2PC, Saga, CAP, Outbox, idempotency — turned out to be a single causal thread: each solution births the next problem."
+date: 2026-06-30
+pinned: false
+filename: "from-monolith-to-idempotency.md"
+readMore:
+  - kind: "source"
+    title: "Pattern: Saga — a chain of local transactions & compensations"
+    href: "https://microservices.io/patterns/data/saga.html"
+    by: "microservices.io — Chris Richardson"
+  - kind: "source"
+    title: "PACELC: the missing half of CAP — latency vs consistency"
+    href: "https://read.thecoder.cafe/p/pacelc"
+    by: "thecoder.cafe — an extension of Daniel Abadi"
+  - kind: "source"
+    title: "The Outbox pattern with CDC"
+    href: "https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/"
+    by: "debezium.io — tailing the outbox via the transaction log"
+  - kind: "source"
+    title: "Idempotent requests"
+    href: "https://docs.stripe.com/api/idempotent_requests"
+    by: "docs.stripe.com — Idempotency-Key in practice"
+  - kind: "on the blog"
+    title: "What I've learned after 5 years as an engineer"
+    href: "things-ive-learned"
+    by: "also a story about leveling up, looking back"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+More than ten years doing backend, and I'm pretty confident about the code I ship. But lately, prepping for an architect interview, something clicked: leveling up isn't about writing better code — it's about being able to **reason about the whole system**. And there's one strand of knowledge that, once you fit the pieces together, is as clean as a story — so I want to tell it.
+
+What I love isn't each piece on its own, but the way they *link into each other*: every solution I found opened up a fresh crack of its own, forcing me to go hunt for the next one. Six topics I once crammed like six loose flashcards turned out to be a single thread.
+
+<Diagram label="The thread — each solution births the next problem" code={`
+split into MICROSERVICES   ──lose──▶   TRANSACTION
+lose TRANSACTION           ──need──▶   SAGA
+SAGA                       ──drags in──▶  EVENTUAL CONSISTENCY  ──must grok──▶  CAP
+SAGA                       ──needs safe event publish──▶  OUTBOX
+OUTBOX                     ──may send duplicates──▶  IDEMPOTENCY
+`} />
+
+## The wrong question and the right one
+
+It all starts with the classic: *"should we split the monolith into microservices?"* The me of years ago would have answered something like "split it, it's more modern." The me of today understands the right question is actually: **"what is the real problem?"**
+
+Because microservices really only cleanly solve three things:
+
+- **Independent scaling** — replicate just the hot part on its own, instead of hauling the whole block up.
+- **Faster releases** — each team deploys its own piece without queuing behind the entire monolith.
+- **Fault isolation** — one service going down doesn't drag the rest down with it.
+
+If your pain isn't in one of those three spots, then often a tidy **modular monolith** — still a single deployment, but cleanly modularized inside — is far cheaper, and dodges a whole mountain of complexity down the line. An architect starts from the *problem*, not from the *solution*.
+
+<InlineFlag>New crack:</InlineFlag> suppose your pain really is those three things and you actually split. Once you do, you lose something the monolith handed you for free — the transaction.
+
+## Losing the transaction you got for free
+
+Back in the monolith, an order was no big deal: *deduct money + deduct stock + create order* sat neatly inside one database transaction. An error at any step, and a single `ROLLBACK` wipes it clean, as if nothing ever happened.
+
+Split into microservices, and each service owns its own database (which is nearly mandatory — otherwise why split at all). Now a customer places an order and *the money is deducted but the stock deduction fails* — then what? Surely you don't just let the customer lose money for nothing? I knew it had to be handled, but at first I couldn't think of any clean way to do it.
+
+<InlineFlag>New crack:</InlineFlag> you need a kind of "transaction" that stretches across multiple services and multiple databases. The first name that pops into your head, straight out of the textbook, is 2PC.
+
+## 2PC — the shiny promise I had to turn down
+
+**Two-Phase Commit** sounds very appealing: a coordinator asks all parties "ready?" (the prepare phase), and only when everyone nods does it say "commit now" (the commit phase). It promises *immediate consistency* — either everyone succeeds, or nobody does.
+
+But dig in and you find the price. While waiting for all parties to answer, every resource involved is **locked**. And worse: the coordinator only has to die right in the middle of the two phases, and the whole crowd of participants is stuck, clutching locks and waiting indefinitely, not knowing whether to commit or roll back. Put another way, 2PC trades away **availability and scalability** for immediate consistency — and those happen to be the two things microservices can't sacrifice. So it's out.
+
+<InlineFlag>New crack:</InlineFlag> if you can't have immediate lock-everything consistency, then you have to accept a softer model — do it step by step, and back out on failure. That's the Saga.
+
+## Saga — a chain of small transactions and a way back
+
+Instead of one enormous transaction, a **Saga** uses a *chain of small transactions*, each step a local transaction tidily inside one service. If a step fails, you run a **compensating transaction** to undo what came before — not a database rollback, but "do the opposite" at the business layer.
+
+There's a trick I find brilliant on the payments side: **don't deduct the money right away; hold it first (authorize) and only actually take it (capture)** once every step is fine. That way, when a later step fails, the compensating action just needs to *release the money*, and the customer isn't out a cent. The best compensation is one that leaves no trace.
+
+Saga has two ways to build it, and this is the part I could add when I dug deeper:
+
+<Finding n="A" title="Orchestration — there's a conductor">
+A central orchestrator holds the baton: call service 1, then call service 2, and on failure it coordinates the compensating steps itself. The logic lives in one place, so it's easy to read and easy to trace. The cost: the orchestrator becomes a component you have to keep alive, and if you build it sloppily it becomes a centralized point of failure. Suits complex business processes with many branches.
+</Finding>
+
+<Finding n="B" title="Choreography — nobody holds the baton">
+No conductor. Each service finishes its work and emits an event; the next service listens and carries on by itself. Very loosely coupled, no centralized point of failure. The cost: as the number of steps grows, nobody sees the whole picture, and debugging "who triggered whom" becomes a nightmare. Suits linear flows with few participants.
+</Finding>
+
+<InlineFlag>New crack:</InlineFlag> a Saga is no longer immediately consistent — there are moments where the money is held but the order isn't done yet, and the system is temporarily "out of sync." That's **eventual consistency**. And to understand why you're forced to accept it, I had to go back to a theorem I'd misunderstood for years.
+
+## CAP — where I was wrong for years
+
+Everyone can recite **CAP**'s "pick 2 of 3" (Consistency, Availability, Partition tolerance). But the truth is: **the P — a partitioned network — isn't something you get to choose.** The network will absolutely go down at some point. So P is something you're forced to accept, and the real choice comes down to just: *when the network is partitioned, do you sacrifice consistency (C) or availability (A)?*
+
+And here's another one that left me stunned: the **C in CAP** and the **C in ACID** are two completely different things. CAP's C is about every node seeing the same data at the same moment (linearizability). ACID's C is about a transaction preserving business constraints. I used to think they were the same.
+
+<Callout label="The piece I dug up: PACELC">
+CAP only talks about *when the network is partitioned*. But Daniel Abadi (2012) pointed out the missing part: **even when the network is perfectly fine**, you still trade off, every single day, between latency and consistency. The full version is **PACELC**: *if Partition, choose A or C; Else (normal), choose Latency or Consistency*. If you want every node always perfectly in sync, they have to wait for each other — and waiting for each other means slow. This is the complete version of the trade-off story.
+</Callout>
+
+<InlineFlag>New crack:</InlineFlag> okay, having accepted eventual consistency, the Saga will run by emitting events between steps. But "emitting an event" hides a bug that a lot of people fall into without knowing.
+
+## Dual Write — the bug everyone hits without noticing
+
+When a service finishes its work, it has to emit an event to tell the next step. Sounds simple. But *writing to the database* and *publishing an event to the message broker* are two different systems, and **no transaction spans both**. This is the **Dual Write Problem**.
+
+<Diagram label="The deadly gap" code={`
+[1] write DB       ✔ success
+        ⟵⟵⟵  CRASH right here
+[2] emit event     ✘ never sent
+    →  the DB says "order created," but the whole downstream has no idea.
+`} />
+
+Crash right in that gap between the two steps, and the data is out of sync instantly: either the DB is written but the event vanishes, or the event was sent but the DB rolls back. Two sources of truth, and no way to force them to agree via a single transaction.
+
+<InlineFlag>New crack:</InlineFlag> you need a way to make "write the data" and "record the intent to emit an event" fall into the *same transaction*. The solution is surprisingly simple: the Outbox.
+
+## Outbox — tuck the event into the same transaction
+
+The **Outbox pattern**: instead of publishing the event straight to the broker, you **write the event into an `outbox` table in the same database**, within the *same transaction* as the business data. Either both get written, or both roll back — the deadly gap disappears, because now there's exactly one transaction on exactly one database.
+
+Then a separate process reads the outbox table and publishes the events. There are two ways to build this tail, and I dug out the trade-off between them:
+
+- **Polling publisher** — a periodic job scans the outbox table for unsent events and pushes them out. Simple, works with any database. The cost: latency bounded by the scan interval, and scanning heavily weighs on the DB. Fine up to a few thousand events per second.
+- **Change Data Capture (CDC)** — a tool like **Debezium** reads the database's transaction log directly (PostgreSQL's WAL, MySQL's binlog) and streams changes almost instantly, barely touching the business tables. Crash, and it resumes reading from the log — no events lost. The cost: you have to keep a CDC pipeline alive — one more moving part in the system.
+
+<InlineFlag>New crack:</InlineFlag> whether polling or CDC, this event-sending process can send *duplicates* — it sends an event and then crashes before it can mark it "sent," so on the next run it sends it again. And this is the final piece.
+
+## Idempotency — the piece that locks the whole thread
+
+In a distributed system, you almost never get to guarantee **exactly-once**. Clients retry on timeout, brokers resend to be safe, Sagas retry a failed step, the Outbox sends duplicates — all sorts of ways for *the same command to run multiple times*. If each run actually deducts money, the customer gets charged two or three times.
+
+The way to handle this is an **idempotency key**: the client sends a unique id along with each operation. The first time the server sees a key, it processes it and *stores the result*; the next time it sees that same key, it returns the old result instead of doing the work again. That way, however many times it runs, the effect is still exactly once — the customer is never charged twice.
+
+This is exactly why Stripe and PayPal have an `Idempotency-Key` header. I dug into how Stripe does it and found a few details worth learning from:
+
+- Every `POST` request accepts an idempotency key; the first time it's processed, the result is stored against that key.
+- On a subsequent request with the same key, Stripe returns the exact old response, tagged with `Idempotent-Replayed: true` — the logic never re-runs.
+- It also **matches the parameters** of the new request against the original; a mismatch is an error, to prevent accidentally reusing a key for a different operation.
+- A key is only kept for **24 hours** and then expires — long enough for safe retries, short enough to avoid bloating memory.
+
+One detail that closes the loop beautifully: remember the *compensating transactions* from the Saga at the start of the story? Those have to be idempotent too — because a compensating step can also get called multiple times. The last piece circles back to embrace the first.
+
+<hr class="divider" />
+
+## A thread, not six flashcards
+
+What I love most isn't each piece on its own, but when you string them together: you split into microservices, so you lose the transaction; you lose the transaction, so you need a Saga; the Saga incurs eventual consistency, so you have to understand CAP (and PACELC); the Saga needs to publish events safely, so you need the Outbox; the Outbox sends duplicates, so you need idempotency. Not six disjointed topics to memorize by rote, but a single unbroken chain of cause and effect.
+
+<PullQuote>
+Becoming an architect isn't about knowing more concepts. It's about seeing the thread that links them — and understanding that every solution carries its own price.
+</PullQuote>
+
+And maybe that's the real difference between "knowing the patterns" and "systems thinking": not remembering more toolboxes, but seeing why this box leads to that one. I wrote this mostly to lay that thread back out in my own head before the interview — and it turned out that writing it down was when I actually understood it.

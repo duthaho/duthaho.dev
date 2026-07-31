@@ -1,0 +1,91 @@
+---
+num: 10
+title: "What I've learned after 5 years as an engineer"
+titleEm: "written while a little tipsy"
+description: "I read an old Reddit post — a drunk data engineer being honest about ten years on the job. It was good enough that I had to sit down and rewrite it from my own angle. Not a summary, not a translation — a real reaction, from someone drinking a beer alone and agreeing with about 80% of what he said."
+date: 2026-05-05
+pinned: false
+filename: "things-ive-learned.md"
+readMore:
+  - kind: "on the blog"
+    title: "Prompt engineering isn't as hard as you think"
+    href: "effective-prompt-engineering"
+    by: "the previous post — another honest take, minus the beer"
+  - kind: "on the blog"
+    title: "Most of my notes die in a folder"
+    href: "notes-that-get-used"
+    by: "the next post — on documentation and the notes that actually get used"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+I don't drink much. But tonight I have. And when I'm a little tipsy, I tend toward the kind of honesty I might regret when I wake up sober tomorrow. But some guy did exactly this on Reddit and people loved it — that post went viral enough that even after the account was deleted, people were still saving it to read. So, sure, I'll give it a shot too.
+
+These are the things I've actually learned — not the things I read in books, not the things I say in interviews. The things I know after doing enough things wrong and watching enough other people do the same things wrong.
+
+## On pay and career
+
+**Switching companies is the fastest way to raise your salary.** I knew this by my second year on the job, but it took me another two years to actually believe it and act on it. My old company gave 8% raises a year if your review was good. The first time I switched companies, I got a 40% bump in a single day. Market rate is real. Internal raises never keep up with market rate, especially in tech.
+
+**Your tech stack doesn't matter as much as you think — but it's not nothing either.** There are maybe 15–20 core patterns in engineering. Database normalization, caching, event-driven architecture, idempotency, eventual consistency. These exist in every language, every framework. Once you understand them, switching stacks is just a matter of learning new syntax. But at the same time — if you want to do ML and all you know is PHP, that's a problem.
+
+**Good code is code a junior can read. Great code is code a first-year student can read. The best code is no code at all.** I pinned this one to my wall. Every time I catch myself writing a complicated solution to a problem, I ask: is there a way to not need this code? The answer is usually "yes, but I don't understand the problem well enough yet to find it."
+
+<hr class="divider" />
+
+**The most underrated skill an engineer has is writing documentation.** I'm someone who writes decent code, but my documentation is a lot worse than my code. Every time I look back at code I wrote six months ago with no docs, I curse myself. I used to think "good code is self-documenting." That's the line of someone too lazy to write docs and in need of an excuse to justify it.
+
+**If you think you're the smartest person in the room, that's when it's time to leave.** Not because arrogance is bad — but because if you really are the best on the team, you're stuck. You have no one to learn from. And that's the most dangerous environment there is for long-term growth. I was on a team like that for eight months. In those eight months I learned almost nothing new.
+
+<PullQuote>
+Working with great engineers made me a better coder. Working with great non-technical co-workers made me a better *engineer*.
+</PullQuote>
+
+**Managers have less power than you think.** Every time I've asked myself "why doesn't the manager just fire that person?" — the answer is usually because they can't. HR process, PIP, documentation, headcount freeze. A manager isn't a dictator. Understanding this made me less frustrated with the things managers "don't do" — because in reality they're bound by the system too.
+
+**If you're getting woken up at 2 a.m. by on-call more than once a quarter, something is genuinely wrong.** Either fix it, or quit. I worked at a place where on-call alerts came 3–4 times a week at odd hours. It took me four months to accept that this wasn't a problem I could fix on my own, and to quit. I should have left in month one.
+
+## On titles and degrees
+
+**Titles don't matter — but titles move in two different directions depending on the stage.** Early in your career, a rising title is good: Junior → Mid → Senior → Lead. It lets you expand your scope and responsibility. Late in your career, a falling title can also be good — because you can negotiate an equivalent salary at a lower role, then get bumped when you're promoted. This is something I'd never once thought about until I read that other post.
+
+**Degrees don't matter in the way people usually say, but fundamentals do.** I've worked with people who had no CS degree but understood data structures more deeply than I did. I've also worked with people from top schools who couldn't tell you why their query was slow. A degree predicts nothing. But if you don't know Big O notation, don't understand why an index matters, don't know when to use recursion and when not to — then there's a problem, degree or no degree.
+
+<Callout label="The thing I agreed with hardest in the whole piece">
+Working close to the product, close to revenue — even when the work isn't technical — makes you feel more valuable. This has been true at every company I've ever worked at. A brilliant infrastructure engineer whose output nobody ever sees. A mediocre product engineer who ships a feature and users use it immediately. The *perception* of value doesn't always match the *reality* of value — and if you need recognition to stay motivated, working close to the product helps more than you'd think.
+</Callout>
+
+**SQL is the most underrated language in tech.** I used to treat SQL as "not real programming." Wrong. SQL is the most powerful declarative language I've ever used. Someone who knows SQL well in a data environment can do 80% of what a complex data pipeline does — with less code, easier to maintain, and readable by other people. I burned two years learning Python and Spark before realizing I should have gone deeper on SQL first.
+
+<hr class="divider" />
+
+## On technology and teamwork
+
+**Interns and juniors are a lot better than people think.** Not because they're smarter — but because they ask the questions seniors don't dare ask for fear of sounding stupid. "Why do we do it this way?" Sometimes that question has no good answer, and the fact that no one asks it is why a lot of bad decisions stick around longer than they should.
+
+**Tests matter. TDD is a cult.** I write tests. I don't write tests before writing code unless I already fully understand the problem — and if I fully understand the problem before I start, then usually the problem isn't complex enough to need TDD. For genuinely hard problems, I need to explore first. Tests come later, once I know what I'm doing.
+
+**Conferences and courses are worth the money.** With one condition: you have to have a specific question before you go. A conference with no question is just an expensive networking event. A course with no specific problem to solve is just a video you'll watch 30% of and then quit. The last time I bought a course, it was because I was building something specific and needed to understand a specific concept. Done in a week. Applied the next day.
+
+<Callout label="Where I disagree with the original">
+He says "I'm becoming the person I hate: working in tech but avoiding tech in real life." And I don't think that's something to regret. A doctor doesn't examine the sick at the dinner table. A lawyer doesn't bring briefs home on the weekend — or shouldn't. Tech is a job. The beautiful thing about tech is that it lets you draw a very clean boundary if you want to. You don't need side projects to be a good engineer. You need rest to be a good person.
+</Callout>
+
+## On life
+
+**Your code shouldn't be your legacy unless you want it to be.** I used to be proud of the elegant code I'd written. Then it got refactored. Then it got replaced. Then the project got deprecated. Code lives on the company's timeline. The things I remember most aren't any of the code I wrote — they're who I helped, and who helped me. Those don't get refactored.
+
+**Engineering is a roughly 80-year-old field. We're still figuring out what we're doing.** I find this comforting to think about. Not because it excuses sloppiness — but because it explains why best practices change constantly, why "right" and "wrong" in engineering are so often "right for this context in that year." You don't have to know everything. Nobody knows everything. Not even the people who write books about it.
+
+<hr class="divider" />
+
+That other guy ended his post with a story about Conan O'Brien — who said "be kind and work hard" in his last show, and that line changed how he lives. I don't have my own Conan O'Brien. But I had an old senior engineer named Minh — who, every time I brought him a problem, didn't solve it for me. He'd ask, "What have you already tried?" Then he'd ask, "Who have you asked?" Then, finally, "Okay, try this." It took me two years to understand he was teaching me how to solve problems myself, not teaching me how to solve that particular problem. That's the most important thing I learned in my career — and it wasn't from a book, not from a course, not from a blog post.
+
+<Aside>
+From a guy who sat next to me and was patient enough not to do it for me.
+</Aside>
+
+<PullQuote closing>
+The things I remember most aren't any of the code I wrote — they're who I helped, and who helped me. Those don't get refactored.
+</PullQuote>

@@ -1,0 +1,12 @@
+---
+// ASCII diagram block. Pass the art as a template-literal `code` string so
+// whitespace survives MDX processing (the .diagram class is `white-space: pre`).
+interface Props {
+  label?: string;
+  code: string;
+}
+const { label, code } = Astro.props;
+// Trim a single leading/trailing newline for tidy authoring.
+const art = code.replace(/^\n/, '').replace(/\n$/, '');
+---
+<div class="diagram">{label && <span class="diagram-label">{label}</span>}{art}</div>

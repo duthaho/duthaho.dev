@@ -1,0 +1,13 @@
+---
+interface Props {
+  n: string | number;
+  title: string;
+}
+const { n, title } = Astro.props;
+const num = String(n).padStart(2, '0');
+---
+<div class="finding-block">
+  <div class="finding-num">{num}</div>
+  <div class="finding-title">{title}</div>
+  <slot />
+</div>

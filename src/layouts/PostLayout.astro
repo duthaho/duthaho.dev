@@ -1,0 +1,169 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface NavLink {
+  slug: string;
+  title: string;
+}
+interface Props {
+  post: CollectionEntry<'posts'>;
+  readingMinutes: number;
+  prev?: NavLink;
+  next?: NavLink;
+}
+
+const { post, readingMinutes, prev, next } = Astro.props;
+const { title, titleEm, description, date, author, filename, num, readMore } = post.data;
+
+const isExternal = (href: string) => /^https?:\/\//.test(href);
+
+const slug = post.id;
+const path = `/${slug}/`;
+const site = Astro.site?.toString().replace(/\/$/, '') ?? 'https://duthaho.dev';
+const ogImage = `/og/${slug}.png`;
+
+const iso = date.toISOString().slice(0, 10);
+const dd = String(date.getUTCDate()).padStart(2, '0');
+const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+const yyyy = date.getUTCFullYear();
+const dateLabel = `${dd}/${mm}/${yyyy}`;
+
+const fileLabel = filename ?? `${slug}.md`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: titleEm ? `${title}: ${titleEm}` : title,
+  description,
+  image: `${site}${ogImage}`,
+  datePublished: iso,
+  dateModified: iso,
+  author: { '@type': 'Person', name: author, url: 'https://about.duthaho.dev' },
+  publisher: { '@type': 'Organization', name: 'Nhật ký dev', url: `${site}/` },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': `${site}${path}` },
+  url: `${site}${path}`,
+  inLanguage: 'en',
+};
+---
+<BaseLayout
+  title={titleEm ? `${title}: ${titleEm}` : title}
+  description={description}
+  path={path}
+  type="article"
+  ogImage={ogImage}
+  publishedTime={iso}
+  author={author}
+  bodyClass="article-page"
+  jsonLd={jsonLd}
+>
+  <div class="reading-progress" id="progress" slot="progress"></div>
+
+  <main class="container-wide">
+    <div class="breadcrumb"><a href="/">blog</a> / {slug}</div>
+
+    <h1 class="page-title">{title}{titleEm && <> <em>{titleEm}</em></>}</h1>
+    <p class="page-desc">{description}</p>
+
+    <div class="terminal-card meta-card">
+      <div class="terminal-header">
+        <span class="terminal-filename">$ git log --oneline --stat</span>
+      </div>
+      <div class="terminal-body meta-body">
+        <span class="meta-item">✍️ <strong>author:</strong> {author}</span>
+        <span class="meta-item">📅 <strong>date:</strong> {dateLabel}</span>
+        <span class="meta-item reading-time-slot">⏱️ <strong>read:</strong> ~{readingMinutes} min</span>
+      </div>
+    </div>
+
+    <div class="article-layout">
+      <div class="article-main">
+        <div class="terminal-card content-card">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="terminal-filename">{fileLabel}</span>
+            <span class="terminal-status">readonly</span>
+          </div>
+          <div class="terminal-body content-body">
+            <article class="article">
+              <slot />
+
+              {readMore && readMore.length > 0 && (
+                <section class="read-more">
+                  <h2>Read more</h2>
+                  <ul class="read-more-list">
+                    {readMore.map((item) => (
+                      <li>
+                        <span class="read-more-kind">{item.kind}</span>
+                        <a
+                          href={isExternal(item.href) ? item.href : `/${item.href}/`}
+                          {...(isExternal(item.href)
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
+                        >
+                          {item.title}
+                          {item.by && <span class="rm-by">{item.by}</span>}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {(prev || next) && (
+                <nav class="post-nav">
+                  {prev ? (
+                    <a class="post-nav-item prev" href={`/${prev.slug}/`}>
+                      <div class="post-nav-dir">&larr; Previous</div>
+                      <div class="post-nav-title">{prev.title}</div>
+                    </a>
+                  ) : <div></div>}
+                  {next ? (
+                    <a class="post-nav-item next" href={`/${next.slug}/`}>
+                      <div class="post-nav-dir">Next &rarr;</div>
+                      <div class="post-nav-title">{next.title}</div>
+                    </a>
+                  ) : <div></div>}
+                </nav>
+              )}
+            </article>
+          </div>
+        </div>
+
+        <section class="terminal-card comments-card" id="comments">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="terminal-filename">comments.md</span>
+          </div>
+          <div class="terminal-body comments-body">
+            <script src="https://giscus.app/client.js"
+                    data-repo="duthaho/duthaho.dev"
+                    data-repo-id="R_kgDOR2nYrQ"
+                    data-category="Blog"
+                    data-category-id="DIC_kwDOR2nYrc4C9gvp"
+                    data-mapping="pathname"
+                    data-strict="1"
+                    data-reactions-enabled="1"
+                    data-emit-metadata="0"
+                    data-input-position="bottom"
+                    data-theme="https://cdn.jsdelivr.net/gh/duthaho/duthaho.dev@main/giscus-theme.css"
+                    data-lang="en"
+                    data-loading="lazy"
+                    crossorigin="anonymous"
+                    async></script>
+            <noscript>Comments require JavaScript to be enabled.</noscript>
+          </div>
+        </section>
+      </div>
+      <aside class="article-sidebar" id="toc-sidebar"></aside>
+    </div>
+  </main>
+</BaseLayout>

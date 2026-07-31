@@ -1,0 +1,132 @@
+---
+num: 13
+title: "Claude Code in large codebases"
+titleEm: "how it works and where to start"
+description: "Claude Code operates in multi-million-line monorepos using agentic search instead of an index. This post sums up how it works, the harness layers you need to build to scale it, and a concrete roadmap for where to start in a large codebase."
+date: 2026-06-15
+pinned: false
+filename: "claude-code-large-codebases.md"
+readMore:
+  - kind: "source"
+    title: "How Claude Code works in large codebases: Best practices and where to start"
+    href: "https://claude.com/blog/how-claude-code-works-in-large-codebases-best-practices-and-where-to-start"
+    by: "claude.com — the original piece"
+  - kind: "source"
+    title: "Claude Code Doesn't Index Your Codebase. Here's What It Does Instead"
+    href: "https://vadim.blog/claude-code-no-indexing/"
+    by: "vadim.blog — agentic search, explained in depth"
+  - kind: "on the blog"
+    title: "Ordinary RAG is lying to you"
+    href: "agentic-rag"
+    by: "why dropping the index isn't a step backward"
+  - kind: "on the blog"
+    title: "I read Claude Code's leaked source"
+    href: "agentic-patterns"
+    by: "what a harness is made of: memory · workflow · tools · automation"
+  - kind: "on the blog"
+    title: "Stop prompting the agent — design the loop that prompts it"
+    href: "loop-engineering"
+    by: "when the machine runs faster than you can read"
+---
+import Callout from '../../components/Callout.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Diagram from '../../components/Diagram.astro';
+import InlineFlag from '../../components/InlineFlag.astro';
+import Aside from '../../components/Aside.astro';
+
+Claude Code is running in production against codebases at real scale: multi-million-line monorepos, decades-old legacy systems, distributed architectures spread across dozens of repos, at organizations with thousands of engineers — and in languages not usually considered "AI-friendly," like C, C++, C#, Java, PHP. What makes it work at that scale isn't the model itself, but **the harness built around the model** — and how far you go to make your own codebase *legible* to an agent.
+
+This post covers three things: how Claude Code navigates code, which extension layers make up the harness, and where to start if you want to roll it out in a large codebase.
+
+## Why Claude Code doesn't index your codebase
+
+The usual approach to a large codebase is to index first: embed the whole repo, store it in a vector database, then retrieve the relevant chunks at question time — that is, RAG. Claude Code doesn't do that. It uses **agentic search**: it walks the filesystem in place, `grep`s by content, globs by pattern, reads specific files, follows references — exactly the way an engineer navigates code. There's no central index to build or maintain.
+
+Worth noting: early builds of Claude Code *did* use RAG with a local vector DB, but the team found agentic search gave consistently better results — surprising enough that they noted it themselves. The reason lies in the hidden costs of indexing at scale:
+
+- **Staleness and drift.** When thousands of engineers commit continuously, the embedding pipeline can't keep up. The index will happily return a function that was renamed last week or a module that was just deleted.
+- **Security risk.** The index has to live somewhere — a copy of your entire code, a new liability and a new attack surface.
+- **Maintenance cost.** The index is one more system to feed: rebuild, sync, monitor.
+
+Agentic search sidesteps all three, because every session works directly on the live code. The price you pay is tokens and latency — it reads more files per task. For most coding workflows, that trade is worth it. The corollary matters just as much: if the agent navigates code like a human does, then a codebase that's hard for a newcomer is also hard for the agent. Making the codebase easy to read becomes a prerequisite, not an option.
+
+## The harness: seven extension points
+
+Most of the difference between "Claude Code works" and "Claude Code works well at scale" lives in the seven extension points below. Each solves a distinct problem, and each comes with a common mistake attached.
+
+### 1. `CLAUDE.md` — loaded every session
+
+The context file Claude reads at the start of every session. Use a layered structure: a root file for the big picture, files in subdirectories for local conventions. <InlineFlag>Common mistake:</InlineFlag> stuffing it with reusable expertise that should have lived in a skill, which weighs down every session.
+
+### 2. Hooks — triggered by events
+
+Automate consistent behavior across sessions: enforce lint and format deterministically, load context per module at startup, suggest updates to `CLAUDE.md` while the context is still fresh. <InlineFlag>Common mistake:</InlineFlag> using a prompt for something that should have been automated with a hook.
+
+### 3. Skills — loaded on demand
+
+Package specialized expertise without bloating every session, via progressive disclosure — loaded only when relevant, and scopable by path. Example: a security-review skill that only activates when you're assessing vulnerabilities. <InlineFlag>Common mistake:</InlineFlag> dumping everything into `CLAUDE.md` instead of splitting it into skills.
+
+### 4. Plugins — always available once installed
+
+Bundle skills, hooks, and MCP configuration into an installable package, so you can distribute a proven setup across the whole organization through a managed marketplace. <InlineFlag>Common mistake:</InlineFlag> leaving good setups sitting in a few people's heads instead of sharing them.
+
+### 5. Language Server Protocol (LSP)
+
+Give Claude symbol-level navigation like a developer's IDE: "go to definition," "find all references," telling apart two functions with the same name. LSP filters out thousands of irrelevant matches *before* Claude has to read a file — especially crucial for polyglot codebases and large-scale C/C++. <InlineFlag>Common mistake:</InlineFlag> assuming LSP configures itself.
+
+### 6. MCP servers
+
+Connect Claude to internal tools, data sources, and APIs: internal docs, ticketing systems, analytics platforms. Teams that go further expose structured search as a callable tool. <InlineFlag>Common mistake:</InlineFlag> building MCP connections before the basics even work.
+
+### 7. Subagents — invoked when called
+
+Separate Claude instances with their own context windows. A read-only subagent goes off and surveys a subsystem, then reports findings back to the parent agent; the parent then edits with the full picture. This model enables parallelism and separates discovery from editing. <InlineFlag>Common mistake:</InlineFlag> running discovery and editing in the same session, letting dead ends and trial-and-error pile up and pollute the context.
+
+## Making a codebase navigable at scale
+
+Teams that roll this out successfully share one trait: they invest up front to make the codebase *legible* to Claude, rather than expecting the model to muddle through on its own. Concretely:
+
+- **Keep `CLAUDE.md` thin and layered.** Because it loads on every session regardless of task, every extra line is a tax on every run.
+- **Initialize in subdirectories, not at the repo root.** Claude walks up the directory tree and loads every `CLAUDE.md` along the way, so the root context is never lost — while local conventions stay where they belong.
+- **Scope test and lint commands to subdirectories.** Running the whole repo's test suite for a small change causes timeouts and stuffs the context with irrelevant output. Declare commands that apply to each part.
+- **Use `.claudeignore`** (managed via `.claude/settings.json`) to exclude generated files, build artifacts, and third-party code.
+- **Write a codebase map in markdown** when the directory structure doesn't speak for its own organization.
+- **Deploy LSP** for typed languages, so lookups go by symbol rather than string match.
+
+<Aside>
+A pragmatic tip from the community: don't let context exceed roughly 60% of capacity — output quality starts to slip somewhere around 20–40% of the window, well before you hit the limit. The quietest trap is embedding an entire documentation file into `CLAUDE.md` via an `@`-reference: you burn the whole instruction budget before the conversation even begins.
+</Aside>
+
+## Configuration needs maintenance too
+
+A pattern that recurs among teams that stay effective long-term: **review `CLAUDE.md` every 3–6 months**. Models evolve, and rules written for an old model can become shackles for a new one.
+
+A textbook example: a rule to "split every refactor into one-file-at-a-time changes" — reasonable for a previous generation of model — later blocks the cross-file edits a newer model actually does better. Likewise, a skill built purely to compensate for a specific model weakness becomes dead weight once that weakness is fixed. AI configuration should be treated like code: reviewed periodically, and stripped of whatever has outlived its use.
+
+## Who owns it: from DRI to "agent manager"
+
+At the organizational scale, the bottleneck is usually not technical but ownership. Companies that roll this out well tend to have a small team — sometimes exactly one person — who steps up to wire the tooling, build the plugins, and write the shared `CLAUDE.md` conventions *before* scaling out. As a result, a developer's first experience is something that just works, and adoption spreads naturally.
+
+The minimal version is a **DRI** (Directly Responsible Individual): one person who owns the Claude Code configuration, the permissions policy, the plugin marketplace, and the `CLAUDE.md` conventions, and who is responsible for keeping it all up to date. Some organizations have formalized this into a new role — the **agent manager**, part PM part engineer — usually sitting under Developer Experience or Developer Productivity.
+
+<Callout label="Why you need a center">
+Bottom-up adoption is exciting but fragments if no one coordinates it: everyone with their own `CLAUDE.md`, the good tricks stuck in a few people's heads, knowledge going "tribal" and then fading — and adoption stalling at a ceiling. Someone has to gather it up and spread the shared conventions.
+</Callout>
+
+## Where to start
+
+A phased roadmap, going from foundations to advanced capabilities:
+
+1. **Foundations.** Write a thin, layered `CLAUDE.md`; initialize in subdirectories. Scope the test/lint commands. Add `.claudeignore` for generated files and third-party code.
+2. **Navigation.** Turn on LSP for typed languages. Write a codebase map where the directory structure isn't self-evident.
+3. **Automation and sharing.** Add hooks for lint/format. Split expertise into skills. Bundle into plugins and distribute through a marketplace.
+4. **Connection.** Add MCP servers to docs, tickets, analytics — after the layers above are running.
+5. **Governance.** Form a cross-functional group (engineering, infosec, governance) to define approved skills/plugins, the review process, and access limits — restricted at first, then widened as confidence grows. Designate a DRI.
+
+<hr class="divider" />
+
+## Scope and limits
+
+The practices above assume a fairly conventional software-engineering environment: engineers are the primary contributors, using Git, with a standard directory structure. Some contexts need extra work: game engines with large blocks of binary assets, unconventional version-control systems, codebases with hundreds of thousands of directories and millions of files, or places where non-engineers also contribute.
+
+One last thing worth noting: most of the effort here isn't "optimizing for the machine." Making a codebase legible to an agent lines up almost exactly with making it legible to a new team member. Even if you take AI out of the equation, a thin `CLAUDE.md`, test commands scoped to the right place, and a clear architecture map are still an investment that pays off.
