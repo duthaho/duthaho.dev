@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Newsletter from '../components/Newsletter.astro';
 import { getSortedPosts } from '../lib/posts';
 
 const posts = await getSortedPosts();
@@ -21,8 +22,8 @@ const jsonLd = {
   url: 'https://duthaho.dev/',
   description,
   inLanguage: 'en',
-  author: { '@type': 'Person', name: 'duthaho', url: 'https://about.duthaho.dev' },
-  publisher: { '@type': 'Person', name: 'duthaho', url: 'https://about.duthaho.dev' },
+  author: { '@type': 'Person', name: 'duthaho', url: 'https://duthaho.dev/about/' },
+  publisher: { '@type': 'Person', name: 'duthaho', url: 'https://duthaho.dev/about/' },
   image: 'https://duthaho.dev/og-default.jpg',
 };
 ---
@@ -34,12 +35,6 @@ const jsonLd = {
           <h3 class="feed-block__title">Workbench</h3>
           <p class="feed-block__hint">Things I'm building outside work hours.</p>
           <ul class="workbench">
-            <li>
-              <a href="https://about.duthaho.dev" target="_blank" rel="noopener noreferrer">
-                <span class="workbench__name">about.duthaho.dev</span>
-                <span class="workbench__desc">bio, projects and contact</span>
-              </a>
-            </li>
             <li>
               <a href="https://claudekit.duthaho.dev" target="_blank" rel="noopener noreferrer">
                 <span class="workbench__name">claudekit.duthaho.dev</span>
@@ -88,6 +83,8 @@ const jsonLd = {
           </div>
         </article>
       )}
+
+      <Newsletter source="home" />
 
       <section class="feed reveal-stagger" id="feed">
         <header class="feed__head">
