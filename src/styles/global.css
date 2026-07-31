@@ -1488,7 +1488,7 @@ body.article-page .topbar-tag {
 body.feed-page .topbar-tag::before,
 body.article-page .topbar-tag::before { content: none; display: none; }
 
-/* Topbar nav links (About / Résumé) — shared across pages */
+/* Topbar nav links (About) — shared across pages */
 .topbar-nav { display: flex; align-items: center; gap: 20px; }
 .topbar-link {
   font-family: var(--idx-font-mono, 'IBM Plex Mono', monospace);

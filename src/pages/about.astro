@@ -3,11 +3,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Newsletter from '../components/Newsletter.astro';
 import profile from '../data/profile.json';
 
-const { personal, stats = [], coreSkills = [], techStack = [], experience = [], projects = [], articles = [], interests = [], social = [], footer = {} } = profile as any;
+const { personal, stats = [], coreSkills = [], techStack = [], experience = [], projects = [], interests = [], social = [] } = profile as any;
 
 const enDash = (s: string) => String(s).replace(/\s*-\s*/g, '–');
-const dotDate = (iso: string) => String(iso || '').replace(/-/g, '.');
-const bare = (u: string) => String(u).replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 const years = experience.flatMap((j: any) => (String(j.period).match(/\d{4}/g) || []).map(Number));
 const startYear = years.length ? Math.min(...years) : null;
@@ -60,9 +58,8 @@ const jsonLd = {
           ))}
         </ul>
         <div class="about-actions">
-          <a class="about-btn about-btn--primary" href="/cv/">Read the résumé →</a>
+          <a class="about-btn about-btn--primary" href={linkedin} target="_blank" rel="noopener noreferrer">Get in touch →</a>
           <a class="about-btn" href={github} target="_blank" rel="noopener noreferrer">GitHub</a>
-          <a class="about-btn" href={linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
         </div>
       </div>
 
@@ -176,26 +173,6 @@ const jsonLd = {
         ))}
       </div>
       <a href="https://github.com/duthaho?tab=repositories" target="_blank" rel="noopener noreferrer" class="about-more">Full archive on GitHub →</a>
-    </section>
-
-    <section class="about-block">
-      <header class="about-shead">
-        <span class="about-shead__label">Writing</span>
-        <h2 class="about-shead__title">Recent field notes</h2>
-        <span class="about-shead__meta">{articles.length} recent</span>
-      </header>
-      <ol class="notes">
-        {articles.map((a: any) => (
-          <li class="note">
-            <span class="note__date">{dotDate(a.date)}</span>
-            <div class="note__body">
-              <h3 class="note__title"><a href={a.url}>{a.title}</a></h3>
-              <p class="note__excerpt">{a.excerpt}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <a href="/" class="about-more">The full shelf at duthaho.dev →</a>
     </section>
 
     <blockquote class="about-pull">
