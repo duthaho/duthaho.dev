@@ -523,6 +523,7 @@ body::after {
 }
 
 .diagram-label {
+  display: block;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9.5px;
   letter-spacing: 0.32em;
