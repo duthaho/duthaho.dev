@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import Newsletter from '../components/Newsletter.astro';
 import type { CollectionEntry } from 'astro:content';
 
 interface NavLink {
@@ -133,6 +134,12 @@ const jsonLd = {
             </article>
           </div>
         </div>
+
+        <Newsletter
+          source="post"
+          heading="Enjoyed this? Get the next one."
+          blurb="After-hours notes on AI, engineering and the developer craft — new posts straight to your inbox. No spam, unsubscribe anytime."
+        />
 
         <section class="terminal-card comments-card" id="comments">
           <div class="terminal-header">

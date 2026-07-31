@@ -1,0 +1,134 @@
+---
+interface Props {
+  /** Short heading shown above the form. */
+  heading?: string;
+  /** Supporting line under the heading. */
+  blurb?: string;
+  /** utm_source appended to the Substack link, to see where signups come from. */
+  source?: string;
+}
+
+const {
+  heading = 'Subscribe to Nhật ký dev',
+  blurb = 'After-hours notes on AI, engineering and the developer craft. New posts straight to your inbox — no spam, unsubscribe anytime.',
+  source = 'blog',
+} = Astro.props;
+
+const action = 'https://duthaho.substack.com/subscribe';
+---
+<section class="newsletter terminal-card" aria-labelledby="nl-heading">
+  <div class="terminal-header">
+    <span class="terminal-filename">$ subscribe --email</span>
+  </div>
+  <div class="terminal-body newsletter__body">
+    <h2 id="nl-heading" class="newsletter__heading">{heading}</h2>
+    <p class="newsletter__blurb">{blurb}</p>
+    <form
+      class="newsletter__form"
+      action={action}
+      method="get"
+      target="_blank"
+      rel="noopener"
+    >
+      <input type="hidden" name="utm_source" value={source} />
+      <label class="newsletter__label" for="nl-email">Email address</label>
+      <div class="newsletter__row">
+        <input
+          class="newsletter__input"
+          type="email"
+          id="nl-email"
+          name="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+        <button class="newsletter__btn" type="submit">Subscribe</button>
+      </div>
+    </form>
+    <p class="newsletter__note">
+      Prefer a reader? <a href="/rss.xml">RSS feed</a> ·
+      <a href="https://duthaho.substack.com/" target="_blank" rel="noopener noreferrer">Substack</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .newsletter {
+    margin: 3rem 0 1rem;
+  }
+  .newsletter__body {
+    padding: 1.4rem 1.5rem 1.6rem;
+  }
+  .newsletter__heading {
+    margin: 0 0 0.4rem;
+    font-family: var(--idx-font-prose, 'Fraunces', Georgia, serif);
+    font-size: 1.4rem;
+    line-height: 1.2;
+    color: var(--text-bright);
+  }
+  .newsletter__blurb {
+    margin: 0 0 1.1rem;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    max-width: 46ch;
+  }
+  .newsletter__label {
+    display: block;
+    font-family: var(--idx-font-mono, monospace);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+  }
+  .newsletter__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .newsletter__input {
+    flex: 1 1 15rem;
+    min-width: 0;
+    padding: 0.65rem 0.8rem;
+    font-family: var(--idx-font-mono, monospace);
+    font-size: 0.95rem;
+    color: var(--text-bright);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .newsletter__input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .newsletter__btn {
+    flex: 0 0 auto;
+    padding: 0.65rem 1.3rem;
+    font-family: var(--idx-font-mono, monospace);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--paper-cream, #f2ebda);
+    background: var(--accent);
+    border: 1px solid var(--accent-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  .newsletter__btn:hover {
+    background: var(--accent-bright);
+  }
+  .newsletter__btn:active {
+    transform: translateY(1px);
+  }
+  .newsletter__note {
+    margin: 0.9rem 0 0;
+    font-size: 0.82rem;
+    color: var(--text-faint);
+  }
+  .newsletter__note a {
+    color: var(--text-dim);
+  }
+</style>
