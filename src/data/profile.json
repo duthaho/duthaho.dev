@@ -1,0 +1,210 @@
+{
+  "personal": {
+    "name": "Duong Thanh Hop",
+    "nickname": "DUTHAHO",
+    "title": "Solution Architect",
+    "location": "Da Nang, Vietnam",
+    "description": "From AAA mobile titles to AI-powered recruitment — designing systems that scale, and the teams that ship them.",
+    "about": {
+      "intro": "Nearly a decade of crafting software that scales.",
+      "paragraphs": [
+        "I'm a <strong>Solution Architect</strong> who keeps both eyes on the machine and the room. From AAA mobile titles at Gameloft to AI-powered recruitment at Paradox, I've designed platforms that handle millions of requests and led the teams that own them long after the diagrams are filed away.",
+        "My work tends to live at the intersection of <strong>system design</strong> and <strong>team design</strong> — drawing the architecture, writing the playbooks, and coaching the engineers who'll inherit it. Good systems aren't shipped, they're inherited; I optimize for the engineer reading this code on a bad Wednesday.",
+        "These days I'm building my own products — writing essays at <strong>duthaho.dev</strong>, shipping open-source AI tooling, and treating every codebase as a teaching artifact. The strongest architectures, in my experience, emerge from understanding both the code and the people who write it."
+      ],
+      "principles": [
+        "SOLID over clever",
+        "Scalability from day one",
+        "Boring tech, careful choices",
+        "Clean code is kind code",
+        "Mentor, don't gatekeep"
+      ]
+    }
+  },
+  "stats": [
+    { "value": "10+", "label": "years in practice" },
+    { "value": "1M+", "label": "daily requests served" },
+    { "value": "250+", "label": "open-source stars" }
+  ],
+  "coreSkills": [
+    { "name": "Distributed Systems", "type": "arch" },
+    { "name": "Platform Architecture", "type": "sys" },
+    { "name": "Full-Stack Engineering", "type": "full" },
+    { "name": "Engineering Leadership", "type": "lead" }
+  ],
+  "techStack": [
+    "Python", "TypeScript", "Django", "FastAPI",
+    "Node.js", "Vue.js", "React", "MongoDB",
+    "MySQL", "Redis", "Kubernetes", "Docker", "AWS"
+  ],
+  "experience": [
+    {
+      "title": "Solution Architect",
+      "company": "Paradox",
+      "url": "https://paradox.ai/",
+      "period": "2020 - 2025",
+      "summary": "Drove architectural decisions for an AI-powered recruitment platform serving the world's leading talent acquisition teams — 1M+ daily requests.",
+      "achievements": [
+        "Architected a URL-shortening service on <strong>DocumentDB</strong> to take hot-path traffic off MySQL — solved <strong>dual-write consistency</strong> and migrated <strong>billions of records</strong> with zero downtime",
+        "Drove the infrastructure migration from <strong>SaltStack to Kubernetes</strong>, unlocking repeatable deploys and elastic scaling",
+        "Established <strong>event-driven architecture and DDD patterns</strong> as paved roads for the platform's services",
+        "Led the platform-wide migration from <strong>Python 2 to Python 3</strong> with zero downtime",
+        "Migrated a legacy <strong>jQuery front-end to Nuxt/Vue.js</strong> across the platform",
+        "Improved performance with <strong>model caching</strong> on hot data paths and built <strong>profiling tooling</strong> to catch bottlenecks before users did"
+      ],
+      "stack": ["Python", "Django", "Vue.js", "Nuxt.js", "MySQL", "DocumentDB", "Redis", "Kubernetes", "Docker", "AWS"]
+    },
+    {
+      "title": "Senior Full-Stack Engineer",
+      "company": "Peddler",
+      "url": "https://www.peddler.com/en/",
+      "period": "2019 - 2020",
+      "summary": "Built a social marketplace platform — product catalog, search, reviews, and the data pipeline behind them.",
+      "achievements": [
+        "Designed NoSQL schema indexing <strong>100K+ products</strong> with reviews and ratings",
+        "Integrated <strong>Elasticsearch</strong> for full-text product discovery",
+        "Drove test culture to <strong>95%+ coverage</strong> across the codebase"
+      ],
+      "stack": ["Node.js", "MongoDB", "React", "Elasticsearch", "Docker"]
+    },
+    {
+      "title": "Co-Founder & Tech Lead",
+      "company": "HT Active",
+      "url": "http://www.htactive.com/",
+      "period": "2018 - 2019",
+      "summary": "Co-founded an engineering studio delivering 20+ web applications across diverse frameworks for global clients.",
+      "achievements": [
+        "Led <strong>10+ engineers</strong> across concurrent client engagements",
+        "Authored coding standards and review process — <strong>45% fewer production bugs</strong>",
+        "Introduced Agile/Scrum cadence — <strong>30% faster delivery</strong> on fixed-scope work",
+        "Onboarded and grew <strong>15+ engineers</strong> from junior to mid-level"
+      ],
+      "stack": ["Node.js", "PHP", "Django", "React", "Vue.js", "MongoDB"]
+    },
+    {
+      "title": "Full-Stack Developer",
+      "company": "VNPT",
+      "url": "https://vnptit.vn/",
+      "period": "2017 - 2018",
+      "summary": "Built healthcare systems integrated with medical devices and hospital information systems.",
+      "achievements": [
+        "Built desktop application processing <strong>1000+ patient records</strong> daily",
+        "Integrated with HIS, RIS, and DICOM-compliant medical imaging devices",
+        "Designed licensing and deployment system serving <strong>50+ hospitals</strong>"
+      ],
+      "stack": [".NET", "C#", "WPF", "React", "SQL Server"]
+    },
+    {
+      "title": "Game Developer — Expert & Supervisor",
+      "company": "Gameloft",
+      "url": "https://www.gameloft.com/en/",
+      "period": "2013 - 2017",
+      "badge": "Started Here",
+      "summary": "Worked on AAA mobile titles — Asphalt 8, World At Arms, and CityMania — growing from developer to Expert & Supervisor.",
+      "achievements": [
+        "Promoted to <strong>Expert & Supervisor</strong> — Gameloft's team-lead track",
+        "Worked across the full game stack: <strong>gameplay, engine, tools, and game servers</strong>",
+        "Contributed to <strong>Asphalt 8: Airborne</strong> — 450M+ downloads worldwide"
+      ],
+      "stack": ["C++", "Python", "OpenGL", "Game Physics", "Game Servers"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "js-quiz",
+      "description": "The javascript quiz for learning",
+      "url": "https://github.com/duthaho/js-quiz",
+      "stars": 115,
+      "forks": 11,
+      "featured": true
+    },
+    {
+      "name": "claudekit",
+      "description": "A verification-first engineering toolkit for Claude Code. Built for senior ICs and tech leads who already know how to ship production code — and want a workflow that keeps the discipline tight without getting in the way.",
+      "url": "https://github.com/duthaho/claudekit",
+      "stars": 98,
+      "forks": 55
+    },
+    {
+      "name": "bookmark",
+      "description": "A reading list for the programmer",
+      "url": "https://github.com/duthaho/bookmark",
+      "stars": 32,
+      "forks": 1
+    },
+    {
+      "name": "nongdocon",
+      "description": "Theo nghị định 000 biết của CP, tool dùng để đo nồng độ cồn cho các bợm nhậu",
+      "url": "https://github.com/duthaho/nongdocon",
+      "stars": 12,
+      "forks": 6
+    }
+  ],
+  "articles": [
+    {
+      "title": "Rate limiter không phải bài toán chọn thuật toán: một buổi phỏng vấn đào mãi không đáy",
+      "excerpt": "Mình vào phỏng vấn architect, được hỏi \"thiết kế một rate limiter\". Mình bắt đầu kể tên thuật toán — và nhận ra người phỏng vấn chẳng quan tâm mình chọn cái nào. Mỗi câu trả lời chỉ mở ra một câu hỏi sâu hơn: chạy trên hai mươi server thì đếm ở đâu, lấy đồng hồ của ai, Redis chết thì cho qua hay chặn, và cuối cùng — rate limiting có phải là tất cả không. Thuật toán là câu trả lời mười phút; phần còn lại mới là buổi phỏng vấn.",
+      "url": "https://duthaho.dev/designing-a-rate-limiter.html",
+      "date": "2026-07-05"
+    },
+    {
+      "title": "Con Redis không cho không cái gì: cái giá ẩn sau mỗi lớp cache",
+      "excerpt": "Hồi mới đi làm, với mình caching là \"API chậm thì quăng con Redis vào\". Ngồi ôn phỏng vấn architect, mình mới thấy cái \"quăng vào\" đó kéo theo cả một chuỗi bài toán — invalidation, ba kiểu làm database gục, nhất quán cache–DB — và hoá ra nó chính là Dual Write Problem đội lốt. Caching không bao giờ miễn phí; mỗi lớp cache là một dòng nợ về nhất quán.",
+      "url": "https://duthaho.dev/caching-is-never-free.html",
+      "date": "2026-07-01"
+    },
+    {
+      "title": "Từ monolith đến idempotency: một sợi dây, không phải sáu flashcard",
+      "excerpt": "Ngồi ôn phỏng vấn vị trí architect, mình nhận ra lên level không phải viết code giỏi hơn mà thấy được cả hệ thống. Sáu chủ đề từng học vẹt — microservices, 2PC, Saga, CAP, Outbox, idempotency — hoá ra là một sợi dây nhân quả: lời giải này đẻ ra vấn đề kia.",
+      "url": "https://duthaho.dev/from-monolith-to-idempotency.html",
+      "date": "2026-06-30"
+    },
+    {
+      "title": "Hai người thợ trong cỗ máy AI",
+      "excerpt": "Mỗi lần AI trả lời, có hai người thợ tính cách trái ngược thay nhau làm việc — và gần như mọi thủ thuật tăng tốc inference đều sinh ra từ mâu thuẫn giữa họ. Một chuyến đi vào bên trong cỗ máy suy luận: prefill, decode, KV cache, batching, quantization, và vì sao đến lúc phải tự nuôi server.",
+      "url": "https://duthaho.dev/ai-inference-engineering.html",
+      "date": "2026-06-18"
+    },
+    {
+      "title": "Chín câu hỏi mình giờ luôn hỏi khi đi phỏng vấn",
+      "excerpt": "Một bài của Louise Deason về chín câu hỏi nên hỏi ngược nhà tuyển dụng — không phải để gây ấn tượng, mà để biết mình sắp bước vào đâu. Đọc xong mình nhận ra suốt mấy năm đi phỏng vấn, mình toàn ngồi sai phía của cái bàn.",
+      "url": "https://duthaho.dev/questions-i-ask-in-interviews.html",
+      "date": "2026-06-16"
+    }
+  ],
+  "interests": [
+    { "name": "Distributed Systems", "icon": "distributed", "summary": "Microservices, queues, eventual consistency." },
+    { "name": "Platform Architecture", "icon": "platform", "summary": "Internal platforms, paved roads, golden paths." },
+    { "name": "AI Tooling", "icon": "ai", "summary": "Agentic systems, harnesses, dev productivity." },
+    { "name": "Open Source", "icon": "opensource", "summary": "claudekit, js-quiz, and the long tail." },
+    { "name": "Mentorship", "icon": "mentorship", "summary": "Growing engineers, writing the playbooks." },
+    { "name": "System Design", "icon": "systemdesign", "summary": "Trade-offs, sketches, and the diagrams behind them." }
+  ],
+  "social": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/duthaho",
+      "icon": "github"
+    },
+    {
+      "name": "LinkedIn",
+      "url": "https://www.linkedin.com/in/duthaho",
+      "icon": "linkedin"
+    },
+    {
+      "name": "Substack",
+      "url": "https://duthaho.substack.com/",
+      "icon": "substack"
+    },
+    {
+      "name": "Blog",
+      "url": "https://duthaho.dev/",
+      "icon": "globe"
+    }
+  ],
+  "footer": {
+    "copyright": "duthaho",
+    "year": 2026,
+    "badge": "Arctic Code Vault Contributor"
+  }
+}

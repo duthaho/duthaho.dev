@@ -1,0 +1,476 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Newsletter from '../components/Newsletter.astro';
+import profile from '../data/profile.json';
+
+const { personal, stats = [], coreSkills = [], techStack = [], experience = [], projects = [], articles = [], interests = [], social = [], footer = {} } = profile as any;
+
+const enDash = (s: string) => String(s).replace(/\s*-\s*/g, '–');
+const dotDate = (iso: string) => String(iso || '').replace(/-/g, '.');
+const bare = (u: string) => String(u).replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+const years = experience.flatMap((j: any) => (String(j.period).match(/\d{4}/g) || []).map(Number));
+const startYear = years.length ? Math.min(...years) : null;
+const endYear = years.length ? Math.max(...years) : null;
+
+const urlOf = (icon: string) => (social.find((s: any) => s.icon === icon) || {}).url || '#';
+const github = urlOf('github');
+const linkedin = urlOf('linkedin');
+
+const fetchRows: Array<[string, string]> = [
+  ['Host', 'Paradox · ex-Gameloft'],
+  ['Uptime', stats[0] ? `${stats[0].value} ${stats[0].label}` : '10+ years in production'],
+  ['Kernel', 'Event-driven + DDD @ 1M+ req/day'],
+  ['Stack', 'Python · TypeScript · Node.js'],
+  ['Data', 'MySQL · MongoDB · Redis'],
+  ['Infra', 'Kubernetes · Docker · AWS'],
+  ['Location', personal.location],
+  ['Spoken', 'Vietnamese · English'],
+];
+
+const title = `${personal.name} (@duthaho) — ${personal.title}`;
+const description = personal.description;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: personal.name,
+  alternateName: personal.nickname,
+  jobTitle: personal.title,
+  url: 'https://duthaho.dev/about/',
+  address: { '@type': 'PostalAddress', addressLocality: personal.location },
+  sameAs: social.map((s: any) => s.url),
+  worksFor: experience[0] ? { '@type': 'Organization', name: experience[0].company } : undefined,
+};
+---
+<BaseLayout title={title} description={description} path="/about/" bodyClass="article-page about-page" jsonLd={jsonLd}>
+  <main class="container-wide about">
+    <div class="breadcrumb"><a href="/">blog</a> / about</div>
+
+    <section class="about-hero">
+      <div class="about-hero__lede">
+        <p class="about-eyebrow">$ whoami</p>
+        <h1 class="page-title">{personal.name}</h1>
+        <p class="page-desc" set:html={
+          'From AAA mobile titles to AI-powered recruitment — designing <em>systems that scale</em> and the teams that ship them.'
+        } />
+        <ul class="about-stats">
+          {stats.map((s: any) => (
+            <li><b>{s.value}</b> {s.label}</li>
+          ))}
+        </ul>
+        <div class="about-actions">
+          <a class="about-btn about-btn--primary" href="/cv/">Read the résumé →</a>
+          <a class="about-btn" href={github} target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="about-btn" href={linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        </div>
+      </div>
+
+      <div class="terminal-card fetch-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+          </div>
+          <span class="terminal-filename">~/duthaho $ neofetch</span>
+        </div>
+        <div class="terminal-body fetch-body">
+          <div class="fetch-head">{(personal.nickname || 'duthaho').toLowerCase()}@architect</div>
+          <dl class="fetch-info">
+            {fetchRows.map(([k, v]) => (
+              <div class="fetch-row"><dt>{k}</dt><span class="fetch-lead"></span><dd>{v}</dd></div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-block">
+      <p class="about-intro-lede">{personal.about.intro}</p>
+      {personal.about.paragraphs.map((p: string) => <p class="about-prose" set:html={p} />)}
+    </section>
+
+    <section class="about-block">
+      <header class="about-shead">
+        <span class="about-shead__label">Philosophy</span>
+        <h2 class="about-shead__title">What I hold to</h2>
+      </header>
+      <ol class="beliefs">
+        {personal.about.principles.map((p: string) => (
+          <li class="belief"><span class="belief__text">{p}</span></li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="about-block">
+      <header class="about-shead">
+        <span class="about-shead__label">Journey</span>
+        <h2 class="about-shead__title">Where I've built</h2>
+        <span class="about-shead__meta">{startYear && endYear ? `${startYear}–${endYear} · ` : ''}{experience.length} roles</span>
+      </header>
+      <ol class="timeline">
+        {experience.map((job: any) => (
+          <li class="job">
+            <div class="job__aside">
+              <span class="job__period">{enDash(job.period)}</span>
+              <a class="job__co" href={job.url} target="_blank" rel="noopener noreferrer">{job.company}</a>
+              {job.badge && <span class="job__badge">{job.badge}</span>}
+            </div>
+            <div class="job__body">
+              <h3 class="job__role">{job.title}</h3>
+              <p class="job__summary">{job.summary}</p>
+              <ul class="job__bullets">
+                {(job.achievements || []).map((a: string) => <li set:html={a} />)}
+              </ul>
+              <ul class="job__stack">
+                {(job.stack || []).map((s: string) => <li>{s}</li>)}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="about-block">
+      <header class="about-shead">
+        <span class="about-shead__label">Focus</span>
+        <h2 class="about-shead__title">What I work on</h2>
+      </header>
+      <div class="focus">
+        <div class="focus__group">
+          <span class="focus__label">Core practice</span>
+          <ul class="corelist">
+            {coreSkills.map((s: any) => {
+              const detail = interests.find((i: any) => i.name === s.name);
+              return <li>{s.name}{detail && <span>{detail.summary}</span>}</li>;
+            })}
+          </ul>
+        </div>
+        <div class="focus__group">
+          <span class="focus__label">Tools I reach for</span>
+          <ul class="chips">
+            {techStack.map((t: string) => <li>{t}</li>)}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-block">
+      <header class="about-shead">
+        <span class="about-shead__label">Building</span>
+        <h2 class="about-shead__title">Open source</h2>
+        <span class="about-shead__meta">{projects.length} repositories</span>
+      </header>
+      <div class="builds">
+        {projects.map((p: any) => (
+          <article class={`repo${p.featured ? ' repo--featured' : ''}`}>
+            <div class="repo__head">
+              <a class="repo__name" href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
+              {p.featured && <span class="repo__tag">Featured</span>}
+            </div>
+            <p class="repo__desc">{p.description}</p>
+            <footer class="repo__meta">
+              {p.stars ? <span>★ {p.stars}</span> : null}
+              {p.forks ? <span>⑂ {p.forks}</span> : null}
+            </footer>
+          </article>
+        ))}
+      </div>
+      <a href="https://github.com/duthaho?tab=repositories" target="_blank" rel="noopener noreferrer" class="about-more">Full archive on GitHub →</a>
+    </section>
+
+    <section class="about-block">
+      <header class="about-shead">
+        <span class="about-shead__label">Writing</span>
+        <h2 class="about-shead__title">Recent field notes</h2>
+        <span class="about-shead__meta">{articles.length} recent</span>
+      </header>
+      <ol class="notes">
+        {articles.map((a: any) => (
+          <li class="note">
+            <span class="note__date">{dotDate(a.date)}</span>
+            <div class="note__body">
+              <h3 class="note__title"><a href={a.url}>{a.title}</a></h3>
+              <p class="note__excerpt">{a.excerpt}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <a href="/" class="about-more">The full shelf at duthaho.dev →</a>
+    </section>
+
+    <blockquote class="about-pull">
+      Good systems aren’t shipped, they’re inherited. I optimize for the engineer reading this on a bad Wednesday.
+      <cite>How I work</cite>
+    </blockquote>
+
+    <Newsletter source="about" heading="Work with me, or just follow along." blurb="I write after-hours notes on AI, engineering and the developer craft. Subscribe below — or reach out on LinkedIn if you're hiring for architecture or AI work." />
+  </main>
+</BaseLayout>
+
+<style>
+  .about { padding-bottom: 4rem; }
+
+  .about-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    color: var(--vermillion);
+    margin: 0.5rem 0 0;
+  }
+
+  /* Hero: prose + neofetch card side by side */
+  .about-hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+    margin: 1rem 0 3rem;
+  }
+  @media (min-width: 900px) {
+    .about-hero { grid-template-columns: 1.1fr 0.9fr; gap: 3rem; }
+  }
+  .about-hero .page-title { margin-top: 0.4rem; }
+
+  .about-stats {
+    list-style: none;
+    margin: 0 0 1.6rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.6rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink-mute);
+  }
+  .about-stats b { color: var(--ink); font-weight: 600; }
+
+  .about-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+  .about-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    background: var(--paper-cream);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .about-btn:hover { border-color: var(--vermillion); color: var(--vermillion); }
+  .about-btn--primary {
+    background: var(--vermillion);
+    color: var(--paper-cream);
+    border-color: var(--vermillion-deep);
+  }
+  .about-btn--primary:hover { background: var(--accent-bright); color: var(--paper-cream); }
+
+  /* Neofetch card */
+  .fetch-body { padding: 1rem 1.2rem 1.2rem; }
+  .fetch-head {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--vermillion);
+    border-bottom: 1px dashed var(--rule-soft);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .fetch-info { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+  .fetch-row { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.16rem 0; }
+  .fetch-row dt { color: var(--ink-mute); flex: none; margin: 0; }
+  .fetch-lead { flex: 1 1 auto; border-bottom: 1px dotted var(--ink-ghost); transform: translateY(-0.2em); }
+  .fetch-row dd { color: var(--ink); flex: none; margin: 0; text-align: right; }
+
+  /* Blocks */
+  .about-block { margin: 3rem 0; }
+  .about-intro-lede {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    line-height: 1.35;
+    color: var(--ink);
+    margin: 0 0 1.2rem;
+    max-width: 30ch;
+  }
+  .about-prose { max-width: 62ch; margin: 0 0 1rem; color: var(--ink-soft); }
+  .about-prose :global(strong) { color: var(--ink); font-weight: 600; }
+
+  .about-shead { margin-bottom: 1.4rem; }
+  .about-shead__label {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vermillion);
+  }
+  .about-shead__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 500;
+    color: var(--ink);
+    margin: 0.2rem 0 0;
+  }
+  .about-shead__meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+
+  /* Philosophy */
+  .beliefs { list-style: none; margin: 0; padding: 0; counter-reset: belief; display: grid; gap: 0.6rem; }
+  @media (min-width: 640px) { .beliefs { grid-template-columns: 1fr 1fr; } }
+  .belief {
+    counter-increment: belief;
+    display: flex;
+    gap: 0.8rem;
+    align-items: baseline;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    background: var(--paper-cream);
+  }
+  .belief::before {
+    content: counter(belief, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--vermillion);
+    flex: none;
+  }
+  .belief__text { font-family: 'Fraunces', serif; font-size: 1.05rem; color: var(--ink); }
+
+  /* Journey timeline */
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .job {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.4rem 2rem;
+    padding: 1.4rem 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+  @media (min-width: 760px) { .job { grid-template-columns: 220px 1fr; } }
+  .job__aside { display: flex; flex-direction: column; gap: 0.25rem; }
+  .job__period { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--ink-mute); }
+  .job__co { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--vermillion); text-decoration: none; }
+  .job__co:hover { text-decoration: underline; }
+  .job__badge {
+    align-self: flex-start;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    margin-top: 0.2rem;
+  }
+  .job__role { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 500; color: var(--ink); margin: 0 0 0.3rem; }
+  .job__summary { margin: 0 0 0.6rem; color: var(--ink-soft); font-size: 0.98rem; }
+  .job__bullets { margin: 0 0 0.7rem; padding-left: 1.1rem; }
+  .job__bullets li { margin-bottom: 0.3rem; color: var(--ink-soft); font-size: 0.95rem; }
+  .job__bullets :global(strong) { color: var(--ink); font-weight: 600; }
+  .job__stack { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .job__stack li {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 0.1rem 0.45rem;
+  }
+
+  /* Focus */
+  .focus { display: grid; gap: 2rem; }
+  @media (min-width: 760px) { .focus { grid-template-columns: 1fr 1fr; } }
+  .focus__label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.8rem;
+  }
+  .corelist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+  .corelist li { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--ink); }
+  .corelist li span { display: block; font-family: 'Newsreader', serif; font-size: 0.9rem; color: var(--ink-mute); }
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chips li {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: 5px;
+    padding: 0.25rem 0.6rem;
+    background: var(--paper-cream);
+  }
+
+  /* Building */
+  .builds { display: grid; gap: 1rem; }
+  @media (min-width: 640px) { .builds { grid-template-columns: 1fr 1fr; } }
+  .repo {
+    border: 1px solid var(--rule-soft);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    background: var(--paper-cream);
+  }
+  .repo--featured { border-color: var(--vermillion); }
+  .repo__head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+  .repo__name { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); text-decoration: none; }
+  .repo__name:hover { color: var(--vermillion); }
+  .repo__tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--vermillion);
+    border: 1px solid var(--vermillion);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+  }
+  .repo__desc { margin: 0 0 0.7rem; font-size: 0.92rem; color: var(--ink-soft); }
+  .repo__meta { display: flex; gap: 1rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-mute); }
+
+  /* Writing */
+  .notes { list-style: none; margin: 0; padding: 0; }
+  .note { display: grid; grid-template-columns: 1fr; gap: 0.3rem 1.5rem; padding: 1.1rem 0; border-top: 1px solid var(--rule-soft); }
+  @media (min-width: 640px) { .note { grid-template-columns: 100px 1fr; } }
+  .note__date { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-faint); }
+  .note__title { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 500; margin: 0 0 0.3rem; }
+  .note__title a { color: var(--ink); text-decoration: none; }
+  .note__title a:hover { color: var(--vermillion); }
+  .note__excerpt { margin: 0; font-size: 0.92rem; color: var(--ink-mute); }
+
+  .about-more {
+    display: inline-block;
+    margin-top: 1.2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--vermillion);
+    text-decoration: none;
+  }
+  .about-more:hover { text-decoration: underline; }
+
+  /* Pull quote */
+  .about-pull {
+    margin: 3.5rem 0;
+    padding: 1.5rem 0 1.5rem 1.6rem;
+    border-left: 3px solid var(--vermillion);
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    line-height: 1.3;
+    font-style: italic;
+    color: var(--ink);
+    max-width: 34ch;
+  }
+  .about-pull cite {
+    display: block;
+    margin-top: 0.8rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    font-style: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+</style>
