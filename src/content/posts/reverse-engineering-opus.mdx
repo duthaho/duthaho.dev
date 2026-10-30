@@ -1,0 +1,120 @@
+---
+num: 20
+title: "Reverse engineering used to require years of expertise"
+titleEm: "Opus 5.5 collapsed that gap in one tool"
+description: "REA bridges Opus 5.5 to your disassembler and turns sealed binaries into clean, annotated code you can understand and rebuild. The technique is 11 steps. The hard part isn't any of them."
+date: 2026-10-30
+pinned: false
+filename: "reverse-engineering-opus.md"
+readMore:
+  - kind: "source"
+    title: "How to Reverse Engineer Anything with Opus 5.5 (Full-Course)"
+    href: "https://movez.substack.com/p/how-to-reverse-engineer-anything"
+    by: "0xMovez — the original guide this post is built on"
+  - kind: "source"
+    title: "How To Turn Opus 5.5 Into Your Personal Reverse Engineer"
+    href: "https://zodchiii.substack.com/p/how-to-turn-opus-55-into-your-personal"
+    by: "zodchiii — a complementary walkthrough with a slightly different setup"
+  - kind: "on the blog"
+    title: "Stop prompting the agent — design the loop that prompts it"
+    href: "loop-engineering"
+    by: "same underlying shift: get out of the manual loop"
+  - kind: "on the blog"
+    title: "I read Claude Code's leaked source and realized I'd been building agents wrong"
+    href: "agentic-patterns"
+    by: "the 12 patterns underneath agentic systems — same architectural thinking"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+For most of my career, reverse engineering was a black art. Not because the concepts were mysterious — decompilers, disassemblers, cross-reference graphs — these aren't obscure. But the fluency required to sit with a Ghidra output and actually extract meaning from it took years to build. You had to hold the whole program in your head while following a thread of indirect jumps through obfuscated control flow. Most developers, including me, quietly decided it wasn't worth learning.
+
+That calculus changed when Opus 5.5 shipped with a 1M-token context window. And it changed completely when a tool called REA appeared on GitHub three months ago, passed 100,000 stars, and made the model's context window into a bridge between natural language and a real disassembly engine.
+
+I spent a week going through the full-course write-up from 0xMovez and actually running through the process myself. What I came out with wasn't a bag of tricks. It was a different mental model for what "understanding a closed system" even means — and a set of techniques I can actually use.
+
+## The gap REA closes
+
+Opus 5.5 can read and write text. It can't load a Mach-O binary, parse ELF sections, or follow a jump table without help. That's the gap. REA closes it.
+
+REA sits between the model and your disassembler — Hopper on macOS, Ghidra if you want free and cross-platform, IDA if you already own it. It loads a binary into the engine and exposes the results as callable functions. The model asks questions. It gets back evidence-tagged responses: addresses, raw bytes, pseudocode. It asks more questions. It iterates.
+
+The setup is a single command once Node 22+ is installed:
+
+```
+npx rea-agents setup
+```
+
+That's the entire installation. Then you point it at a binary and start asking.
+
+<Callout label="What the model actually sees">
+Every response from REA is tagged as an observation (this is what the binary contains), an inference (this is what it probably does), or an unknown (insufficient evidence). The model is instructed to maintain those tags throughout its analysis. It means you always know how much to trust any particular claim the agent makes about the code.
+</Callout>
+
+## The 11-step process
+
+The guide breaks the workflow into 11 steps. I'm going to describe them at the level that mattered to me — the decision points and the reasons, not the exact commands.
+
+<Finding n="Step 1–2" title="Know your target before you touch it">
+The first real decision is identifying the binary type: native code (Mach-O, ELF, PE), Electron (which means JavaScript is right there waiting), .NET, Go, APK, or WASM. This matters because Electron apps don't need a disassembler at all — the JavaScript is sitting in the bundle readable with a text editor. Running Ghidra on an Electron app is one of the six most common mistakes in the guide. Identify the format first; pick the tool second.
+</Finding>
+
+<Finding n="Step 3–4" title="Reconnaissance before decompilation">
+The temptation is to immediately start decompiling functions. Don't. The first pass should extract the overview: binary architecture, total function count, readable strings (URLs, error messages, feature names), and cross-reference counts. The cross-reference count is the important one — it tells you which functions are called most often, which is a proxy for which ones matter. You don't read a codebase sequentially; you read by importance. Same here.
+</Finding>
+
+<Finding n="Step 5–6" title="Decompile, then annotate">
+Decompilation converts machine instructions to pseudocode. The output is rough: variable names like `var_28`, tangled logic, type casts everywhere. That's expected. What Opus 5.5 does in the annotation step is what changes the texture entirely: it renames cryptic variables, identifies design patterns, rewrites the function in clean idiomatic code, and flags missing error handling or security issues. One sentence of purpose per function. This is the step where the machine code becomes something a human can reason about.
+</Finding>
+
+<Finding n="Step 7" title="Obfuscated code needs a budget">
+When the code has been deliberately scrambled — control-flow flattening, opaque predicates, dead code injection, string encryption — the cost per function rises sharply. The guide recommends setting a token spending limit per function and rating confidence on a 1–10 scale. Below 6, you need more context before proceeding. Tools like Caveman can strip junk before analysis, which keeps the cost manageable. Attempting multi-layer obfuscation without a budget is mistake number four on the list.
+</Finding>
+
+<Finding n="Step 8" title="The swarm pattern for large codebases">
+For anything with more than a few hundred functions, the single-agent model breaks down. The swarm pattern replaces it: one controller chat manages the big picture and distributes tasks; multiple worker chats each analyze one function. The controller injects resolved structures to keep naming consistent across workers. Workers report back with confidence ratings, triggering second passes when the confidence is too low. It's a concurrency pattern — and it's the thing that makes a 300,000-function binary tractable.
+</Finding>
+
+<PullQuote>
+The swarm isn't about speed. It's about keeping the controller's context clean while workers go deep on individual functions without polluting each other's analysis.
+</PullQuote>
+
+<Finding n="Step 9" title="Clean-room is the only legal path">
+This is the step most tutorials skip. Clean-room methodology is what separates "reverse engineering to understand" from "copying." Four rules: observe black-box behavior, never paste source code into the agent's context; use public specifications for file formats, not the reverse-engineered parsers; create original assets with attribution tracking; and — critically — separate the analysis agent from the implementation agent. Different context. The analysis agent produces a specification describing behavior, interfaces, and test requirements. The implementation agent receives the specification and builds from it without ever having touched the original binary.
+</Finding>
+
+<Finding n="Step 10–11" title="Ship the rebuild as an MCP server">
+The final steps are about packaging what you've built. The pattern that came out of the WordCraft example in the guide: structure the rebuild in layers, each using only the ones below it, and expose every action as a named command accessible to agents — which means releasing it as an MCP server. Verification is systematic: generate 50 test inputs across normal cases, edge cases, and error conditions; run both the original and the rebuild with identical inputs; document match rates and divergences in a parity report before shipping.
+</Finding>
+
+## The six mistakes
+
+The guide lists them. I think they're worth repeating because they're not obvious until after you've made them.
+
+Running Ghidra on an Electron app. Dumping the entire binary before analyzing strategically. Reading functions in sequence instead of by cross-reference count. Attempting obfuscated code without a per-function token budget. Letting the agent copy code instead of implementing from a specification. Shipping without behavioral parity testing.
+
+The one that surprised me was the second — dumping everything upfront. It feels like good preparation. In practice, you burn tokens on functions that don't matter and the context fills up before you reach the ones that do.
+
+<Aside>
+The effort level matters here: Medium for navigation and inspection, High for ordinary annotation, Max for obfuscated code and pointer arithmetic. Using Max on everything is how you run up a bill on functions that didn't need it.
+</Aside>
+
+## What this actually changes
+
+Reverse engineering with this setup isn't a faster way to do what was already possible. It's access to something that was previously gated behind years of specialization.
+
+The 1M context window means Opus 5.5 can hold a substantial codebase in a single pass. REA means it can actually load and query a real disassembler rather than hallucinating pseudocode from the filename. The annotation step means the output is human-readable and reason-able, not just decompiled. And the clean-room methodology means the result has a defensible legal posture.
+
+<PullQuote>
+Reverse engineering is about understanding well enough to rebuild — never cracking for its own sake.
+</PullQuote>
+
+That's the framing the guide opens with, and it's the right frame. The technique isn't about circumventing anything. It's about understanding how closed systems behave when you don't have access to the source. That's a legitimate engineering problem that shows up constantly: understanding a vendor's binary you have to integrate with, analyzing a legacy system whose source was lost, figuring out what a protocol actually does versus what its documentation claims.
+
+The gap between "can theoretically be done" and "I can actually do this next week" just closed significantly.
+
+---
+
+*Setup: Node 22+, one disassembler, `npx rea-agents setup`. The REA repository and full walkthrough are linked in the sources below.*
