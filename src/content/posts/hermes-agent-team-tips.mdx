@@ -1,0 +1,176 @@
+---
+num: 21
+title: "Seven upgrades that turn a single Hermes bot"
+titleEm: "into a full AI agent team"
+description: "Most people run Hermes Agent as one bot with one personality. The guide at Komputer Mechanic shows a different architecture: a named crew of specialists, each with its own memory and Telegram topic, coordinated by an orchestrator that owns the outcome. This post is a detailed walk through those seven upgrades — what they do, why the design decisions work, and where the traps are."
+date: 2026-11-19
+pinned: false
+filename: "hermes-agent-team-tips.md"
+readMore:
+  - kind: "source"
+    title: "Hermes Agent Tips: 7 Upgrades for Your AI Agent Team"
+    href: "https://komputermechanic.com/tutorials/hermes-agent-tips"
+    by: "komputermechanic.com — the original guide this post unpacks"
+  - kind: "on the blog"
+    title: "I read Claude Code's leaked source"
+    href: "agentic-patterns"
+    by: "12 patterns for agentic systems — good companion reading on the same problems"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+The first version of my Hermes setup was one bot, one Telegram chat, one long `SOUL.md` file that tried to describe everything the bot should ever do. It could research things. It could draft content. It could occasionally write a script. All in the same context window, all with the same instructions, all fighting for the same working memory. The problems were predictable: it would drift mid-task, mix up its "researcher voice" with its "writer voice," and after a few long sessions start contradicting instructions it had supposedly internalized.
+
+The guide at Komputer Mechanic proposes a clean solution to this: stop trying to make one agent handle everything, and instead build a small crew of specialists that each do one thing well. It covers seven specific upgrades to get there — an orchestrator, isolated agent profiles, Telegram topic routing, and a silence protocol for scheduled jobs. This post is my detailed read of each one.
+
+## Why one bot with many roles fails
+
+Before getting into the upgrades, it's worth naming the underlying problem clearly. A single agent with a broad mandate is essentially a generalist asked to context-switch on every message. The model doesn't have role boundaries — it has instructions that say "sometimes you're a researcher and sometimes you're a writer," and nothing structurally enforcing the difference. When the conversation is short, those instructions hold. When the conversation is long, or when two tasks arrive in quick succession, they blur.
+
+Multi-agent architectures solve this by moving the boundary from the prompt into the infrastructure. A Research agent and a Writer agent aren't the same agent in a different mood — they're separate profiles with separate identities, separate memories, and separate working contexts. The model doesn't need to remember which role it's playing right now, because the profile file tells it every time the session starts.
+
+The second problem a single bot has is routing. When one bot receives every message, it has to decide on each turn what mode it's in. With specialist agents and Telegram topic routing, the routing decision happens at the infrastructure level — the message arrives in the Research topic, it goes to the Research agent. No decision required, no ambiguity.
+
+## Part 01 — Building the crew
+
+<Finding n="Upgrade 01" title="The Orchestrator">
+The orchestrator is the main coordinator: it decides which team member handles each incoming task, can handle small tasks itself without delegating, owns the outcome if a specialist stalls, and never takes irreversible actions (deletes, external sends) without approval. Its identity lives at the top of `~/.hermes/SOUL.md`.
+
+The key design principle here is that the orchestrator doesn't just route — it owns outcomes. It's the difference between a router that fires and forgets and a manager that follows up when nothing comes back. Without the follow-up behavior, a stalled specialist just produces silence, and nobody knows if that's a problem or the job is done.
+</Finding>
+
+<Finding n="Upgrade 02" title="Cloning a Single Specialist Profile">
+Creating a specialist starts with:
+```
+hermes profile create <profile> --clone
+```
+
+The `--clone` flag copies your current working setup into the new profile, including the model selection, tool access, and memory configuration. After cloning, if the new profile is on a different machine or the auth credentials aren't copied, you need to manually copy `auth.json` from the main profile directory.
+
+The guide treats this as a prerequisite step — it's the atom from which all specialist agents are built. The important thing it establishes is that each agent has its own profile directory. Memory isolation, identity isolation, and config isolation all follow from that.
+</Finding>
+
+<Finding n="Upgrade 03" title="Creating Multiple Specialists at Once">
+Rather than creating specialists one at a time, the guide provides a prompt that creates three default agents in a single step: **Research** (finds from real sources, never invents), **Writer** (creates content in a warm, human voice), and **Developer** (builds tools in clean, tested code). Each gets its own profile directory and identity file.
+
+Three is a good default set because it covers the three most common types of knowledge work: information gathering, communication, and implementation. The bigger insight is the constraint on each role: the Research agent's core rule is "never invent facts," not "find information." The negation is load-bearing — the model is explicitly told what it must not do, not just what it should do.
+</Finding>
+
+<Finding n="Upgrade 04" title="Memory Setup Per Agent">
+Each specialist gets role-specific memory isolation, a unique identity that persists across sessions, a separate workspace, and a one-line deflection response for tasks outside its scope. The guide also enables continuous session learning — the agent records what it learned in each session and carries it forward.
+
+The deflection line is the most important detail here. Without it, a specialist asked to do something outside its role will either try anyway (poor results) or refuse awkwardly (confusing to the user). A short, clean deflection — "I handle research; the Writer can help with that" — keeps the boundary clear without creating friction. It has to be short or it won't be used consistently.
+</Finding>
+
+<Callout label="Why identity persistence matters more than it sounds">
+An agent that starts every session with no memory of its previous work isn't a specialist — it's a template. The first few sessions are spent re-establishing context that any real specialist would already know: what projects are in flight, what style the team prefers, what the user has already tried. Session memory isn't a nice-to-have; it's the thing that makes a specialist feel like a person rather than a one-shot prompt.
+</Callout>
+
+## Part 02 — Telegram topic routing
+
+The crew is only useful if messages reach the right agent. This section of the guide solves that through Telegram's Topics feature — each specialist gets its own topic, and a plugin routes incoming messages to the matching profile.
+
+**Prerequisites:** Hermes Agent connected to Telegram, a Telegram group with Topics (also called Forums) enabled, and the bot must have "Manage topics" admin rights in the group.
+
+<Finding n="Upgrade 05" title="One Topic Per Agent">
+Create one Telegram topic for each specialist agent. After creating them, capture the group chat ID and the thread ID for each topic, then save that mapping into agent memory. The thread IDs are what the routing plugin uses to decide which profile receives a given message.
+
+This step is mechanical but it has to be done carefully — a wrong thread ID means a message arrives at the wrong agent and gets answered by someone who isn't scoped for it. Getting the mapping right at setup time is easier than debugging routing problems later.
+</Finding>
+
+<Finding n="Upgrade 06" title="Isolating Specialist Profiles from Telegram">
+Once each specialist has its own topic, those profiles need to be removed from the Telegram configuration so they don't each try to independently listen to the bot. This means deleting the `platforms:` block from each specialist's `config.yaml` and removing `TELEGRAM_BOT_TOKEN` from their `.env` files. The model, tools, and memory stay intact — only the direct Telegram access is removed.
+
+This is a subtle but important step. If specialist profiles each have their own Telegram connection, the bot would process messages multiple times — once for each profile that's listening. The routing plugin works by intercepting at the main gateway; specialists need to receive messages through that gateway, not through their own direct connections.
+</Finding>
+
+<Finding n="Upgrade 07a" title="Installing the Routing Plugin">
+The routing plugin lives at `~/.hermes/plugins/telegram_topic_profiles/` and consists of three files:
+
+**`plugin.yaml`** — plugin metadata, declaring the plugin as standalone kind.
+
+**`topics.json`** — the mapping from Telegram thread IDs to profile names:
+```json
+{
+  "chat_id": "<your_group_chat_id>",
+  "topics": {
+    "<thread_id_1>": "research",
+    "<thread_id_2>": "writer",
+    "<thread_id_3>": "developer"
+  }
+}
+```
+
+**`__init__.py`** — the Python logic with two functions: `_load_map()` reads `topics.json`, and `_route()` checks the incoming Telegram message's thread ID against the map and assigns the correct profile.
+
+Activation:
+```
+hermes plugins enable telegram_topic_profiles
+hermes config set multiplex_profiles true
+hermes gateway restart
+```
+
+For Hermes 0.21+, there's also a `profile_routes:` section in `config.yaml` that supersedes some of this — the guide covers both paths.
+</Finding>
+
+<Callout label="The troubleshooting checklist if routing breaks">
+If topics still answer as the main agent after setup, the guide gives a four-point audit: `multiplex_profiles: true` must be set at the top level of config; the plugin must be enabled and `topics.json` must have the correct mapping; profile routes must be configured for Hermes 0.21+; and specialist profiles must have their Telegram blocks removed. Any one of these missing produces the same symptom — wrong agent responds — which makes it worth going through the whole list rather than stopping at the first thing you check.
+</Callout>
+
+After routing is confirmed working, the guide recommends typing `/new` in each topic to start fresh sessions — clearing any residual context from the main agent before the specialists take over.
+
+## Part 03 — Scheduled job silence
+
+The third section addresses a different problem: agents that run scheduled jobs and send messages even when nothing has changed. A monitoring agent that checks a feed every hour and sends "nothing new" twelve times a day isn't useful — it's noise that trains you to ignore the notification.
+
+<Finding n="Upgrade 05b" title="The [SILENT] Protocol for New Jobs">
+When creating a new scheduled job that checks or monitors something, append this instruction to the prompt:
+
+> If there is nothing new to report, reply with exactly [SILENT] and nothing else.
+
+Hermes treats `[SILENT]` as a signal to suppress delivery — the agent runs, checks, produces the token, and no message is sent. This applies to scanning and reporting jobs only; always-send jobs (daily briefings, reminders) should not get the silence instruction because silence would break their purpose.
+</Finding>
+
+<Finding n="Upgrade 06b" title="Upgrading Existing Scheduled Jobs">
+For jobs already running, the upgrade path is:
+```
+hermes cron list
+hermes cron edit <job_id> --prompt "..."
+```
+
+You rewrite the job prompt to include the silence instruction. The guide notes the distinction carefully: add it to jobs that *scan for updates* but leave alone jobs that are *expected to send on every run*. Getting that wrong in either direction — silencing a briefing, or not silencing a noisy monitor — produces the same user experience problem: a notification you eventually stop reading.
+</Finding>
+
+<PullQuote>
+[SILENT] is a contract between the agent and the delivery layer. The agent agrees to be honest about when there's nothing worth saying. The delivery layer agrees to respect that. Most notification systems default to the opposite — they deliver everything and trust the recipient to filter.
+</PullQuote>
+
+## What holds the whole architecture together
+
+The seven upgrades work because they enforce separation at the infrastructure level, not the prompt level. This is the central idea worth carrying forward even if you use a different platform.
+
+**Separation through profiles.** Each specialist's scope is not a paragraph in a system prompt that the model might or might not apply — it's a file that defines the agent's identity from the moment the session opens. The difference between "you're currently acting as the researcher" and "you are the researcher, that's what this profile is" sounds philosophical but it has real behavioral consequences.
+
+**Routing through the platform, not the agent.** The orchestrator doesn't route by reading the message and deciding where to send it — the platform routes by checking the thread ID against a map before the message reaches any agent. This means routing is fast, deterministic, and doesn't consume context tokens. If you're building a multi-agent system where the orchestrator itself reads and routes every message, you're burning capacity on a job that infrastructure handles better.
+
+**Silence as a first-class outcome.** The `[SILENT]` pattern treats "nothing to report" as a valid, structured response — not an absence of response. The agent still runs, still checks, still produces output. It's the delivery layer that suppresses it. This distinction matters because it means you get execution logs (the job ran and found nothing) without the notification overhead. Debugging a silent monitor is much easier when you can confirm it ran and produced `[SILENT]` rather than wondering whether it ran at all.
+
+<Aside>
+The guide was written for Hermes 0.20 and 0.21+, noting differences between versions for the routing configuration. Hermes is under active development, so some specifics — especially the plugin structure and the `profile_routes:` syntax — may change. The architecture itself won't. These patterns solve problems that exist in any multi-agent system, not just Hermes.
+</Aside>
+
+## Where I'd go after these seven upgrades
+
+The guide stops at seven. Here are three things I'd add once the basic crew is running:
+
+**A fourth specialist for execution.** Research, Writer, and Developer cover knowing, saying, and building. What they don't cover is "do the thing": scheduling calendar events, sending emails, managing files, interacting with external APIs. An Executor agent scoped to those actions — with explicit constraints on what it can and can't touch without approval — fills the gap without muddying the other three roles.
+
+**A weekly memory review.** Each specialist's session memory accumulates. Without a consolidation step, it fills with outdated context, resolved tasks, and superseded instructions. A cron job that runs weekly and asks each specialist to prune its own memory log — keeping only what's still relevant — is the low-tech version of the Dream Consolidation pattern I wrote about elsewhere on this blog.
+
+**A test before you trust the routing.** The guide's verification step ("type 'Who are you?' in each topic and confirm you get the right agent") is correct, but I'd go further: send a task that each specialist should *deflect* from. Send a research task to the Writer topic, a writing task to the Developer topic. If the deflection lines work correctly, you know the identity is solid, not just that the routing hit the right profile.
+
+<PullQuote closing>
+A single bot with many roles is a person with many jobs and no time to specialize. A crew of specialists with clear handoffs is how real teams work. The infrastructure just has to enforce what people enforce through org charts and job descriptions.
+</PullQuote>
