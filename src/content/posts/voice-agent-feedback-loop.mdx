@@ -35,37 +35,37 @@ import Aside from '../../components/Aside.astro';
 
 A phone agent can give the right answer and still fail the call. It waits just long enough for the caller to say "hello?" again. It starts speaking over a correction. It confidently confirms an appointment that never reached the calendar. None of these failures is solved by asking which model tops a leaderboard. They happen in the connections between hearing, deciding, speaking, and checking what actually changed.
 
-ThunderPhone's November 9 [Zeus announcement](https://thunderphone.com/blog/introducing-zeus) is interesting precisely because it treats those connections as the product. The company describes a voice stack with multiple transcription models, fast and slow reasoning models, conversation-handling components, and an agent that configures and tests the stack. Those are *vendor descriptions*, not independently verified performance results. The more useful question is what this architecture teaches us about building voice systems even if we never use ThunderPhone.[1]
+ThunderPhone's November 9 [Zeus announcement](https://thunderphone.com/blog/introducing-zeus) is interesting precisely because it treats those connections as the product. The company describes a voice stack with multiple transcription models, fast and slow reasoning models, conversation-handling components, and an agent that configures and tests the stack. Those are *vendor descriptions*, not independently verified performance results. The more useful question is what this architecture teaches us about building voice systems even if we never use ThunderPhone.
 
 ## A transcript is a lossy interface
 
-The familiar voice pipeline has three boxes: speech-to-text, a text agent, and text-to-speech. That layout has a genuine advantage. The application can inspect the transcript, run a policy check, call a business system, and decide what to say before it produces audio. [OpenAI's voice-agent documentation](https://developers.openai.com/api/docs/guides/voice-agents) explicitly presents this as the path when you need to see or replace each stage.[2]
+The familiar voice pipeline has three boxes: speech-to-text, a text agent, and text-to-speech. That layout has a genuine advantage. The application can inspect the transcript, run a policy check, call a business system, and decide what to say before it produces audio. [OpenAI's voice-agent documentation](https://developers.openai.com/api/docs/guides/voice-agents) explicitly presents this as the path when you need to see or replace each stage.
 
-But the handoff between the first two boxes is an information bottleneck. Imagine a caller saying, "Book a table for *four* at five," while the transcript reads "book a table for *five* at four." A text-only agent can reason perfectly over the wrong sentence and still produce a wrong booking. If it only receives one best-guess string, it cannot inspect the original audio for a clue. ThunderPhone argues that this is a fundamental weakness of a single-transcript pipeline and says its architecture often runs several transcribers in parallel, sometimes also sending audio directly to a model.[1]
+But the handoff between the first two boxes is an information bottleneck. Imagine a caller saying, "Book a table for *four* at five," while the transcript reads "book a table for *five* at four." A text-only agent can reason perfectly over the wrong sentence and still produce a wrong booking. If it only receives one best-guess string, it cannot inspect the original audio for a clue. ThunderPhone argues that this is a fundamental weakness of a single-transcript pipeline and says its architecture often runs several transcribers in parallel, sometimes also sending audio directly to a model.
 
 That does not imply that three transcripts automatically yield truth. They may share training biases, all fail on a surname, or disagree without a reliable arbiter. A practical system needs a decision rule: when hypotheses disagree on a consequential slot — a date, amount, name, or consent — ask the caller to repeat it, or confirm it back before taking action. For low-risk small talk, choosing a plausible hypothesis quickly may be better than stopping the conversation. **The right response depends on the cost of being wrong.**
 
 <Callout label="A design question, not a benchmark result">
-Multiple transcribers create more evidence only if you preserve the alternatives and have a way to resolve disagreement. The Zeus post describes parallel transcription; it does not publish enough independent, task-level evidence here to prove that its system is universally more accurate than other architectures.[1]
+Multiple transcribers create more evidence only if you preserve the alternatives and have a way to resolve disagreement. The Zeus post describes parallel transcription; it does not publish enough independent, task-level evidence here to prove that its system is universally more accurate than other architectures.
 </Callout>
 
 ## The first latency budget is about *when* to answer
 
 Voice latency is often discussed as model tokens per second. The caller experiences something else: the time between finishing a thought and hearing a useful reply. Before an LLM runs, the system must decide whether the caller has actually finished. A pause might mean "I'm done," or it might be the middle of "next Tuesday... actually Wednesday."
 
-[LiveKit's turn-taking guide](https://docs.livekit.io/agents/logic/turns/tuning/) separates user activity detection, interruption handling, preemptive generation, audio preprocessing, and speech scheduling. These are distinct controls. Shortening endpointing delay can make an agent feel snappier but also make it cut callers off. Starting generation before the end of a turn can hide compute time, but speculative work may be thrown away when the caller continues or corrects themselves.[3]
+[LiveKit's turn-taking guide](https://docs.livekit.io/agents/logic/turns/tuning/) separates user activity detection, interruption handling, preemptive generation, audio preprocessing, and speech scheduling. These are distinct controls. Shortening endpointing delay can make an agent feel snappier but also make it cut callers off. Starting generation before the end of a turn can hide compute time, but speculative work may be thrown away when the caller continues or corrects themselves.
 
 Suppose a booking agent hears "move my appointment to Friday" and begins preparing a tool call while the caller adds "not this Friday — next Friday." The model may have been fast. The agent was still too early. In that case, latency optimization moved a correctness decision across the boundary where the information needed for it became available.
 
 <Finding n="01" title="Measure the conversation, not just the model">
-Separate end-of-user-turn detection, first audible response, time to a completed tool action, and interruption recovery. An agent that starts talking quickly but repeatedly restarts after corrections may have a good first-audio number and a poor user experience. OpenAI recommends measuring audible timing, unwanted silence, overlap, and interruptions separately from task outcomes.[2]
+Separate end-of-user-turn detection, first audible response, time to a completed tool action, and interruption recovery. An agent that starts talking quickly but repeatedly restarts after corrections may have a good first-audio number and a poor user experience. OpenAI recommends measuring audible timing, unwanted silence, overlap, and interruptions separately from task outcomes.
 </Finding>
 
-The same principle applies when the *agent* is speaking. A real caller can interrupt with "No, the other address." The system must stop or revise its outgoing speech, update the turn state, and avoid treating half-spoken instructions as completed business actions. This is not just TTS playback. It is state management across two speakers and several asynchronous streams.[2][3]
+The same principle applies when the *agent* is speaking. A real caller can interrupt with "No, the other address." The system must stop or revise its outgoing speech, update the turn state, and avoid treating half-spoken instructions as completed business actions. This is not just TTS playback. It is state management across two speakers and several asynchronous streams.
 
 ## A faster model and a slower model are not a free speedup
 
-ThunderPhone says it combines a fast and a slower LLM and may choose which handles a turn based on conversation state. Its announcement frames that routing as a way to trade cost, latency, and reliability, but does not provide a public per-turn comparison that would let us quantify the gain.[1]
+ThunderPhone says it combines a fast and a slower LLM and may choose which handles a turn based on conversation state. Its announcement frames that routing as a way to trade cost, latency, and reliability, but does not provide a public per-turn comparison that would let us quantify the gain.
 
 The idea itself is sensible. "What time do you close?" and "Cancel my reservation, refund the deposit, and send confirmation" do not need identical reasoning paths. The first may be a read-only lookup. The second involves authorization, irreversible effects, and a record of what happened. A router can send the simple question to a quicker path and require the more careful path for the action. But the router is now part of the safety boundary: if it classifies a risky request as harmless, the stronger model never gets a chance to help.
 
@@ -76,13 +76,13 @@ A workable routing policy is less about finding the cleverest threshold and more
 - Keep the business rule outside any model's improvisation: require explicit confirmation before cancellation or payment, and check the tool result before saying the action succeeded.
 - Record which path handled the turn so a bad outcome can be traced to recognition, routing, reasoning, a tool, or speech.
 
-These are proposed engineering safeguards, not a description of ThunderPhone's internal policy. The [OpenAI guide](https://developers.openai.com/api/docs/guides/voice-agents) makes the architectural distinction useful here: a chained workflow exposes intermediate text and policy checks; a speech-to-speech session can handle speech, tools, and interruptions together. It also describes a full-duplex option with a separate backend for business logic. None is automatically best. The architecture should follow the control you need, the timing you can tolerate, and the failure you cannot accept.[2]
+These are proposed engineering safeguards, not a description of ThunderPhone's internal policy. The [OpenAI guide](https://developers.openai.com/api/docs/guides/voice-agents) makes the architectural distinction useful here: a chained workflow exposes intermediate text and policy checks; a speech-to-speech session can handle speech, tools, and interruptions together. It also describes a full-duplex option with a separate backend for business logic. None is automatically best. The architecture should follow the control you need, the timing you can tolerate, and the failure you cannot accept.
 
 ## Closing the loop means testing the *completed task*
 
-The Zeus post describes an optimization loop: simulate text and audio calls, inspect live-call problems, backtest changes against prior conversations, and offer A/B tests of fixes. It says teams can choose whether Zeus asks before changes. That is a product claim about its workflow; without independent access to its evals, it should not be read as proof that the loop improves every customer's calls.[1]
+The Zeus post describes an optimization loop: simulate text and audio calls, inspect live-call problems, backtest changes against prior conversations, and offer A/B tests of fixes. It says teams can choose whether Zeus asks before changes. That is a product claim about its workflow; without independent access to its evals, it should not be read as proof that the loop improves every customer's calls.
 
-The underlying pattern is important. A text agent can pass a prompt check while the spoken conversation fails. A voice agent can sound convincing while a tool writes the wrong record. [OpenAI's evaluation guidance](https://developers.openai.com/api/docs/guides/voice-agents) distinguishes conversation quality from the final application state: for a booking agent, listen to the confirmation *and* check that the intended appointment was actually saved. It recommends keeping audio, events, tool results, and application state, and separating failed test runs from valid runs in which the agent fails the task.[2]
+The underlying pattern is important. A text agent can pass a prompt check while the spoken conversation fails. A voice agent can sound convincing while a tool writes the wrong record. [OpenAI's evaluation guidance](https://developers.openai.com/api/docs/guides/voice-agents) distinguishes conversation quality from the final application state: for a booking agent, listen to the confirmation *and* check that the intended appointment was actually saved. It recommends keeping audio, events, tool results, and application state, and separating failed test runs from valid runs in which the agent fails the task.
 
 Here is how I would turn that into an engineering loop for a hypothetical appointment agent:
 
@@ -92,10 +92,10 @@ Here is how I would turn that into an engineering loop for a hypothetical appoin
 4. **Compare versions on the same scenarios.** Measure task completion, incorrect actions, audible delay, overlap, and recoverability independently. A prettier voice cannot compensate for a wrong calendar update.
 5. **Gate production changes.** Review failures that matter, roll out cautiously, and watch real outcomes; a pass on the offline set is a reason to test the next stage, not a license to skip it.
 
-[LiveKit's Agent Simulations](https://docs.livekit.io/testing/simulations/) offers a concrete implementation of the idea: a simulated caller pursues a scenario, the real agent logic responds, and the run produces a transcript and a verdict. Its text and audio modes cover different surfaces; audio testing can exercise parts that text-only tests cannot. The documentation also describes limitations, so an offline pass should not be confused with a guarantee for live callers.[4]
+[LiveKit's Agent Simulations](https://docs.livekit.io/testing/simulations/) offers a concrete implementation of the idea: a simulated caller pursues a scenario, the real agent logic responds, and the run produces a transcript and a verdict. Its text and audio modes cover different surfaces; audio testing can exercise parts that text-only tests cannot. The documentation also describes limitations, so an offline pass should not be confused with a guarantee for live callers.
 
 <Finding n="02" title="Replay is evidence, not a time machine">
-A stored call is useful for reproducing an old failure. But a new agent may say something different at turn two, causing the caller to behave differently at turn three. Replaying the original audio cannot tell us how that caller *would have reacted* to the new conversation. Simulations explore branches, while controlled live tests check whether improvements survive real interactions. Both have blind spots.[1][4]
+A stored call is useful for reproducing an old failure. But a new agent may say something different at turn two, causing the caller to behave differently at turn three. Replaying the original audio cannot tell us how that caller *would have reacted* to the new conversation. Simulations explore branches, while controlled live tests check whether improvements survive real interactions. Both have blind spots.
 </Finding>
 
 ## The evaluation loop can become the risk
@@ -104,7 +104,7 @@ The more knobs an optimizing agent can turn — model selection, prompts, interr
 
 This is why I would separate three permissions: proposing a configuration, evaluating it, and deploying it. They need not belong to the same actor. Protect consent and payment rules as constraints, not just metrics to trade against a lower average call duration. Examine worst-case outcomes alongside averages; a rare wrong cancellation matters more than a small improvement in how quickly a greeting starts.
 
-There is also an operational bill. Parallel recognition and multiple candidate models may improve observability or resilience, but they add compute, coordination, and failure modes. Speech-to-speech can remove some explicit handoffs yet make intermediate decisions harder to inspect; chained pipelines can be more inspectable but demand careful timing and interruption logic. Those are architecture trade-offs, not a league table with a universal winner.[1][2][3]
+There is also an operational bill. Parallel recognition and multiple candidate models may improve observability or resilience, but they add compute, coordination, and failure modes. Speech-to-speech can remove some explicit handoffs yet make intermediate decisions harder to inspect; chained pipelines can be more inspectable but demand careful timing and interruption logic. Those are architecture trade-offs, not a league table with a universal winner.
 
 <Aside>
 The example call flows and safeguards in this article are design sketches, not measured results or a claim to have tested Zeus. ThunderPhone's comparisons and performance statements are its own; the independent documentation cited here supports the architectural choices and evaluation methods, not its commercial performance claims.
@@ -119,10 +119,3 @@ If your agent says "your booking is confirmed," the most important voice metric 
 </PullQuote>
 
 Choosing a model is one decision inside that chain. The engineering work is deciding what happens when any link is wrong — and proving, with tests and real outcomes, that the next version handles that failure better.
-
-## Sources
-
-[1] https://thunderphone.com/blog/introducing-zeus — Introducing ThunderPhone v3, featuring Zeus
-[2] https://developers.openai.com/api/docs/guides/voice-agents — Voice agents
-[3] https://docs.livekit.io/agents/logic/turns/tuning — Turn-taking tuning
-[4] https://docs.livekit.io/testing/simulations — Agent Simulations
