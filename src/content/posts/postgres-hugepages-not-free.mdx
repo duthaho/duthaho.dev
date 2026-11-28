@@ -1,0 +1,129 @@
+---
+num: 23
+title: "PostgreSQL needs more memory"
+titleEm: "but huge pages aren't free"
+description: "A PostgreSQL HugeTLB reservation can save page-table overhead and make memory behavior more predictable. Size it wrong and the database falls back, fails to start, or reserves RAM that everything else needed."
+date: 2026-11-28
+pinned: false
+filename: "postgres-hugepages-not-free.md"
+readMore:
+  - kind: "source"
+    title: "Pre-Calculating HugePages for PostgreSQL"
+    href: "https://www.percona.com/blog/pre-calculating-hugepages-for-postgresql/"
+    by: "Jobin Augustine, Percona — the November 24 article behind this post"
+  - kind: "source"
+    title: "PostgreSQL — Linux Huge Pages"
+    href: "https://www.postgresql.org/docs/current/kernel-resources.html"
+    by: "official guide to estimating and provisioning the pool"
+  - kind: "source"
+    title: "PostgreSQL — Resource Consumption"
+    href: "https://www.postgresql.org/docs/current/runtime-config-resource.html"
+    by: "huge_pages modes, status and Transparent Huge Pages caveat"
+  - kind: "source"
+    title: "Linux kernel — HugeTLB Pages"
+    href: "https://docs.kernel.org/admin-guide/mm/hugetlbpage.html"
+    by: "the kernel's account of reservation, fragmentation and pool counters"
+  - kind: "source"
+    title: "Kubernetes — Manage HugePages"
+    href: "https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/"
+    by: "resource requests, limits and scheduling constraints"
+  - kind: "on the blog"
+    title: "Redis never gives you anything for free"
+    href: "caching-is-never-free"
+    by: "another optimization whose hidden cost sits outside the fast path"
+---
+import Callout from '../../components/Callout.astro';
+import Finding from '../../components/Finding.astro';
+import Diagram from '../../components/Diagram.astro';
+import PullQuote from '../../components/PullQuote.astro';
+import Aside from '../../components/Aside.astro';
+
+It is possible to have enough RAM for PostgreSQL and still have a database that will not start. It is also possible to reserve plenty of memory for PostgreSQL, get a healthy-looking server, and discover that it never used the pages you reserved. Both outcomes can follow from the same well-intentioned optimization: giving the database huge pages.
+
+[Jobin Augustine's Percona post on pre-calculating HugePages](https://www.percona.com/blog/pre-calculating-hugepages-for-postgresql/) makes the operational problem unusually concrete. An operator needs to know the size of PostgreSQL's shared memory *before* creating a Kubernetes pod, but some familiar ways of measuring memory require a running database. That is not a small configuration nuisance. It changes what a safe deployment procedure can be.
+
+The interesting lesson is not "turn on a kernel setting." It is what happens when an optimization asks us to reserve a finite resource ahead of time, with an answer that depends on the final application configuration.
+
+## Why a bigger page changes the equation
+
+Memory is mapped in pages. With smaller pages, the operating system manages more page mappings for a large region. A huge page covers a larger chunk, reducing the number of mappings and the work associated with them. PostgreSQL's [Linux Huge Pages guide](https://www.postgresql.org/docs/current/kernel-resources.html) and [resource settings](https://www.postgresql.org/docs/current/runtime-config-resource.html) describe smaller page tables and reduced CPU time for memory management as potential benefits. They do **not** say that every database workload will get a meaningful speedup.
+
+PostgreSQL's explicit `huge_pages` setting targets its **main shared memory area**. Think of `shared_buffers` as a major tenant in that area, not as the entire area. Lock tables, WAL-related structures, process bookkeeping, preloaded extensions and other allocations also need space. Percona walks through those components and shows why "take `shared_buffers` and add a little" is a brittle capacity rule. Raise connection or lock limits and the other tenants grow even if the buffer setting does not change.
+
+<Diagram label="What is being reserved, and what isn't" code={`
+Host RAM
+├─ HugeTLB pool ──→ PostgreSQL main shared memory
+│                  (shared_buffers + metadata + other shared structures)
+└─ Normal memory → OS cache, private process memory, other workloads
+
+work_mem and maintenance_work_mem are NOT sized by this HugeTLB calculation.
+`} />
+
+The other side is the reservation. The [Linux kernel's HugeTLB documentation](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html) says reserved huge pages are unavailable for ordinary purposes and are not swapped out. A pool sitting mostly unused is not "free headroom" for the filesystem cache or another process. The system may have memory in total but less *ordinary* memory than an operator expects. Allocating the pool late can also fail because sufficient contiguous memory is unavailable; PostgreSQL's guide notes that fragmentation may require another attempt or a reboot.
+
+<Callout label="HugeTLB is not Transparent Huge Pages">
+Explicit HugeTLB uses a reserved pool and PostgreSQL's `huge_pages` setting for the main shared area. Linux Transparent Huge Pages (THP) are a different mechanism that acts on normal allocations without the same explicit request. PostgreSQL's documentation currently discourages THP for some Linux versions because users have reported performance degradation. Enabling one is not equivalent to enabling the other.
+</Callout>
+
+## The number you need isn't `shared_buffers` divided by page size
+
+The sizing question is straightforward in form: **how many whole huge pages does the actual main shared-memory request require?** The difficulty is discovering that request *before* the service starts. PostgreSQL exposes a runtime-computed parameter for exactly this. With the PostgreSQL binary, data directory and intended configuration available, its [official guide](https://www.postgresql.org/docs/current/kernel-resources.html) shows:
+
+```sh
+postgres -D "$PGDATA" -C shared_memory_size_in_huge_pages
+```
+
+That output is the required page count for the effective configuration and selected huge-page size, not an estimate derived solely from the buffer cache. Check the page size separately (`Hugepagesize` in `/proc/meminfo`, or the size-specific paths under `/sys/kernel/mm/hugepages`); a page count with no size attached is not a portable memory budget. Recalculate after changing settings that influence shared memory or loading extensions that request it. An answer from last month's configuration is not a guarantee for today's restart.
+
+Percona describes three ways people arrive at a number: run PostgreSQL and inspect its mappings, ask PostgreSQL to calculate the value, or use an estimate such as "buffers plus some margin." The first is useful on an existing host but cannot necessarily size a pod that has not been created. The second is preferable when you can stage the final binary, configuration and data directory. The third can be useful as a provisional bound, **but is not exact**. I would not turn Percona's long, version-sensitive source-code formula into an enduring spreadsheet without testing it against the actual PostgreSQL versions and extension set being deployed.
+
+<Finding n="01" title="The chicken-and-egg problem in Kubernetes">
+Huge pages are declared as a pod resource. The scheduler needs the request *before* the pod starts, while the most reliable PostgreSQL calculation needs the effective configuration and a way to run the binary. An operator must either arrange a preflight step that has those inputs, or use a conservative, version-aware estimate and validate it against PostgreSQL before relying on it. Merely moving the calculation into a shell script inside the final pod does not help the scheduler place that pod.
+</Finding>
+
+[Kubernetes' HugePages guide](https://kubernetes.io/docs/tasks/manage-hugepages/scheduling-hugepages/) also says huge pages cannot be overcommitted like ordinary memory, and they are exposed by page size (`hugepages-2Mi`, for example). A request larger than necessary ties up scarce capacity and can prevent placement. A request smaller than necessary may leave PostgreSQL unable to obtain its main shared segment from the pool. This is not a tuning slider you can correct with a harmless in-process setting change: changing a pod resource can mean replacing the pod, with the availability and failover consequences Percona highlights.
+
+Percona's worked example is a good warning about intuition: for its specified PostgreSQL 17 configuration with **8 GiB of `shared_buffers`**, PostgreSQL reports **4,221 pages of 2 MiB**. Reserving only 8 GiB would be 4,096 such pages — insufficient for the full main shared-memory request. These are the article's example settings, **not** a universal PostgreSQL multiplier. Different versions, extension allocations and configuration values change the result.
+
+## `try` and `on` express different failure policies
+
+PostgreSQL's documented `huge_pages` modes are `off`, `try` and `on`. `try` is the default: attempt huge pages, and fall back to normal pages if the request fails. `on` refuses to start if it cannot get huge pages. Neither setting is inherently more responsible; the right choice depends on whether the fallback is safe for the memory budget and whether you will detect it.
+
+In a simple installation, `try` can be the availability-friendly choice. The database remains up when the pool is short. But in a container whose *ordinary* memory limit was sized assuming that the shared segment would live in huge pages, fallback can move that segment into a budget it no longer fits. Percona calls out that failure mode for Kubernetes. "The process started" is not an adequate test of the memory policy.
+
+With `on`, a mis-sized pool becomes an immediate startup failure. That can be preferable to a quiet capacity regression when huge pages are a hard requirement, but it can also turn an ordinary restart into an outage if node provisioning is wrong. The trade-off is **visible failure now versus possible hidden failure later**. Do not change this switch on a production cluster without first checking the actual page count, the pool available on every possible node, and the recovery path if startup fails.
+
+<PullQuote>
+A successful start with `huge_pages=try` proves the server found *some* way to allocate memory. It does not prove it used the memory you reserved.
+</PullQuote>
+
+PostgreSQL exposes `huge_pages_status` for the actual state in supported versions; check the version's documentation and read it after startup instead of inferring success from the configured mode. For PostgreSQL 17 and later, Percona suggests:
+
+```sql
+SHOW huge_pages_status;
+SHOW shared_memory_size_in_huge_pages;
+```
+
+Those queries answer related but different questions: whether huge pages were actually used and how many the running configuration needs. On the host, inspect `HugePages_Total`, `HugePages_Free`, `HugePages_Rsvd` and `Hugepagesize` in `/proc/meminfo` or the size-specific counters under `/sys/kernel/mm/hugepages/`. The [kernel documentation](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html) explains that free pages and reserved-but-not-yet-allocated pages are different; don't equate `HugePages_Free` with "safe to give away" without checking reservations and competing users.
+
+## The cost you measure is not just database latency
+
+There is an appealing story in which huge pages shrink page tables and therefore make every query faster. Real deployments deserve a harder test. Compare the same workload and configuration with and without the reservation, keeping the database version and memory limits fixed. Measure throughput and tail latency, but also page-table memory, CPU use, ordinary-memory pressure, filesystem-cache behavior, restart success, scheduling failures and how often the expected huge-page mode actually engages.
+
+An improvement for a workload with a very large shared segment may not appear in a smaller instance. A reservation that helps PostgreSQL while starving the OS page cache can move work from one part of the stack to another. I would rather publish a result that says "no measurable difference under this workload" than a page-size promise whose only evidence is a benchmark from somewhere else. Percona mentions performance reports on particular workloads; that is a reason to test, not a claim about this site's measurements.
+
+<Aside>
+The commands and the PostgreSQL 17 page-count example here come from the cited PostgreSQL, kernel, Kubernetes and Percona references. They are not results of a benchmark or a PostgreSQL deployment performed for this article. Host provisioning and pod configuration are environment-specific; use the documentation for your exact versions before making production changes.
+</Aside>
+
+## A preflight checklist worth keeping
+
+Before rolling this out, I would make the following checks explicit in the deployment process:
+
+- **Calculate from final inputs.** Use PostgreSQL's computed count when the target binary, data directory and configuration are available; otherwise label the estimate as an estimate and test it against real instances of each version you support.
+- **Match sizes.** Compare a count in pages with the host's page size; ensure Kubernetes requests use the corresponding `hugepages-<size>` resource and that every eligible node exposes enough of it.
+- **Leave normal RAM.** Account for OS cache, private backend memory and neighboring processes. The shared-segment reservation is not the whole database's memory requirement.
+- **Choose a failure contract.** Decide whether `try`'s fallback fits the ordinary-memory limit, or whether `on`'s startup failure is safer and adequately monitored.
+- **Inspect reality after every rollout.** Check `huge_pages_status` where supported, PostgreSQL's required count, host pool counters, and application behavior. Recheck on failover nodes and after upgrades or shared-memory-related configuration changes.
+
+The point of pre-calculating HugePages is not to find a magic memory setting. It is to turn a hidden startup dependency into a capacity decision we can inspect, test and repeat. Huge pages can make a large shared-memory mapping cheaper to manage. Their reservation can make the rest of the machine harder to run. Good engineering keeps both sides in view.
